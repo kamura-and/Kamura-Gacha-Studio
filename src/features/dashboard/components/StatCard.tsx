@@ -19,7 +19,7 @@ export function StatCard({
   return (
     <Card className="border-violet-500/20 bg-slate-950/50">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-muted-foreground">
+        <CardTitle className="text-sm font-medium text-slate-200">
           {title}
         </CardTitle>
       </CardHeader>
@@ -30,7 +30,7 @@ export function StatCard({
         </div>
 
         {subtitle && (
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="mt-2 text-xs text-slate-300">
             {subtitle}
           </p>
         )}

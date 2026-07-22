@@ -6,8 +6,8 @@ export function DashboardHeader() {
           Kamura Gacha Studio
         </h1>
 
-        <p className="mt-1 text-sm text-muted-foreground">
-          TikTok LIVE Gacha Controller
+        <p className="mt-1 text-sm text-slate-400">
+          TikTok LIVE ガチャコントローラー
         </p>
       </div>
 

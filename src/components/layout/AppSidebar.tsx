@@ -1,37 +1,35 @@
 import {
   BarChart3,
-  Boxes,
   Gift,
   LayoutDashboard,
   Settings,
   Sparkles,
 } from "lucide-react";
-import { NavLink } from "react-router";
+import { NavLink } from "react-router-dom";
 
 const navigationItems = [
   {
-    label: "Dashboard",
+    label: "ダッシュボード",
     path: "/",
     icon: LayoutDashboard,
-    end: true,
   },
   {
-    label: "Gacha",
+    label: "ガチャ設定",
     path: "/gacha",
     icon: Sparkles,
   },
   {
-    label: "Gifts",
+    label: "ギフト設定",
     path: "/gifts",
     icon: Gift,
   },
   {
-    label: "Statistics",
+    label: "統計",
     path: "/statistics",
     icon: BarChart3,
   },
   {
-    label: "Settings",
+    label: "設定",
     path: "/settings",
     icon: Settings,
   },
@@ -39,25 +37,17 @@ const navigationItems = [
 
 export function AppSidebar() {
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-zinc-200/70 bg-white/80 backdrop-blur-xl lg:flex lg:flex-col">
-      <div className="flex h-20 items-center gap-3 border-b border-zinc-200/70 px-6">
-        <div className="flex size-10 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-lg shadow-violet-600/20">
-          <Boxes aria-hidden="true" size={21} />
-        </div>
-
+    <aside className="flex min-h-screen w-56 shrink-0 flex-col border-r border-slate-200 bg-white">
+      <div className="flex h-20 items-center border-b border-slate-200 px-5">
         <div>
-          <p className="text-sm font-bold tracking-tight text-zinc-900">
+          <p className="text-sm font-bold text-slate-900">
             Kamura Gacha
           </p>
-
-          <p className="text-xs text-zinc-500">Studio</p>
+          <p className="text-xs text-slate-500">Studio</p>
         </div>
       </div>
 
-      <nav
-        aria-label="メインナビゲーション"
-        className="flex-1 space-y-1.5 px-4 py-6"
-      >
+      <nav className="flex-1 space-y-2 p-3">
         {navigationItems.map((item) => {
           const Icon = item.icon;
 
@@ -65,46 +55,28 @@ export function AppSidebar() {
             <NavLink
               key={item.path}
               to={item.path}
-              end={item.end}
+              end={item.path === "/"}
               className={({ isActive }) =>
                 [
-                  "group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition",
+                  "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition",
                   isActive
-                    ? "bg-violet-600 text-white shadow-md shadow-violet-600/20"
-                    : "text-zinc-500 hover:bg-violet-50 hover:text-violet-700",
+                    ? "bg-violet-600 text-white"
+                    : "text-slate-600 hover:bg-violet-50 hover:text-violet-700",
                 ].join(" ")
               }
             >
-              {({ isActive }) => (
-                <>
-                  <Icon
-                    aria-hidden="true"
-                    size={19}
-                    strokeWidth={isActive ? 2.3 : 2}
-                  />
-
-                  <span>{item.label}</span>
-                </>
-              )}
+              <Icon aria-hidden="true" size={18} />
+              <span>{item.label}</span>
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="p-4">
-        <div className="rounded-3xl border border-violet-100 bg-violet-50/80 p-4">
-          <div className="flex items-center gap-2">
-            <span className="size-2 rounded-full bg-amber-400" />
-
-            <p className="text-xs font-semibold text-zinc-700">
-              TikTok LIVE
-            </p>
-          </div>
-
-          <p className="mt-2 text-xs leading-5 text-zinc-500">
-            現在は未接続です。接続機能は今後のリリースで追加します。
-          </p>
-        </div>
+      <div className="border-t border-slate-200 p-4">
+        <p className="text-xs font-semibold text-slate-700">
+          Kamura Gacha Studio
+        </p>
+        <p className="mt-1 text-xs text-slate-400">v0.1.0</p>
       </div>
     </aside>
   );

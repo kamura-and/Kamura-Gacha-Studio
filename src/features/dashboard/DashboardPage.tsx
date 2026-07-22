@@ -3,8 +3,25 @@ import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader
 import { RecentLogCard } from "@/features/dashboard/components/RecentLogCard";
 import { StatCard } from "@/features/dashboard/components/StatCard";
 import { TestGachaCard } from "@/features/dashboard/components/TestGachaCard";
+import { useDashboardStore } from "@/features/dashboard/store/useDashboardStore";
 
 export function DashboardPage() {
+  const isConnected = useDashboardStore(
+    (state) => state.isConnected,
+  );
+
+  const todayGiftCount = useDashboardStore(
+    (state) => state.todayGiftCount,
+  );
+
+  const gachaRollCount = useDashboardStore(
+    (state) => state.gachaRollCount,
+  );
+
+  const isOverlayRunning = useDashboardStore(
+    (state) => state.isOverlayRunning,
+  );
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <DashboardHeader />
@@ -13,27 +30,35 @@ export function DashboardPage() {
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="TikTok Connection"
-          value="Connected"
-          subtitle="Ready to receive gifts"
+          title="TikTok接続状況"
+          value={isConnected ? "接続中" : "未接続"}
+          subtitle={
+            isConnected
+              ? "ギフト受信の準備ができています"
+              : "TikTok LIVEへの接続が必要です"
+          }
         />
 
         <StatCard
-          title="Today's Gifts"
-          value="28"
-          subtitle="+12% from yesterday"
+          title="本日のギフト数"
+          value={todayGiftCount.toString()}
+          subtitle="本日受信したギフト数"
         />
 
         <StatCard
-          title="Gacha Rolls"
-          value="54"
-          subtitle="Triggered today"
+          title="ガチャ実行回数"
+          value={gachaRollCount.toString()}
+          subtitle="本日実行された回数"
         />
 
         <StatCard
-          title="Overlay"
-          value="Running"
-          subtitle="Browser source active"
+          title="オーバーレイ状態"
+          value={isOverlayRunning ? "稼働中" : "停止中"}
+          subtitle={
+            isOverlayRunning
+              ? "ブラウザソースが有効です"
+              : "オーバーレイは停止しています"
+          }
         />
       </section>
 

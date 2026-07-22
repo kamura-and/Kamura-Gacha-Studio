@@ -1,20 +1,19 @@
-import { Outlet } from "react-router";
-import { AppHeader } from "../components/layout/AppHeader";
-import { AppSidebar } from "../components/layout/AppSidebar";
-import { MobileNavigation } from "../components/layout/MobileNavigation";
+import { Outlet } from "react-router-dom";
+
+import { AppHeader } from "@/components/layout/AppHeader";
+import { AppSidebar } from "@/components/layout/AppSidebar";
 
 export function AppLayout() {
   return (
-    <div className="flex min-h-screen bg-transparent">
+    <div className="flex min-h-screen bg-slate-100">
       <AppSidebar />
 
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader />
-        <MobileNavigation />
 
-        <div className="min-w-0">
+        <main className="flex-1 p-6">
           <Outlet />
-        </div>
+        </main>
       </div>
     </div>
   );

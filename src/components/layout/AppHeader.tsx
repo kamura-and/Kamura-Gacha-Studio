@@ -1,5 +1,5 @@
 import { Bell, ExternalLink, Play, Settings2 } from "lucide-react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
