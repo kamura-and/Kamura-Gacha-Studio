@@ -1,5 +1,5 @@
 import { BarChart3 } from "lucide-react";
-import { PagePlaceholder } from "../components/PagePlaceholder";
+import { PagePlaceholder } from "@/components/PagePlaceholder";
 
 export function StatisticsPage() {
   return (

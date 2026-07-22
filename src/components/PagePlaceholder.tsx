@@ -1,4 +1,12 @@
 import type { LucideIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 type PagePlaceholderProps = {
   title: string;
@@ -16,25 +24,25 @@ export function PagePlaceholder({
   return (
     <main className="px-5 py-7 md:px-8 md:py-9">
       <div className="mx-auto max-w-7xl">
-        <div className="flex min-h-[28rem] items-center justify-center rounded-3xl border border-white/80 bg-white/80 p-8 text-center shadow-sm backdrop-blur">
-          <div className="max-w-md">
-            <div className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-violet-100 text-violet-700">
+        <Card className="flex min-h-[28rem] items-center justify-center rounded-3xl">
+          <CardHeader className="max-w-md items-center text-center">
+            <div className="flex size-16 items-center justify-center rounded-3xl bg-primary/10 text-primary">
               <Icon aria-hidden="true" size={28} />
             </div>
 
-            <h2 className="mt-6 text-2xl font-bold text-zinc-900">
-              {title}
-            </h2>
+            <CardTitle className="mt-4 text-2xl">{title}</CardTitle>
 
-            <p className="mt-3 text-sm leading-6 text-zinc-500">
+            <CardDescription className="leading-6">
               {description}
-            </p>
+            </CardDescription>
 
-            <span className="mt-6 inline-flex rounded-full bg-violet-50 px-4 py-2 text-xs font-semibold text-violet-700">
-              {nextVersion}で実装予定
-            </span>
-          </div>
-        </div>
+            <CardContent className="p-0 pt-3">
+              <Badge variant="secondary">
+                {nextVersion}で実装予定
+              </Badge>
+            </CardContent>
+          </CardHeader>
+        </Card>
       </div>
     </main>
   );

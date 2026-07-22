@@ -1,5 +1,5 @@
 import { Sparkles } from "lucide-react";
-import { PagePlaceholder } from "../components/PagePlaceholder";
+import { PagePlaceholder } from "@/components/PagePlaceholder";
 
 export function GachaPage() {
   return (
