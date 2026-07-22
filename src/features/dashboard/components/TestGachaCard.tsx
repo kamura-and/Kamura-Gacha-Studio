@@ -1,44 +1,48 @@
-import { Play, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 
 export function TestGachaCard() {
   return (
-    <Card className="relative overflow-hidden rounded-3xl border-zinc-800 bg-zinc-950 text-white">
-      <div
-        aria-hidden="true"
-        className="absolute -right-16 -top-16 size-48 rounded-full bg-violet-600/30 blur-3xl"
-      />
-
-      <CardHeader className="relative">
-        <div className="mb-3 flex size-11 items-center justify-center rounded-2xl bg-violet-500/15 text-violet-300">
-          <Sparkles aria-hidden="true" size={21} />
-        </div>
-
-        <CardTitle className="text-white">
-          オーバーレイ演出を確認
-        </CardTitle>
-
-        <CardDescription className="leading-6 text-zinc-400">
-          TikTok連携前でも、テスト用のガチャ演出を確認できるようになります。
+    <Card className="overflow-hidden border-violet-500/20 bg-slate-950/50">
+      <CardHeader>
+        <CardTitle>Test Gacha</CardTitle>
+        <CardDescription>
+          Run a preview without receiving a TikTok gift
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="relative">
-        <Button
-          type="button"
-          className="w-full rounded-2xl bg-violet-600 text-white hover:bg-violet-500"
-        >
-          <Play aria-hidden="true" fill="currentColor" />
-          ガチャを回す
-        </Button>
+      <CardContent>
+        <div className="flex min-h-56 flex-col items-center justify-center rounded-xl border border-violet-500/20 bg-gradient-to-br from-violet-500/10 via-slate-950 to-cyan-500/10 p-6 text-center">
+          <p className="text-sm font-medium uppercase tracking-[0.3em] text-violet-300">
+            Gacha Result
+          </p>
+
+          <div className="mt-5 text-3xl tracking-widest text-yellow-300">
+            ★★★★★
+          </div>
+
+          <p className="mt-4 text-2xl font-bold">
+            Ultra Rare
+          </p>
+
+          <p className="mt-2 text-sm text-muted-foreground">
+            Minecraft Black Hole
+          </p>
+        </div>
       </CardContent>
+
+      <CardFooter>
+        <Button className="w-full">
+          Run Test Gacha
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
