@@ -3,87 +3,60 @@ import {
   Trash2,
 } from "lucide-react";
 
-import type {
-  ActionDefinition,
-} from "@/core/actions";
+import type { ActionInstance } from "@/core/actions";
 
-type Props = {
+type TimelineItemProps = {
   index: number;
-
-  action: ActionDefinition;
-
-  onDelete(): void;
+  instance: ActionInstance;
+  onDelete: () => void;
 };
 
 export function TimelineItem({
   index,
-  action,
+  instance,
   onDelete,
-}: Props) {
+}: TimelineItemProps) {
+  const action = instance.definition;
+
   return (
-    <div
-      className="
-      flex
-      items-center
-      gap-3
-
-      rounded-xl
-
-      border
-      border-slate-200
-
-      bg-white
-
-      p-4
-
-      shadow-sm
-    "
-    >
+    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <GripVertical
         size={18}
-        className="text-slate-400"
+        className="shrink-0 text-slate-400"
       />
 
-      <div
-        className="
-        flex
-        h-10
-        w-10
-        items-center
-        justify-center
-
-        rounded-lg
-
-        bg-violet-100
-      "
-      >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-xl">
         {action.icon ?? "⚡"}
       </div>
 
-      <div className="flex-1">
-
-        <div className="font-semibold">
-
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-slate-900">
           {index + 1}. {action.name}
-
         </div>
 
-        <div className="text-sm text-slate-500">
-
+        <div className="mt-0.5 truncate text-sm text-slate-500">
           {action.description}
-
         </div>
 
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {Object.entries(instance.values).map(
+            ([key, value]) => (
+              <span
+                key={key}
+                className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
+              >
+                {key}: {String(value)}
+              </span>
+            ),
+          )}
+        </div>
       </div>
 
       <button
+        type="button"
         onClick={onDelete}
-        className="
-          rounded-lg
-          p-2
-
-          hover:bg-rose-100
-        "
+        aria-label={`${action.name}を削除`}
+        className="shrink-0 rounded-lg p-2 transition hover:bg-rose-100"
       >
         <Trash2
           size={18}

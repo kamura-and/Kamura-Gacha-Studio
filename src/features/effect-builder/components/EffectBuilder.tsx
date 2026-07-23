@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Layers3, ListPlus } from "lucide-react";
 
-import type {
-  ActionDefinition,
-  ActionRegistry,
+import {
+  createActionInstance,
+  type ActionDefinition,
+  type ActionInstance,
+  type ActionRegistry,
 } from "@/core/actions";
 
 import { ActionLibrary } from "./ActionLibrary";
@@ -16,29 +18,31 @@ type EffectBuilderProps = {
 export function EffectBuilder({
   registry,
 }: EffectBuilderProps) {
-  const [timelineActions, setTimelineActions] = useState<
-    ActionDefinition[]
+  const [timelineItems, setTimelineItems] = useState<
+    ActionInstance[]
   >([]);
 
   const handleAddAction = (
     action: ActionDefinition,
   ) => {
-    setTimelineActions((currentActions) => [
-      ...currentActions,
-      action,
+    setTimelineItems((currentItems) => [
+      ...currentItems,
+      createActionInstance(action),
     ]);
   };
 
-  const handleDeleteAction = (index: number) => {
-    setTimelineActions((currentActions) =>
-      currentActions.filter(
-        (_, actionIndex) => actionIndex !== index,
+  const handleDeleteAction = (
+    instanceId: string,
+  ) => {
+    setTimelineItems((currentItems) =>
+      currentItems.filter(
+        (item) => item.id !== instanceId,
       ),
     );
   };
 
   const handleClearTimeline = () => {
-    if (timelineActions.length === 0) {
+    if (timelineItems.length === 0) {
       return;
     }
 
@@ -50,7 +54,7 @@ export function EffectBuilder({
       return;
     }
 
-    setTimelineActions([]);
+    setTimelineItems([]);
   };
 
   return (
@@ -103,13 +107,13 @@ export function EffectBuilder({
 
             <div className="flex items-center gap-3">
               <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
-                {timelineActions.length}件
+                {timelineItems.length}件
               </span>
 
               <button
                 type="button"
                 onClick={handleClearTimeline}
-                disabled={timelineActions.length === 0}
+                disabled={timelineItems.length === 0}
                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 すべて削除
@@ -119,7 +123,7 @@ export function EffectBuilder({
 
           <div className="max-h-[720px] overflow-y-auto p-5">
             <Timeline
-              actions={timelineActions}
+              items={timelineItems}
               onDelete={handleDeleteAction}
             />
           </div>

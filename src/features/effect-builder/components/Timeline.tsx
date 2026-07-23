@@ -1,43 +1,22 @@
-import type {
-  ActionDefinition,
-} from "@/core/actions";
+import type { ActionInstance } from "@/core/actions";
 
 import { TimelineItem } from "./TimelineItem";
 
-type Props = {
+type TimelineProps = {
+  items: ActionInstance[];
 
-  actions: ActionDefinition[];
-
-  onDelete(
-    index: number,
-  ): void;
-
+  onDelete: (
+    instanceId: string,
+  ) => void;
 };
 
 export function Timeline({
-
-  actions,
-
+  items,
   onDelete,
-
-}: Props) {
-
-  if (actions.length === 0) {
+}: TimelineProps) {
+  if (items.length === 0) {
     return (
-      <div
-        className="
-        rounded-xl
-        border-2
-        border-dashed
-        border-slate-300
-
-        py-20
-
-        text-center
-
-        text-slate-400
-      "
-      >
+      <div className="rounded-xl border-2 border-dashed border-slate-300 py-20 text-center text-slate-400">
         アクションがありません
       </div>
     );
@@ -45,23 +24,14 @@ export function Timeline({
 
   return (
     <div className="space-y-3">
-
-      {actions.map((action, index) => (
-
+      {items.map((item, index) => (
         <TimelineItem
-
-          key={`${action.id}-${index}`}
-
-          action={action}
-
+          key={item.id}
+          instance={item}
           index={index}
-
-          onDelete={() => onDelete(index)}
-
+          onDelete={() => onDelete(item.id)}
         />
-
       ))}
-
     </div>
   );
 }
