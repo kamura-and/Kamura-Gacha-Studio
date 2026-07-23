@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
+import { GachaPage } from "@/features/gacha/pages/GachaPage";
 import { AppLayout } from "@/layouts/AppLayout";
 
 export const router = createBrowserRouter([
@@ -11,6 +12,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <DashboardPage />,
+      },
+      {
+        path: "gacha",
+        element: <GachaPage />,
       },
     ],
   },
