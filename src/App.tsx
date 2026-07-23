@@ -1,9 +1,7 @@
-import { RouterProvider } from "react-router-dom";
-
-import { router } from "@/app/router/AppRouter";
+import { EffectBuilderTestPage } from "./features/effect-builder/EffectBuilderTestPage";
 
 function App() {
-  return <RouterProvider router={router} />;
+  return <EffectBuilderTestPage />;
 }
 
 export default App;
