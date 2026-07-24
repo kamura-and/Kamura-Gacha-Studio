@@ -5,80 +5,13 @@ import {
   type GeneratedActionCommand,
 } from "@/core/actions";
 
-/**
- * パラメーターを文字列として取得する。
- */
-function getStringValue(
-  values: ActionParameterValues,
-  key: string,
-  fallback: string,
-): string {
-  const value = values[key];
+import {
+  getBooleanValue,
+  getNumberValue,
+  getStringValue,
+} from "@/core/actions/utils/parameterValue";
 
-  if (typeof value === "string") {
-    return value;
-  }
-
-  return fallback;
-}
-
-/**
- * パラメーターを数値として取得する。
- */
-function getNumberValue(
-  values: ActionParameterValues,
-  key: string,
-  fallback: number,
-): number {
-  const value = values[key];
-
-  if (typeof value === "number") {
-    return Number.isFinite(value)
-      ? value
-      : fallback;
-  }
-
-  if (typeof value === "string") {
-    const parsedValue = Number(value);
-
-    return Number.isFinite(parsedValue)
-      ? parsedValue
-      : fallback;
-  }
-
-  return fallback;
-}
-
-/**
- * パラメーターを真偽値として取得する。
- */
-function getBooleanValue(
-  values: ActionParameterValues,
-  key: string,
-  fallback: boolean,
-): boolean {
-  const value = values[key];
-
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  return fallback;
-}
-
-/**
- * 数値を指定された範囲に収める。
- */
-function clamp(
-  value: number,
-  min: number,
-  max: number,
-): number {
-  return Math.min(
-    Math.max(value, min),
-    max,
-  );
-}
+import { clamp } from "@/core/actions/utils/clamp";
 
 /**
  * 超TNTのコマンドを生成する。
@@ -124,7 +57,7 @@ function buildSuperTntCommands(
         count === 1
           ? 0
           : 1 +
-            (index % power);
+          (index % power);
 
       const offsetX = Math.round(
         Math.cos(angle) * distance,

@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 
 import { EffectBuilder } from "@/features/effect-builder/components/EffectBuilder";
-import { testActionRegistry } from "@/features/effect-builder/testActionRegistry";
+import { actionRegistry } from "@/core/actions/packs/actionRegistry";
 import { useEffectStore } from "@/features/effects/store/effectStore";
 import type { EffectDefinition } from "@/features/effects/types/effectDefinition";
 
@@ -62,7 +62,7 @@ export function EffectEditorPage() {
 
   return (
     <EffectBuilder
-      registry={testActionRegistry}
+      registry={actionRegistry}
       initialEffect={effect}
       onSave={handleSave}
     />

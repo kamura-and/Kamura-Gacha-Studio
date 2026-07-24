@@ -4,7 +4,7 @@ import type { EffectDefinition } from "@/features/effects/types/effectDefinition
 import { useEffectStore } from "@/features/effects/store/effectStore";
 
 import { EffectBuilder } from "./components/EffectBuilder";
-import { testActionRegistry } from "./testActionRegistry";
+import { actionRegistry } from "@/core/actions/packs/actionRegistry";
 
 export function EffectBuilderTestPage() {
   const effects = useEffectStore(
@@ -47,7 +47,7 @@ export function EffectBuilderTestPage() {
     <div className="min-h-full p-4 lg:p-6">
       <div className="mx-auto w-full max-w-[1800px]">
         <EffectBuilder
-          registry={testActionRegistry}
+          registry={actionRegistry}
           onSave={handleSave}
         />
       </div>
