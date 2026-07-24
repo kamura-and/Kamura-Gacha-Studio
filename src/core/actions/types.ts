@@ -10,8 +10,7 @@ export type ActionOutputTarget =
   | "sound"
   | "discord"
   | "obs"
-  | "wait"
-  | string;
+  | "wait";
 
 export type ActionParameterValue =
   | string

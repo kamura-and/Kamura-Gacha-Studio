@@ -48,24 +48,38 @@ export const useCommandQueueStore = create<CommandQueueState>((set) => ({
   isProcessing: false,
   currentItemId: null,
 
-  enqueueCommands: ({ gachaItemId, gachaItemName, commands }) => {
+  enqueueCommands: ({
+    gachaItemId,
+    gachaItemName,
+    commands,
+  }) => {
     const createdAt = Date.now();
 
-    const queueItems: CommandQueueItem[] = commands
-      .filter((command) => command.enabled)
-      .map((command, index) => ({
-        id: createQueueItemId(),
-        gachaItemId,
-        gachaItemName,
-        command: {
-          ...command,
-        },
-        status: "pending",
-        createdAt: createdAt + index,
-      }));
+    const queueItems: CommandQueueItem[] =
+      commands
+        .filter(
+          (command) =>
+            command.enabled !== false,
+        )
+        .map((command, index) => ({
+          id: createQueueItemId(),
+          gachaItemId,
+          gachaItemName,
+          command: {
+            ...command,
+            delay: command.delay ?? 0,
+            enabled:
+              command.enabled !== false,
+          },
+          status: "pending",
+          createdAt: createdAt + index,
+        }));
 
     set((state) => ({
-      items: [...state.items, ...queueItems],
+      items: [
+        ...state.items,
+        ...queueItems,
+      ],
     }));
 
     return queueItems;

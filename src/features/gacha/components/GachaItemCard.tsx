@@ -5,6 +5,8 @@ import {
   Command,
   Copy,
   Layers3,
+  MessageCircle,
+  Monitor,
   Pencil,
   Trash2,
   Volume2,
@@ -49,6 +51,9 @@ function getActionLabel(type: GachaActionType): string {
     case "minecraft":
       return "Minecraft";
 
+    case "obs":
+      return "OBS";
+
     case "overlay":
       return "Overlay";
 
@@ -57,6 +62,9 @@ function getActionLabel(type: GachaActionType): string {
 
     case "wait":
       return "Wait";
+
+    case "discord":
+      return "Discord";
 
     default: {
       const exhaustiveCheck: never = type;
@@ -70,6 +78,9 @@ function getActionIcon(type: GachaActionType) {
     case "minecraft":
       return <Command size={14} />;
 
+    case "obs":
+      return <Monitor size={14} />;
+
     case "overlay":
       return <Layers3 size={14} />;
 
@@ -78,6 +89,9 @@ function getActionIcon(type: GachaActionType) {
 
     case "wait":
       return <Clock3 size={14} />;
+
+    case "discord":
+      return <MessageCircle size={14} />;
 
     default: {
       const exhaustiveCheck: never = type;
@@ -193,19 +207,17 @@ export function GachaItemCard({
         opacity: 0,
         scale: 0.97,
       }}
-      className={`rounded-3xl border bg-white p-5 shadow-sm transition ${
-        item.isEnabled
-          ? "border-slate-200"
-          : "border-slate-200 opacity-60"
-      }`}
+      className={`rounded-3xl border bg-white p-5 shadow-sm transition ${item.isEnabled
+        ? "border-slate-200"
+        : "border-slate-200 opacity-60"
+        }`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
-                rarityStyles[item.rarity]
-              }`}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-black ${rarityStyles[item.rarity]
+                }`}
             >
               {rarityLabels[item.rarity]}
             </span>
@@ -215,11 +227,10 @@ export function GachaItemCard({
             </span>
 
             <span
-              className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
-                item.isEnabled
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-slate-200 text-slate-500"
-              }`}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-black ${item.isEnabled
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-slate-200 text-slate-500"
+                }`}
             >
               {item.isEnabled ? "有効" : "無効"}
             </span>
@@ -264,11 +275,10 @@ export function GachaItemCard({
         <button
           type="button"
           onClick={() => onToggleEnabled(item.id)}
-          className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-            item.isEnabled
-              ? "bg-emerald-500"
-              : "bg-slate-300"
-          }`}
+          className={`relative h-7 w-12 shrink-0 rounded-full transition ${item.isEnabled
+            ? "bg-emerald-500"
+            : "bg-slate-300"
+            }`}
           aria-label={`${item.name}の有効状態を切り替える`}
           aria-pressed={item.isEnabled}
         >
@@ -307,9 +317,8 @@ export function GachaItemCard({
               .map((command, index) => (
                 <div
                   key={command.id}
-                  className={`flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 ${
-                    command.enabled ? "" : "opacity-40"
-                  }`}
+                  className={`flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 ${command.enabled ? "" : "opacity-40"
+                    }`}
                 >
                   <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-700">
                     {getActionIcon(command.type)}

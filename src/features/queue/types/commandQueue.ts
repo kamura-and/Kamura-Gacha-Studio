@@ -1,4 +1,6 @@
-import type { GachaCommand } from "@/features/gacha/types/gacha";
+import type {
+  GeneratedActionCommand,
+} from "@/core/actions";
 
 export type QueueItemStatus =
   | "pending"
@@ -14,19 +16,22 @@ export type CommandQueueItem = {
   id: string;
 
   /**
-   * 元になったガチャアイテムのID
+   * コマンドの登録元ID
+   *
+   * 現在はガチャアイテムIDや
+   * エフェクトビルダーの実行IDが入る。
    */
   gachaItemId: string;
 
   /**
-   * 画面表示やログ用のガチャアイテム名
+   * 画面表示やログに使用する登録元の名前
    */
   gachaItemName: string;
 
   /**
    * 実行するコマンド本体
    */
-  command: GachaCommand;
+  command: GeneratedActionCommand;
 
   /**
    * キュー上の実行状態
@@ -57,7 +62,7 @@ export type CommandQueueItem = {
 export type EnqueueCommandsInput = {
   gachaItemId: string;
   gachaItemName: string;
-  commands: GachaCommand[];
+  commands: GeneratedActionCommand[];
 };
 
 export type CommandQueueSnapshot = {

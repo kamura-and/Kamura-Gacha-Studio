@@ -1,7 +1,8 @@
-import type { GachaCommand } from "@/features/gacha/types/gacha";
-import { sendMinecraftCommand } from "@/features/minecraft/services/minecraftConnector";
+import type {
+  GeneratedActionCommand,
+} from "@/core/actions";
 
-import { sleep } from "./sleep";
+import { sendMinecraftCommand } from "@/features/minecraft/services/minecraftConnector";
 
 export type ActionExecutionContext = {
   gachaItemId: string;
@@ -10,28 +11,13 @@ export type ActionExecutionContext = {
 };
 
 export type ActionExecutor = (
-  command: GachaCommand,
+  command: GeneratedActionCommand,
   context: ActionExecutionContext,
 ) => Promise<void>;
 
-function parseWaitMilliseconds(value: string): number {
-  const parsedValue = Number(value);
-
-  if (!Number.isFinite(parsedValue)) {
-    throw new Error(
-      `待機時間が数値ではありません: "${value}"`,
-    );
-  }
-
-  if (parsedValue < 0) {
-    throw new Error(
-      "待機時間には0以上の数値を指定してください。",
-    );
-  }
-
-  return parsedValue;
-}
-
+/**
+ * Minecraftコマンドを実行する。
+ */
 const executeMinecraftCommand: ActionExecutor = async (
   command,
   context,
@@ -39,25 +25,38 @@ const executeMinecraftCommand: ActionExecutor = async (
   const minecraftCommand = command.value.trim();
 
   if (!minecraftCommand) {
-    throw new Error("Minecraftコマンドが空です。");
+    throw new Error(
+      "Minecraftコマンドが空です。",
+    );
   }
 
-  console.info("[Minecraft Executor] SEND", {
-    command: minecraftCommand,
-    context,
-  });
+  console.info(
+    "[Minecraft Executor] SEND",
+    {
+      command: minecraftCommand,
+      context,
+    },
+  );
 
   const result = await sendMinecraftCommand(
     minecraftCommand,
   );
 
-  console.info("[Minecraft Executor] RESPONSE", {
-    command: result.command,
-    response: result.response || "レスポンスなし",
-    context,
-  });
+  console.info(
+    "[Minecraft Executor] RESPONSE",
+    {
+      command: result.command,
+      response:
+        result.response ||
+        "レスポンスなし",
+      context,
+    },
+  );
 };
 
+/**
+ * オーバーレイ表示イベントを発行する。
+ */
 const executeOverlayAction: ActionExecutor = async (
   command,
   context,
@@ -65,7 +64,9 @@ const executeOverlayAction: ActionExecutor = async (
   const overlayValue = command.value.trim();
 
   if (!overlayValue) {
-    throw new Error("オーバーレイ内容が空です。");
+    throw new Error(
+      "オーバーレイ内容が空です。",
+    );
   }
 
   window.dispatchEvent(
@@ -83,6 +84,9 @@ const executeOverlayAction: ActionExecutor = async (
   });
 };
 
+/**
+ * サウンド再生イベントを発行する。
+ */
 const executeSoundAction: ActionExecutor = async (
   command,
   context,
@@ -90,7 +94,9 @@ const executeSoundAction: ActionExecutor = async (
   const soundValue = command.value.trim();
 
   if (!soundValue) {
-    throw new Error("サウンド指定が空です。");
+    throw new Error(
+      "サウンド指定が空です。",
+    );
   }
 
   window.dispatchEvent(
@@ -108,36 +114,120 @@ const executeSoundAction: ActionExecutor = async (
   });
 };
 
+/**
+ * Discord出力イベントを発行する。
+ *
+ * 実際のDiscord連携処理は、
+ * kamura:discordイベントの受信側で実装する。
+ */
+const executeDiscordAction: ActionExecutor = async (
+  command,
+  context,
+) => {
+  const discordValue = command.value.trim();
+
+  if (!discordValue) {
+    throw new Error(
+      "Discordへ送信する内容が空です。",
+    );
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("kamura:discord", {
+      detail: {
+        value: discordValue,
+        context,
+      },
+    }),
+  );
+
+  console.info("[Discord Executor]", {
+    value: discordValue,
+    context,
+  });
+};
+
+/**
+ * OBS操作イベントを発行する。
+ *
+ * 実際のOBS連携処理は、
+ * kamura:obsイベントの受信側で実装する。
+ */
+const executeObsAction: ActionExecutor = async (
+  command,
+  context,
+) => {
+  const obsValue = command.value.trim();
+
+  if (!obsValue) {
+    throw new Error(
+      "OBS操作内容が空です。",
+    );
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("kamura:obs", {
+      detail: {
+        value: obsValue,
+        context,
+      },
+    }),
+  );
+
+  console.info("[OBS Executor]", {
+    value: obsValue,
+    context,
+  });
+};
+
+/**
+ * Waitコマンド本体の処理。
+ *
+ * 実際の待機はcommandQueueEngine側で
+ * command.delayを使って処理済みのため、
+ * ここでは追加のsleepを行わない。
+ */
 const executeWaitAction: ActionExecutor = async (
   command,
   context,
 ) => {
-  const milliseconds =
-    parseWaitMilliseconds(command.value);
+  const milliseconds = Math.max(
+    0,
+    command.delay ?? 0,
+  );
 
   console.info("[Wait Executor]", {
     milliseconds,
     context,
   });
-
-  await sleep(milliseconds);
 };
 
+/**
+ * 出力先ごとのExecutor一覧。
+ */
 const actionExecutors: Record<
-  GachaCommand["type"],
+  GeneratedActionCommand["type"],
   ActionExecutor
 > = {
   minecraft: executeMinecraftCommand,
   overlay: executeOverlayAction,
   sound: executeSoundAction,
+  discord: executeDiscordAction,
+  obs: executeObsAction,
   wait: executeWaitAction,
 };
 
+/**
+ * GeneratedActionCommandを適切なExecutorへ渡して実行する。
+ *
+ * 関数名は既存コードとの互換性を保つため、
+ * executeGachaCommandのまま使用する。
+ */
 export async function executeGachaCommand(
-  command: GachaCommand,
+  command: GeneratedActionCommand,
   context: ActionExecutionContext,
 ): Promise<void> {
-  if (!command.enabled) {
+  if (command.enabled === false) {
     console.log(
       `[Queue] SKIP | ${command.type} | disabled`,
     );
@@ -145,14 +235,17 @@ export async function executeGachaCommand(
     return;
   }
 
+  const delay = command.delay ?? 0;
+
   console.log(
-    `[Queue] START | ${command.type} | value="${command.value}" | delay=${command.delay}ms`,
+    `[Queue] START | ${command.type} | value="${command.value}" | delay=${delay}ms`,
   );
 
   const startedAt = performance.now();
 
   try {
-    const executor = actionExecutors[command.type];
+    const executor =
+      actionExecutors[command.type];
 
     await executor(command, context);
 

@@ -1,3 +1,7 @@
+import type {
+  ActionOutputTarget,
+} from "@/core/actions";
+
 export type GachaRarity =
   | "common"
   | "rare"
@@ -7,10 +11,7 @@ export type GachaRarity =
   | "secret";
 
 export type GachaActionType =
-  | "minecraft"
-  | "overlay"
-  | "sound"
-  | "wait";
+  ActionOutputTarget;
 
 export type GachaCommand = {
   id: string;
