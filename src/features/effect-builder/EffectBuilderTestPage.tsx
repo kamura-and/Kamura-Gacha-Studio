@@ -4,7 +4,7 @@ import type { EffectDefinition } from "@/features/effects/types/effectDefinition
 import { useEffectStore } from "@/features/effects/store/effectStore";
 
 import { EffectBuilder } from "./components/EffectBuilder";
-import { actionRegistry } from "@/core/actions/packs/actionRegistry";
+import { actionRegistry } from "@/core/actions/packs";
 
 export function EffectBuilderTestPage() {
   const effects = useEffectStore(

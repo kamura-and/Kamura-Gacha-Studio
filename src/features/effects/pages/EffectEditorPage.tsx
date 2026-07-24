@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 
 import { EffectBuilder } from "@/features/effect-builder/components/EffectBuilder";
-import { actionRegistry } from "@/core/actions/packs/actionRegistry";
+import { actionRegistry } from "@/core/actions/packs";
 import { useEffectStore } from "@/features/effects/store/effectStore";
 import type { EffectDefinition } from "@/features/effects/types/effectDefinition";
 
