@@ -3,15 +3,9 @@ import { testActionRegistry } from "./testActionRegistry";
 
 export function EffectBuilderTestPage() {
   return (
-    <div className="min-h-screen bg-slate-100 p-6">
-      <div className="mx-auto max-w-7xl">
-        <h1 className="mb-6 text-3xl font-bold">
-          エフェクトビルダー テスト
-        </h1>
-
-        <EffectBuilder
-          registry={testActionRegistry}
-        />
+    <div className="min-h-full p-4 lg:p-6">
+      <div className="mx-auto w-full max-w-[1800px]">
+        <EffectBuilder registry={testActionRegistry} />
       </div>
     </div>
   );

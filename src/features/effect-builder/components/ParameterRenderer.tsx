@@ -8,7 +8,6 @@ import { ParameterField } from "./ParameterField";
 
 type ParameterRendererProps = {
   action: ActionDefinition;
-
   values: ActionParameterValues;
 
   onChange: (
@@ -17,7 +16,6 @@ type ParameterRendererProps = {
   ) => void;
 
   errors?: Record<string, string>;
-
   disabled?: boolean;
 };
 
@@ -34,7 +32,7 @@ export function ParameterRenderer({
     return (
       <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-6 text-center">
         <p className="text-sm text-slate-500">
-          このActionは設定項目がありません。
+          このアクションには設定項目がありません。
         </p>
       </div>
     );
