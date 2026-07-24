@@ -1,20 +1,32 @@
-import { testActionRegistry } from "@/features/effect-builder/testActionRegistry";
 import { useMemo } from "react";
 import {
   Navigate,
+  useNavigate,
   useParams,
 } from "react-router-dom";
 
 import { EffectBuilder } from "@/features/effect-builder/components/EffectBuilder";
+import { testActionRegistry } from "@/features/effect-builder/testActionRegistry";
 import { useEffectStore } from "@/features/effects/store/effectStore";
+import type { EffectDefinition } from "@/features/effects/types/effectDefinition";
 
 export function EffectEditorPage() {
+  const navigate = useNavigate();
+
   const { effectId } = useParams<{
     effectId: string;
   }>();
 
   const effects = useEffectStore(
     (state) => state.effects,
+  );
+
+  const saveEffect = useEffectStore(
+    (state) => state.saveEffect,
+  );
+
+  const updateEffect = useEffectStore(
+    (state) => state.updateEffect,
   );
 
   const effect = useMemo(() => {
@@ -36,10 +48,23 @@ export function EffectEditorPage() {
     );
   }
 
+  const handleSave = (
+    savedEffect: EffectDefinition,
+  ) => {
+    if (effectId) {
+      updateEffect(savedEffect);
+    } else {
+      saveEffect(savedEffect);
+    }
+
+    navigate("/effects");
+  };
+
   return (
     <EffectBuilder
       registry={testActionRegistry}
       initialEffect={effect}
+      onSave={handleSave}
     />
   );
 }

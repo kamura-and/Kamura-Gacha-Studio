@@ -4,7 +4,8 @@ import {
 } from "react-router-dom";
 
 import { AppLayout } from "@/app/layout/AppLayout";
-import { CurrentWorkspacePage } from "@/app/router/CurrentWorkspacePage";
+import { EffectEditorPage } from "@/features/effects/pages/EffectEditorPage";
+import { EffectListPage } from "@/features/effects/pages/EffectListPage";
 import { QueuePage } from "@/features/queue/pages/QueuePage";
 
 export const router = createHashRouter([
@@ -22,7 +23,15 @@ export const router = createHashRouter([
       },
       {
         path: "effects",
-        element: <CurrentWorkspacePage />,
+        element: <EffectListPage />,
+      },
+      {
+        path: "effects/new",
+        element: <EffectEditorPage />,
+      },
+      {
+        path: "effects/:effectId",
+        element: <EffectEditorPage />,
       },
       {
         path: "queue",
