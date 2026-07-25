@@ -16,3 +16,5 @@ export type {
 } from "./types/plugin";
 
 export * from "./store/pluginRuntimeStore";
+
+export * from "./store/pluginConfigStore";
