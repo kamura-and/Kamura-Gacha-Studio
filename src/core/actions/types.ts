@@ -35,9 +35,14 @@ type BaseActionParameterDefinition = {
   required?: boolean;
 };
 
+export type NumberActionParameterVariant =
+  | "default"
+  | "stepper";
+
 export type NumberActionParameterDefinition =
   BaseActionParameterDefinition & {
     type: "number";
+    variant?: NumberActionParameterVariant;
     defaultValue: number;
     min?: number;
     max?: number;

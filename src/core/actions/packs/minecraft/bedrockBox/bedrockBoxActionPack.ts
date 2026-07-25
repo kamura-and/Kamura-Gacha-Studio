@@ -11,6 +11,7 @@ import { fillRowsAction } from "./actions/fillRowsAction";
 import { glassPrisonAction } from "./actions/glassPrisonAction";
 import { heightDownAction } from "./actions/heightDownAction";
 import { heightUpAction } from "./actions/heightUpAction";
+import { loseAction } from "./actions/loseAction";
 import { meteorAction } from "./actions/meteorAction";
 import { radiusDownAction } from "./actions/radiusDownAction";
 import { radiusUpAction } from "./actions/radiusUpAction";
@@ -19,6 +20,7 @@ import { resetAction } from "./actions/resetAction";
 import { superTntAction } from "./actions/superTntAction";
 import { tntAction } from "./actions/tntAction";
 import { tntRingAction } from "./actions/tntRingAction";
+import { winAction } from "./actions/winAction";
 import { zeusTntAction } from "./actions/zeusTntAction";
 
 export const bedrockBoxActionPack: ActionDefinition[] = [
@@ -47,4 +49,6 @@ export const bedrockBoxActionPack: ActionDefinition[] = [
 
   resetAction,
   dragonResetAction,
+  winAction,
+  loseAction,
 ];
