@@ -12,7 +12,18 @@ export type ActionInstance = {
   id: string;
 
   /**
+   * 元になったActionDefinitionのID
+   *
+   * localStorageへ保存するときは、
+   * definition全体ではなく、このIDを使用する。
+   */
+  actionId: string;
+
+  /**
    * 元になったアクション定義
+   *
+   * 保存方式の移行中なので一時的に保持する。
+   * 最終的にはActionRegistryから取得する形へ変更する。
    */
   definition: ActionDefinition;
 
@@ -30,7 +41,11 @@ export function createActionInstance(
 ): ActionInstance {
   return {
     id: crypto.randomUUID(),
+    actionId: definition.id,
     definition,
-    values: createDefaultParameterValues(definition),
+    values:
+      createDefaultParameterValues(
+        definition,
+      ),
   };
 }

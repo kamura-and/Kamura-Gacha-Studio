@@ -12,10 +12,17 @@ import type {
 } from "./types";
 
 export class ActionRegistry {
-  private readonly actions = new Map<string, ActionDefinition>();
+  private readonly actions = new Map<
+    string,
+    ActionDefinition
+  >();
 
+  /**
+   * Action定義を1件登録する。
+   */
   register(action: ActionDefinition): void {
-    const errors = validateActionDefinition(action);
+    const errors =
+      validateActionDefinition(action);
 
     if (errors.length > 0) {
       throw new Error(errors.join("\n"));
@@ -30,24 +37,64 @@ export class ActionRegistry {
     this.actions.set(action.id, action);
   }
 
-  registerMany(actions: ActionDefinition[]): void {
+  /**
+   * 複数のAction定義をまとめて登録する。
+   */
+  registerMany(
+    actions: ActionDefinition[],
+  ): void {
     for (const action of actions) {
       this.register(action);
     }
   }
 
-  get(id: string): ActionDefinition | undefined {
+  /**
+   * IDからAction定義を取得する。
+   *
+   * 既存コードとの互換性を保つために残している。
+   */
+  get(
+    id: string,
+  ): ActionDefinition | undefined {
+    return this.getById(id);
+  }
+
+  /**
+   * IDからAction定義を取得する。
+   *
+   * 保存されたactionIdからAction定義を
+   * 復元するときに使用する。
+   */
+  getById(
+    id: string,
+  ): ActionDefinition | undefined {
     return this.actions.get(id);
   }
 
+  /**
+   * 指定したIDのActionが登録されているか確認する。
+   */
+  has(id: string): boolean {
+    return this.actions.has(id);
+  }
+
+  /**
+   * 登録されているすべてのAction定義を取得する。
+   */
   getAll(): ActionDefinition[] {
     return [...this.actions.values()];
   }
 
+  /**
+   * 登録されているAction定義をすべて削除する。
+   */
   clear(): void {
     this.actions.clear();
   }
 
+  /**
+   * 条件に一致するActionを検索する。
+   */
   search(
     query: ActionSearchQuery = {},
   ): ActionSearchResult {
@@ -55,25 +102,34 @@ export class ActionRegistry {
 
     if (query.query?.trim()) {
       result = result.filter((action) =>
-        actionMatchesSearchQuery(action, query.query!),
+        actionMatchesSearchQuery(
+          action,
+          query.query!,
+        ),
       );
     }
 
     if (query.pluginIds?.length) {
       result = result.filter((action) =>
-        query.pluginIds!.includes(action.pluginId),
+        query.pluginIds!.includes(
+          action.pluginId,
+        ),
       );
     }
 
     if (query.intents?.length) {
       result = result.filter((action) =>
-        query.intents!.includes(action.intent),
+        query.intents!.includes(
+          action.intent,
+        ),
       );
     }
 
     if (query.categories?.length) {
       result = result.filter((action) =>
-        query.categories!.includes(action.category),
+        query.categories!.includes(
+          action.category,
+        ),
       );
     }
 
@@ -87,16 +143,22 @@ export class ActionRegistry {
 
     if (query.capabilities?.length) {
       result = result.filter((action) =>
-        query.capabilities!.every((capability) =>
-          action.capabilities?.includes(capability),
+        query.capabilities!.every(
+          (capability) =>
+            action.capabilities?.includes(
+              capability,
+            ),
         ),
       );
     }
 
     if (query.outputTargets?.length) {
       result = result.filter((action) =>
-        query.outputTargets!.every((target) =>
-          action.outputTargets?.includes(target),
+        query.outputTargets!.every(
+          (target) =>
+            action.outputTargets?.includes(
+              target,
+            ),
         ),
       );
     }
@@ -110,13 +172,17 @@ export class ActionRegistry {
 
       case "impact-desc":
         result.sort(
-          (a, b) => (b.impact ?? 0) - (a.impact ?? 0),
+          (a, b) =>
+            (b.impact ?? 0) -
+            (a.impact ?? 0),
         );
         break;
 
       case "impact-asc":
         result.sort(
-          (a, b) => (a.impact ?? 0) - (b.impact ?? 0),
+          (a, b) =>
+            (a.impact ?? 0) -
+            (b.impact ?? 0),
         );
         break;
 
@@ -138,37 +204,62 @@ export class ActionRegistry {
     actions: ActionDefinition[],
   ): ActionSearchFacets {
     return {
-      pluginIds: this.count(actions, (a) => a.pluginId),
-      intents: this.count(actions, (a) => a.intent),
-      categories: this.count(actions, (a) => a.category),
+      pluginIds: this.count(
+        actions,
+        (action) => action.pluginId,
+      ),
+
+      intents: this.count(
+        actions,
+        (action) => action.intent,
+      ),
+
+      categories: this.count(
+        actions,
+        (action) => action.category,
+      ),
+
       capabilities: this.countMany(
         actions,
-        (a) => a.capabilities ?? [],
+        (action) =>
+          action.capabilities ?? [],
       ),
+
       tags: this.countMany(
         actions,
-        (a) => a.tags ?? [],
+        (action) => action.tags ?? [],
       ),
+
       outputTargets: this.countMany(
         actions,
-        (a) => a.outputTargets ?? [],
+        (action) =>
+          action.outputTargets ?? [],
       ),
     };
   }
 
   private count(
     actions: ActionDefinition[],
-    selector: (action: ActionDefinition) => string,
+    selector: (
+      action: ActionDefinition,
+    ) => string,
   ): ActionFacetItem[] {
     const map = new Map<string, number>();
 
     for (const action of actions) {
       const value = selector(action);
-      map.set(value, (map.get(value) ?? 0) + 1);
+
+      map.set(
+        value,
+        (map.get(value) ?? 0) + 1,
+      );
     }
 
     return [...map.entries()]
-      .map(([value, count]) => ({ value, count }))
+      .map(([value, count]) => ({
+        value,
+        count,
+      }))
       .sort((a, b) =>
         a.value.localeCompare(b.value),
       );
@@ -184,12 +275,18 @@ export class ActionRegistry {
 
     for (const action of actions) {
       for (const value of selector(action)) {
-        map.set(value, (map.get(value) ?? 0) + 1);
+        map.set(
+          value,
+          (map.get(value) ?? 0) + 1,
+        );
       }
     }
 
     return [...map.entries()]
-      .map(([value, count]) => ({ value, count }))
+      .map(([value, count]) => ({
+        value,
+        count,
+      }))
       .sort((a, b) =>
         a.value.localeCompare(b.value),
       );
