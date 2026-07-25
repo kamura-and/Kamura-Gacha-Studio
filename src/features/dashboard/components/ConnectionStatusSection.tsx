@@ -1,27 +1,40 @@
-import type { LucideIcon } from "lucide-react";
+import type {
+  LucideIcon,
+} from "lucide-react";
+
 import {
   Activity,
+  AlertTriangle,
   CheckCircle2,
   Clock3,
   Gamepad2,
+  LoaderCircle,
   Radio,
-  RefreshCw,
+  Unplug,
   Wifi,
+  XCircle,
 } from "lucide-react";
 
-type ConnectionStatus = "online" | "waiting" | "offline";
+import { usePluginStore } from "@/features/plugins";
+
+import type {
+  PluginDefinition,
+  PluginType,
+} from "@/features/plugins";
+
+type DisplayStatus =
+  | "online"
+  | "waiting"
+  | "offline"
+  | "error"
+  | "disabled";
 
 type ConnectionItemProps = {
-  title: string;
-  description: string;
-  detail: string;
-  status: ConnectionStatus;
-  statusLabel: string;
-  icon: LucideIcon;
+  plugin: PluginDefinition;
 };
 
 const statusStyles: Record<
-  ConnectionStatus,
+  DisplayStatus,
   {
     dot: string;
     badge: string;
@@ -30,30 +43,185 @@ const statusStyles: Record<
 > = {
   online: {
     dot: "bg-emerald-500",
-    badge: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-    icon: "bg-emerald-50 text-emerald-600",
+    badge:
+      "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+    icon:
+      "bg-emerald-50 text-emerald-600",
   },
+
   waiting: {
     dot: "bg-amber-500",
-    badge: "bg-amber-50 text-amber-700 ring-amber-600/20",
-    icon: "bg-amber-50 text-amber-600",
+    badge:
+      "bg-amber-50 text-amber-700 ring-amber-600/20",
+    icon:
+      "bg-amber-50 text-amber-600",
   },
+
   offline: {
+    dot: "bg-slate-400",
+    badge:
+      "bg-slate-100 text-slate-600 ring-slate-500/20",
+    icon:
+      "bg-slate-100 text-slate-500",
+  },
+
+  error: {
     dot: "bg-rose-500",
-    badge: "bg-rose-50 text-rose-700 ring-rose-600/20",
-    icon: "bg-rose-50 text-rose-600",
+    badge:
+      "bg-rose-50 text-rose-700 ring-rose-600/20",
+    icon:
+      "bg-rose-50 text-rose-600",
+  },
+
+  disabled: {
+    dot: "bg-slate-300",
+    badge:
+      "bg-slate-100 text-slate-400 ring-slate-400/20",
+    icon:
+      "bg-slate-100 text-slate-400",
   },
 };
 
+function getPluginIcon(
+  type: PluginType,
+): LucideIcon {
+  switch (type) {
+    case "tiktok":
+      return Radio;
+
+    case "minecraft":
+      return Gamepad2;
+
+    case "overlay":
+      return Wifi;
+  }
+}
+
+function getDisplayStatus(
+  plugin: PluginDefinition,
+): DisplayStatus {
+  if (!plugin.enabled) {
+    return "disabled";
+  }
+
+  switch (
+    plugin.connectionStatus
+  ) {
+    case "connected":
+      return "online";
+
+    case "connecting":
+      return "waiting";
+
+    case "error":
+      return "error";
+
+    case "disconnected":
+      return "offline";
+  }
+}
+
+function getStatusLabel(
+  plugin: PluginDefinition,
+): string {
+  if (!plugin.enabled) {
+    return "無効";
+  }
+
+  switch (
+    plugin.connectionStatus
+  ) {
+    case "connected":
+      return "接続中";
+
+    case "connecting":
+      return "接続処理中";
+
+    case "error":
+      return "エラー";
+
+    case "disconnected":
+      return "未接続";
+  }
+}
+
+function getDescription(
+  plugin: PluginDefinition,
+): string {
+  if (!plugin.enabled) {
+    return "このPluginは無効です";
+  }
+
+  switch (
+    plugin.connectionStatus
+  ) {
+    case "connected":
+      return "サービスへ接続されています";
+
+    case "connecting":
+      return "サービスへ接続しています";
+
+    case "error":
+      return "接続処理でエラーが発生しました";
+
+    case "disconnected":
+      return "サービスへ接続されていません";
+  }
+}
+
+function getDetail(
+  plugin: PluginDefinition,
+): string {
+  if (!plugin.enabled) {
+    return "Plugin設定で有効化してください";
+  }
+
+  if (plugin.errorMessage) {
+    return plugin.errorMessage;
+  }
+
+  if (plugin.connectionDetail) {
+    return plugin.connectionDetail;
+  }
+
+  if (
+    plugin.connectionStatus ===
+    "connected"
+  ) {
+    const timestamp =
+      plugin.lastHeartbeatAt ??
+      plugin.lastConnectedAt;
+
+    if (timestamp) {
+      return `最終確認：${formatRelativeTime(
+        timestamp,
+      )}`;
+    }
+
+    return "接続済み";
+  }
+
+  if (
+    plugin.connectionStatus ===
+    "connecting"
+  ) {
+    return "接続結果を待っています";
+  }
+
+  return "接続情報はありません";
+}
+
 function ConnectionItem({
-  title,
-  description,
-  detail,
-  status,
-  statusLabel,
-  icon: Icon,
+  plugin,
 }: ConnectionItemProps) {
-  const styles = statusStyles[status];
+  const status =
+    getDisplayStatus(plugin);
+
+  const styles =
+    statusStyles[status];
+
+  const Icon =
+    getPluginIcon(plugin.type);
 
   return (
     <article className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/60">
@@ -64,16 +232,21 @@ function ConnectionItem({
           <div
             className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${styles.icon}`}
           >
-            <Icon size={22} strokeWidth={2} />
+            <Icon
+              size={22}
+              strokeWidth={2}
+            />
           </div>
 
           <div className="min-w-0">
             <h3 className="truncate text-base font-bold text-slate-900">
-              {title}
+              {plugin.name}
             </h3>
 
             <p className="mt-1 text-sm font-medium text-slate-600">
-              {description}
+              {getDescription(
+                plugin,
+              )}
             </p>
           </div>
         </div>
@@ -83,80 +256,99 @@ function ConnectionItem({
         >
           <span
             className={`size-2 rounded-full ${styles.dot} ${
-              status === "online" ? "animate-pulse" : ""
+              status === "online"
+                ? "animate-pulse"
+                : ""
             }`}
           />
-          {statusLabel}
+
+          {getStatusLabel(
+            plugin,
+          )}
         </span>
       </div>
 
       <div className="mt-5 flex items-center gap-2 rounded-2xl bg-slate-50 px-3.5 py-3 text-sm text-slate-500">
-        <Clock3 size={15} className="shrink-0 text-slate-400" />
+        {plugin.connectionStatus ===
+        "connecting" ? (
+          <LoaderCircle
+            size={15}
+            className="shrink-0 animate-spin text-amber-500"
+          />
+        ) : plugin.connectionStatus ===
+          "error" ? (
+          <XCircle
+            size={15}
+            className="shrink-0 text-rose-500"
+          />
+        ) : (
+          <Clock3
+            size={15}
+            className="shrink-0 text-slate-400"
+          />
+        )}
 
-        <span className="truncate">{detail}</span>
+        <span className="truncate">
+          {getDetail(plugin)}
+        </span>
       </div>
     </article>
   );
 }
 
 export function ConnectionStatusSection() {
-  const connectionItems: ConnectionItemProps[] = [
-    {
-      title: "TikTok LIVE",
-      description: "ギフトイベントを受信しています",
-      detail: "最後の受信：3秒前",
-      status: "online",
-      statusLabel: "接続中",
-      icon: Radio,
-    },
-    {
-      title: "Minecraft",
-      description: "ゲームサーバーと接続済みです",
-      detail: "サーバー：Paper 1.21",
-      status: "online",
-      statusLabel: "接続済み",
-      icon: Gamepad2,
-    },
-    {
-      title: "配信オーバーレイ",
-      description: "OBS Browser Sourceで待機中です",
-      detail: "最終更新：たった今",
-      status: "waiting",
-      statusLabel: "待機中",
-      icon: Wifi,
-    },
-  ];
+  const plugins =
+    usePluginStore(
+      (state) =>
+        state.plugins,
+    );
 
-  const hasOfflineConnection = connectionItems.some(
-    (item) => item.status === "offline",
-  );
+  const enabledPlugins =
+    plugins.filter(
+      (plugin) =>
+        plugin.enabled,
+    );
 
-  const hasWaitingConnection = connectionItems.some(
-    (item) => item.status === "waiting",
-  );
+  const connectedCount =
+    enabledPlugins.filter(
+      (plugin) =>
+        plugin.connectionStatus ===
+        "connected",
+    ).length;
 
-  const overallStatus = hasOfflineConnection
-    ? {
-        label: "要確認",
-        message: "接続できていないサービスがあります。",
-        icon: Activity,
-        className: "bg-rose-50 text-rose-700 ring-rose-600/20",
-      }
-    : hasWaitingConnection
-      ? {
-          label: "一部待機中",
-          message: "接続済みのサービスは正常に稼働しています。",
-          icon: RefreshCw,
-          className: "bg-amber-50 text-amber-700 ring-amber-600/20",
-        }
-      : {
-          label: "すべて正常",
-          message: "すべてのサービスが正常に稼働しています。",
-          icon: CheckCircle2,
-          className: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-        };
+  const errorCount =
+    enabledPlugins.filter(
+      (plugin) =>
+        plugin.connectionStatus ===
+        "error",
+    ).length;
 
-  const OverallStatusIcon = overallStatus.icon;
+  const connectingCount =
+    enabledPlugins.filter(
+      (plugin) =>
+        plugin.connectionStatus ===
+        "connecting",
+    ).length;
+
+  const disconnectedCount =
+    enabledPlugins.filter(
+      (plugin) =>
+        plugin.connectionStatus ===
+        "disconnected",
+    ).length;
+
+  const overallStatus =
+    getOverallStatus({
+      enabledCount:
+        enabledPlugins.length,
+      connectedCount,
+      connectingCount,
+      disconnectedCount,
+      errorCount,
+    });
+
+  const OverallStatusIcon =
+    overallStatus.icon;
 
   return (
     <section
@@ -167,7 +359,9 @@ export function ConnectionStatusSection() {
         <div>
           <div className="flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
-              <Activity size={18} />
+              <Activity
+                size={18}
+              />
             </div>
 
             <h2
@@ -179,28 +373,69 @@ export function ConnectionStatusSection() {
           </div>
 
           <p className="mt-2 text-sm text-slate-500">
-            TikTok LIVE、Minecraft、配信オーバーレイの稼働状態です。
+            各Pluginの現在の接続状態を表示します。
           </p>
         </div>
 
         <div
           className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-inset ${overallStatus.className}`}
         >
-          <OverallStatusIcon size={14} />
+          <OverallStatusIcon
+            size={14}
+            className={
+              overallStatus.animate
+                ? "animate-spin"
+                : undefined
+            }
+          />
+
           {overallStatus.label}
         </div>
       </div>
 
       <div className="p-6">
-        <div className="grid gap-4 lg:grid-cols-3">
-          {connectionItems.map((item) => (
-            <ConnectionItem key={item.title} {...item} />
-          ))}
-        </div>
+        {plugins.length > 0 ? (
+          <div className="grid gap-4 lg:grid-cols-3">
+            {plugins.map(
+              (plugin) => (
+                <ConnectionItem
+                  key={plugin.id}
+                  plugin={plugin}
+                />
+              ),
+            )}
+          </div>
+        ) : (
+          <div className="flex min-h-48 flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 text-center">
+            <Unplug
+              size={30}
+              className="text-slate-400"
+            />
 
-        <div className="mt-5 flex items-start gap-3 rounded-2xl border border-violet-100 bg-violet-50/60 px-4 py-3">
-          <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-violet-600 shadow-sm">
-            <CheckCircle2 size={16} />
+            <h3 className="mt-4 text-base font-black text-slate-900">
+              Pluginがありません
+            </h3>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Pluginを登録すると、接続状況がここに表示されます。
+            </p>
+          </div>
+        )}
+
+        <div
+          className={`mt-5 flex items-start gap-3 rounded-2xl border px-4 py-3 ${overallStatus.panelClassName}`}
+        >
+          <div
+            className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ${overallStatus.iconClassName}`}
+          >
+            <OverallStatusIcon
+              size={16}
+              className={
+                overallStatus.animate
+                  ? "animate-spin"
+                  : undefined
+              }
+            />
           </div>
 
           <div>
@@ -209,11 +444,185 @@ export function ConnectionStatusSection() {
             </p>
 
             <p className="mt-1 text-xs leading-5 text-slate-500">
-              接続状態は今後、各サービスの実データと連動して自動更新されます。
+              接続状態はPlugin Storeの実データから自動更新されます。
             </p>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+type OverallStatusInput = {
+  enabledCount: number;
+  connectedCount: number;
+  connectingCount: number;
+  disconnectedCount: number;
+  errorCount: number;
+};
+
+function getOverallStatus({
+  enabledCount,
+  connectedCount,
+  connectingCount,
+  disconnectedCount,
+  errorCount,
+}: OverallStatusInput) {
+  if (enabledCount === 0) {
+    return {
+      label: "すべて無効",
+      message:
+        "有効なPluginがありません。",
+      icon: Unplug,
+      animate: false,
+      className:
+        "bg-slate-100 text-slate-600 ring-slate-500/20",
+      panelClassName:
+        "border-slate-200 bg-slate-50",
+      iconClassName:
+        "text-slate-500",
+    };
+  }
+
+  if (errorCount > 0) {
+    return {
+      label: "要確認",
+      message:
+        "接続エラーが発生しているPluginがあります。",
+      icon: AlertTriangle,
+      animate: false,
+      className:
+        "bg-rose-50 text-rose-700 ring-rose-600/20",
+      panelClassName:
+        "border-rose-100 bg-rose-50/60",
+      iconClassName:
+        "text-rose-600",
+    };
+  }
+
+  if (connectingCount > 0) {
+    return {
+      label: "接続処理中",
+      message:
+        "接続処理中のPluginがあります。",
+      icon: LoaderCircle,
+      animate: true,
+      className:
+        "bg-amber-50 text-amber-700 ring-amber-600/20",
+      panelClassName:
+        "border-amber-100 bg-amber-50/60",
+      iconClassName:
+        "text-amber-600",
+    };
+  }
+
+  if (
+    connectedCount ===
+    enabledCount
+  ) {
+    return {
+      label: "すべて正常",
+      message:
+        "有効なPluginはすべて接続されています。",
+      icon: CheckCircle2,
+      animate: false,
+      className:
+        "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+      panelClassName:
+        "border-emerald-100 bg-emerald-50/60",
+      iconClassName:
+        "text-emerald-600",
+    };
+  }
+
+  if (
+    disconnectedCount > 0
+  ) {
+    return {
+      label: "未接続",
+      message:
+        "接続されていないPluginがあります。",
+      icon: Unplug,
+      animate: false,
+      className:
+        "bg-slate-100 text-slate-600 ring-slate-500/20",
+      panelClassName:
+        "border-slate-200 bg-slate-50",
+      iconClassName:
+        "text-slate-500",
+    };
+  }
+
+  return {
+    label: "状態不明",
+    message:
+      "Pluginの状態を確認できません。",
+    icon: Activity,
+    animate: false,
+    className:
+      "bg-slate-100 text-slate-600 ring-slate-500/20",
+    panelClassName:
+      "border-slate-200 bg-slate-50",
+    iconClassName:
+      "text-slate-500",
+  };
+}
+
+function formatRelativeTime(
+  timestamp: number,
+): string {
+  const elapsed =
+    Date.now() - timestamp;
+
+  if (elapsed < 0) {
+    return formatDate(
+      timestamp,
+    );
+  }
+
+  const seconds = Math.floor(
+    elapsed / 1000,
+  );
+
+  if (seconds < 10) {
+    return "たった今";
+  }
+
+  if (seconds < 60) {
+    return `${seconds}秒前`;
+  }
+
+  const minutes = Math.floor(
+    seconds / 60,
+  );
+
+  if (minutes < 60) {
+    return `${minutes}分前`;
+  }
+
+  const hours = Math.floor(
+    minutes / 60,
+  );
+
+  if (hours < 24) {
+    return `${hours}時間前`;
+  }
+
+  return formatDate(timestamp);
+}
+
+function formatDate(
+  timestamp: number,
+): string {
+  return new Intl.DateTimeFormat(
+    "ja-JP",
+    {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    },
+  ).format(
+    new Date(timestamp),
   );
 }
