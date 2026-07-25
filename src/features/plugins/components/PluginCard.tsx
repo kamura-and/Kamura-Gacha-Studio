@@ -35,117 +35,155 @@ export function PluginCard({
     getConnectionDescription(plugin);
 
   return (
-    <article className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/60">
+    <article className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/50">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-300 to-transparent opacity-0 transition group-hover:opacity-100" />
 
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-start gap-4">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
-            <Icon
-              aria-hidden="true"
-              size={22}
-            />
+      <div className="p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 items-start gap-4">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+              <Icon
+                aria-hidden="true"
+                size={22}
+              />
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="text-base font-black text-slate-950">
+                  {plugin.name}
+                </h3>
+
+                <PluginStatusBadge
+                  enabled={plugin.enabled}
+                  connectionStatus={
+                    plugin.connectionStatus
+                  }
+                />
+              </div>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                {getPluginDescription(
+                  plugin,
+                )}
+              </p>
+            </div>
           </div>
 
-          <div className="min-w-0">
-            <h3 className="truncate text-base font-black text-slate-900">
-              {plugin.name}
-            </h3>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-500">
+              {plugin.type}
+            </span>
 
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              {getPluginDescription(
-                plugin,
+            {plugin.version ? (
+              <span className="rounded-lg bg-violet-50 px-2.5 py-1 text-[11px] font-black text-violet-700">
+                v{plugin.version}
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+              {plugin.connectionStatus ===
+              "connected" ? (
+                <Wifi
+                  aria-hidden="true"
+                  size={16}
+                  className="text-emerald-600"
+                />
+              ) : (
+                <Unplug
+                  aria-hidden="true"
+                  size={16}
+                  className="text-slate-400"
+                />
               )}
-            </p>
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-xs font-black text-slate-400">
+                接続状態
+              </p>
+
+              <p className="mt-1 truncate text-sm font-bold text-slate-700">
+                {connectionDescription}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <PluginStatusBadge
-          enabled={plugin.enabled}
-          connectionStatus={
-            plugin.connectionStatus
-          }
-        />
-      </div>
+          {plugin.author ? (
+            <div className="lg:text-right">
+              <p className="text-xs font-black text-slate-400">
+                提供元
+              </p>
 
-      <div className="mt-5 rounded-2xl bg-slate-50 px-4 py-3">
-        <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-          {plugin.connectionStatus ===
-          "connected" ? (
-            <Wifi
-              aria-hidden="true"
-              size={15}
-              className="shrink-0 text-emerald-600"
-            />
-          ) : (
-            <Unplug
-              aria-hidden="true"
-              size={15}
-              className="shrink-0 text-slate-400"
-            />
-          )}
-
-          <span className="truncate">
-            {connectionDescription}
-          </span>
+              <p className="mt-1 text-sm font-bold text-slate-700">
+                {plugin.author}
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          disabled
-          title="次のSprintでConfigStoreへ接続します"
-          className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-500 opacity-70"
-        >
-          {plugin.enabled ? (
-            <ToggleRight
+      <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            disabled
+            title="次のSprintでConfigStoreへ接続します"
+            className="inline-flex min-h-11 min-w-24 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-500 opacity-70"
+          >
+            {plugin.enabled ? (
+              <ToggleRight
+                aria-hidden="true"
+                size={19}
+                className="text-violet-600"
+              />
+            ) : (
+              <ToggleLeft
+                aria-hidden="true"
+                size={19}
+              />
+            )}
+
+            {plugin.enabled
+              ? "有効"
+              : "無効"}
+          </button>
+
+          <button
+            type="button"
+            disabled
+            title="次のSprintでConnectorへ接続します"
+            className="inline-flex min-h-11 min-w-24 items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 text-sm font-black text-white shadow-sm shadow-violet-200 opacity-60"
+          >
+            <Cable
               aria-hidden="true"
-              size={18}
-              className="text-violet-600"
+              size={17}
             />
-          ) : (
-            <ToggleLeft
+
+            {plugin.connectionStatus ===
+            "connected"
+              ? "切断"
+              : "接続"}
+          </button>
+
+          <button
+            type="button"
+            disabled
+            title="Plugin設定画面は今後実装します"
+            className="inline-flex min-h-11 min-w-24 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-600 opacity-70"
+          >
+            <Settings
               aria-hidden="true"
-              size={18}
+              size={17}
             />
-          )}
 
-          {plugin.enabled
-            ? "有効"
-            : "無効"}
-        </button>
-
-        <button
-          type="button"
-          disabled
-          title="次のSprintでConnectorへ接続します"
-          className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-violet-600 px-3 text-sm font-bold text-white opacity-60"
-        >
-          <Cable
-            aria-hidden="true"
-            size={16}
-          />
-
-          {plugin.connectionStatus ===
-          "connected"
-            ? "切断"
-            : "接続"}
-        </button>
-
-        <button
-          type="button"
-          disabled
-          title="Plugin設定画面は今後実装します"
-          className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-600 opacity-70"
-        >
-          <Settings
-            aria-hidden="true"
-            size={16}
-          />
-
-          設定
-        </button>
+            設定
+          </button>
+        </div>
       </div>
     </article>
   );
