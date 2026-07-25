@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { effectRepository } from "../repository/effectRepository";
+import { effectRepository } from "../repository/EffectRepository";
 import type { EffectDefinition } from "../types/effectDefinition";
 
 type EffectStore = {

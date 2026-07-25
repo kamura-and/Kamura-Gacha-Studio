@@ -204,7 +204,7 @@
 
 ### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\pages\EffectListPage.tsx
 
-### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\repository\effectRepository.ts
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\repository\EffectRepository.ts
 
 ### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\store\effectStore.ts
 

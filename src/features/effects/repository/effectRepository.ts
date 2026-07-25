@@ -295,6 +295,20 @@ export class EffectRepository {
       ),
     );
   }
+
+  getRandom(): EffectDefinition | undefined {
+    const effects = this.loadAll();
+
+    if (effects.length === 0) {
+      return undefined;
+    }
+
+    const index = Math.floor(
+      Math.random() * effects.length,
+    );
+
+    return effects[index];
+  }
 }
 
 export const effectRepository =
