@@ -1,4 +1,5 @@
 import {
+  Blocks,
   CircleDotDashed,
   Dices,
   History,
@@ -56,6 +57,11 @@ const operationNavigationItems: NavigationItem[] = [
 ];
 
 const systemNavigationItems: NavigationItem[] = [
+  {
+    to: "/plugins",
+    label: "プラグイン",
+    icon: Blocks,
+  },
   {
     to: "/settings",
     label: "設定",

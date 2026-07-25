@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Blocks,
   Boxes,
   Gift,
   LayoutDashboard,
@@ -25,6 +26,11 @@ const navigationItems = [
     icon: Gift,
   },
   {
+    label: "プラグイン",
+    path: "/plugins",
+    icon: Blocks,
+  },
+  {
     label: "統計",
     path: "/statistics",
     icon: BarChart3,
@@ -42,7 +48,10 @@ export function AppSidebar() {
       {/* ロゴ */}
       <div className="flex h-20 items-center gap-3 border-b border-slate-200 px-5">
         <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-violet-700 text-white shadow-lg shadow-violet-600/25">
-          <Boxes aria-hidden="true" size={22} />
+          <Boxes
+            aria-hidden="true"
+            size={22}
+          />
         </div>
 
         <div className="min-w-0">
@@ -85,10 +94,15 @@ export function AppSidebar() {
                         : "bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-violet-600",
                     ].join(" ")}
                   >
-                    <Icon aria-hidden="true" size={18} />
+                    <Icon
+                      aria-hidden="true"
+                      size={18}
+                    />
                   </span>
 
-                  <span className="truncate">{item.label}</span>
+                  <span className="truncate">
+                    {item.label}
+                  </span>
                 </>
               )}
             </NavLink>

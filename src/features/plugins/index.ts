@@ -18,3 +18,10 @@ export type {
 export * from "./store/pluginRuntimeStore";
 
 export * from "./store/pluginConfigStore";
+
+export * from "./pages/PluginManagerPage";
+
+export * from "./components/PluginCard";
+export * from "./components/PluginStatusBadge";
+export * from "./components/PluginSummary";
+export * from "./pages/PluginManagerPage";
