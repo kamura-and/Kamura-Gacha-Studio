@@ -1,0 +1,278 @@
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\App.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\index.css
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\main.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\app\AppProviders.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\app\layout\AppLayout.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\app\layout\Sidebar.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\app\layout\SidebarItem.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\app\router\AppRouter.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\app\router\CurrentWorkspacePage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\app\router\router.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\assets\hero.png
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\components\PagePlaceholder.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\components\common\KamuraCard.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\components\common\StatusBadge.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\components\layout\AppHeader.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\components\layout\AppSidebar.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\components\layout\MobileNavigation.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\components\ui\badge.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\components\ui\button.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\components\ui\card.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\components\ui\dropdown-menu.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\actionInstance.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\actionRegistry.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\actionUtils.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\defineAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\index.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\types.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\builders\waitBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\index.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\core\coreActionPack.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\core\actions\waitAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\bedrockBoxActionPack.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\blackHoleAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\clearAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\cometsAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\dragonResetAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\endermanAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\fillAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\fillBlockAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\fillRowsAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\glassPrisonAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\heightDownAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\heightUpAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\loseAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\meteorAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\radiusDownAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\radiusUpAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\randomTntAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\resetAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\superTntAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\tntAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\tntRingAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\winAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\actions\zeusTntAction.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\blackHoleBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\clearBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\cometsBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\dragonResetBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\endermanBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\fillBlockBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\fillBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\fillRowsBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\glassPrisonBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\heightDownBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\heightUpBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\loseBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\meteorBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\radiusDownBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\radiusUpBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\randomTntBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\resetBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\superTntBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\tntBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\tntRingBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\winBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\packs\minecraft\bedrockBox\builders\zeusTntBuilder.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\utils\clamp.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\core\actions\utils\parameterValue.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\dashboard\DashboardPage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\dashboard\components\ConnectionStatusSection.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\dashboard\components\DashboardHeader.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\dashboard\components\RecentGachaCard.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\dashboard\components\RecentLogCard.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\dashboard\components\StatCard.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\dashboard\components\TestGachaCard.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\dashboard\store\useDashboardStore.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\EffectBuilder.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\index.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\testActionRegistry.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\components\ActionCard.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\components\ActionLibrary.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\components\CommandPreview.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\components\EffectBuilder.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\components\parameterDisplay.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\components\ParameterField.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\components\ParameterRenderer.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\components\SaveEffectDialog.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\components\Timeline.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\components\TimelineItem.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effect-builder\services\effectExecutor.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\components\EffectCard.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\pages\EffectEditorPage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\pages\EffectListPage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\repository\effectRepository.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\store\effectStore.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\types\effectDefinition.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\effects\types\persistedEffectDefinition.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gacha\components\GachaFormModal.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gacha\components\GachaItemCard.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gacha\data\sampleGachaItems.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gacha\pages\GachaPage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gacha\services\drawGacha.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gacha\services\probability.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gacha\services\random.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gacha\services\weight.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gacha\store\gachaStore.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gacha\types\gacha.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\gifts\GiftsPage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\minecraft\data\commandLibrary.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\minecraft\hooks\useCommandLibrary.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\minecraft\services\minecraftConnector.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\minecraft\types\commandLibrary.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\minecraft\utils\buildMinecraftCommand.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\overlay\OverlayPage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\queue\components\CommandQueuePanel.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\queue\components\GachaQueueTestButton.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\queue\pages\QueuePage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\queue\services\actionExecutors.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\queue\services\commandQueueEngine.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\queue\services\sleep.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\queue\store\commandQueueStore.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\queue\types\commandQueue.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\settings\SettingsPage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\statistics\StatisticsPage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\features\system\NotFoundPage.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\lib\kamura-ui.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\lib\utils.ts
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\shared\layout\PageLayout.tsx
+
+### C:\Users\arao1\OneDrive\??\GitHub\Kamura-Gacha-Studio\src\styles\kamura-theme.css
+
