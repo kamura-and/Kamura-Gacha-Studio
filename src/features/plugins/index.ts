@@ -14,3 +14,5 @@ export type {
   PluginId,
   PluginType,
 } from "./types/plugin";
+
+export * from "./store/pluginRuntimeStore";
