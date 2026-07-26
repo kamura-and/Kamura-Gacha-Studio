@@ -12,60 +12,123 @@ import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader
 import { EffectPreviewCard } from "@/features/dashboard/components/EffectPreviewCard";
 import { RecentLogCard } from "@/features/dashboard/components/RecentLogCard";
 import { StatCard } from "@/features/dashboard/components/StatCard";
-import { usePluginStore } from "@/features/plugins";
+import { pluginDefinitions } from "@/features/plugins/definitions/pluginDefinitions";
+import { usePluginConfigStore } from "@/features/plugins/store/pluginConfigStore";
+import { usePluginRuntimeStore } from "@/features/plugins/store/pluginRuntimeStore";
 import { useCommandQueueStore } from "@/features/queue/store/commandQueueStore";
 
 import type {
   PluginConnectionStatus,
-  PluginDefinition,
+  PluginId,
+  PluginType,
 } from "@/features/plugins";
 
 export function DashboardPage() {
-  const plugins = usePluginStore(
-    (state) => state.plugins,
+  const configs = usePluginConfigStore(
+    (state) => state.configs,
+  );
+
+  const runtimes = usePluginRuntimeStore(
+    (state) => state.runtimes,
   );
 
   const queueItems = useCommandQueueStore(
     (state) => state.items,
   );
 
-  const tiktokPlugin = plugins.find(
-    (plugin) =>
-      plugin.id === "tiktok-live",
-  );
-
-  const overlayPlugin = plugins.find(
-    (plugin) =>
-      plugin.id === "overlay",
-  );
-
-  const todayCommandCount = useMemo(
+  const plugins = useMemo<DashboardPlugin[]>(
     () =>
-      queueItems.filter((item) =>
-        isToday(item.createdAt),
-      ).length,
-    [queueItems],
+      pluginDefinitions.map(
+        (definition) => {
+          const config =
+            configs[definition.id];
+
+          const runtime =
+            runtimes[definition.id];
+
+          return {
+            id: definition.id,
+            name: definition.name,
+            type: definition.type,
+
+            enabled:
+              config.enabled,
+
+            connectionStatus:
+              runtime.connectionStatus,
+
+            connectionDetail:
+              runtime.connectionDetail,
+
+            errorMessage:
+              runtime.errorMessage,
+
+            lastHeartbeatAt:
+              runtime.lastHeartbeatAt,
+
+            lastConnectedAt:
+              runtime.lastConnectedAt,
+          };
+        },
+      ),
+    [configs, runtimes],
   );
 
-  const tiktokDisplay = getPluginDisplay(
-    tiktokPlugin,
-    {
-      connectedValue: "接続中",
-      disconnectedValue: "未接続",
-      connectedTrend: "受信可能",
-      disconnectedTrend: "待機中",
-    },
-  );
+  const tiktokPlugin =
+    plugins.find(
+      (plugin) =>
+        plugin.id ===
+        "tiktok-live",
+    );
 
-  const overlayDisplay = getPluginDisplay(
-    overlayPlugin,
-    {
-      connectedValue: "稼働中",
-      disconnectedValue: "停止中",
-      connectedTrend: "配信可能",
-      disconnectedTrend: "待機中",
-    },
-  );
+  const overlayPlugin =
+    plugins.find(
+      (plugin) =>
+        plugin.id ===
+        "overlay",
+    );
+
+  const todayCommandCount =
+    useMemo(
+      () =>
+        queueItems.filter(
+          (item) =>
+            isToday(
+              item.createdAt,
+            ),
+        ).length,
+      [queueItems],
+    );
+
+  const tiktokDisplay =
+    getPluginDisplay(
+      tiktokPlugin,
+      {
+        connectedValue:
+          "接続中",
+        disconnectedValue:
+          "未接続",
+        connectedTrend:
+          "受信可能",
+        disconnectedTrend:
+          "待機中",
+      },
+    );
+
+  const overlayDisplay =
+    getPluginDisplay(
+      overlayPlugin,
+      {
+        connectedValue:
+          "稼働中",
+        disconnectedValue:
+          "停止中",
+        connectedTrend:
+          "配信可能",
+        disconnectedTrend:
+          "待機中",
+      },
+    );
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -92,12 +155,20 @@ export function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             title="TikTok接続状況"
-            value={tiktokDisplay.value}
+            value={
+              tiktokDisplay.value
+            }
             description="TikTok LIVEとの接続状態"
             icon={Radio}
-            status={tiktokDisplay.status}
-            statusTone={tiktokDisplay.statusTone}
-            trend={tiktokDisplay.trend}
+            status={
+              tiktokDisplay.status
+            }
+            statusTone={
+              tiktokDisplay.statusTone
+            }
+            trend={
+              tiktokDisplay.trend
+            }
           />
 
           <StatCard
@@ -112,16 +183,20 @@ export function DashboardPage() {
 
           <StatCard
             title="本日のコマンド数"
-            value={todayCommandCount}
+            value={
+              todayCommandCount
+            }
             description="本日Queueへ追加されたコマンド"
             icon={Sparkles}
             status={
-              todayCommandCount > 0
+              todayCommandCount >
+              0
                 ? "履歴あり"
                 : "履歴なし"
             }
             statusTone={
-              todayCommandCount > 0
+              todayCommandCount >
+              0
                 ? "success"
                 : "neutral"
             }
@@ -130,12 +205,20 @@ export function DashboardPage() {
 
           <StatCard
             title="オーバーレイ状態"
-            value={overlayDisplay.value}
+            value={
+              overlayDisplay.value
+            }
             description="配信用オーバーレイ"
             icon={Tv}
-            status={overlayDisplay.status}
-            statusTone={overlayDisplay.statusTone}
-            trend={overlayDisplay.trend}
+            status={
+              overlayDisplay.status
+            }
+            statusTone={
+              overlayDisplay.statusTone
+            }
+            trend={
+              overlayDisplay.trend
+            }
           />
         </div>
       </section>
@@ -151,6 +234,23 @@ export function DashboardPage() {
   );
 }
 
+type DashboardPlugin = {
+  id: PluginId;
+  name: string;
+  type: PluginType;
+
+  enabled: boolean;
+
+  connectionStatus:
+    PluginConnectionStatus;
+
+  connectionDetail?: string;
+  errorMessage?: string;
+
+  lastHeartbeatAt?: number;
+  lastConnectedAt?: number;
+};
+
 type PluginDisplayOptions = {
   connectedValue: string;
   disconnectedValue: string;
@@ -161,16 +261,20 @@ type PluginDisplayOptions = {
 type PluginDisplay = {
   value: string;
   status: string;
+
   statusTone:
     | "success"
     | "warning"
     | "error"
     | "neutral";
+
   trend: string;
 };
 
 function getPluginDisplay(
-  plugin: PluginDefinition | undefined,
+  plugin:
+    | DashboardPlugin
+    | undefined,
   options: PluginDisplayOptions,
 ): PluginDisplay {
   if (!plugin) {
@@ -178,7 +282,8 @@ function getPluginDisplay(
       value: "未登録",
       status: "未登録",
       statusTone: "neutral",
-      trend: "Plugin情報なし",
+      trend:
+        "Plugin情報なし",
     };
   }
 
@@ -187,7 +292,8 @@ function getPluginDisplay(
       value: "無効",
       status: "無効",
       statusTone: "neutral",
-      trend: "Plugin設定を確認",
+      trend:
+        "Plugin設定を確認",
     };
   }
 
@@ -198,16 +304,19 @@ function getPluginDisplay(
 }
 
 function getConnectionDisplay(
-  connectionStatus: PluginConnectionStatus,
+  connectionStatus:
+    PluginConnectionStatus,
   options: PluginDisplayOptions,
 ): PluginDisplay {
   switch (connectionStatus) {
     case "connected":
       return {
-        value: options.connectedValue,
+        value:
+          options.connectedValue,
         status: "正常",
         statusTone: "success",
-        trend: options.connectedTrend,
+        trend:
+          options.connectedTrend,
       };
 
     case "connecting":
@@ -215,7 +324,8 @@ function getConnectionDisplay(
         value: "接続中",
         status: "処理中",
         statusTone: "warning",
-        trend: "接続結果を待機",
+        trend:
+          "接続結果を待機",
       };
 
     case "error":
@@ -223,23 +333,18 @@ function getConnectionDisplay(
         value: "エラー",
         status: "要確認",
         statusTone: "error",
-        trend: "接続設定を確認",
+        trend:
+          "接続設定を確認",
       };
 
     case "disconnected":
       return {
-        value: options.disconnectedValue,
+        value:
+          options.disconnectedValue,
         status: "未接続",
         statusTone: "neutral",
-        trend: options.disconnectedTrend,
-      };
-
-    default:
-      return {
-        value: "不明",
-        status: "不明",
-        statusTone: "neutral",
-        trend: "状態を確認",
+        trend:
+          options.disconnectedTrend,
       };
   }
 }
@@ -248,7 +353,9 @@ function isToday(
   timestamp: number,
 ): boolean {
   const today = new Date();
-  const target = new Date(timestamp);
+
+  const target =
+    new Date(timestamp);
 
   return (
     today.getFullYear() ===

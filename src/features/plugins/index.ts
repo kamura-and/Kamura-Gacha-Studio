@@ -4,10 +4,6 @@ export {
 } from "./repository/PluginRepository";
 
 export {
-  usePluginStore,
-} from "./store/pluginStore";
-
-export {
   usePluginRuntimeStore,
 } from "./store/pluginRuntimeStore";
 
