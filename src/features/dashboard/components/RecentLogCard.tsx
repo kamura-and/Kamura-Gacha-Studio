@@ -93,32 +93,32 @@ const filterItems: Array<{
   label: string;
   icon: LucideIcon;
 }> = [
-  {
-    value: "all",
-    label: "すべて",
-    icon: CircleDot,
-  },
-  {
-    value: "pending",
-    label: "待機中",
-    icon: Clock3,
-  },
-  {
-    value: "running",
-    label: "実行中",
-    icon: LoaderCircle,
-  },
-  {
-    value: "completed",
-    label: "完了",
-    icon: CheckCircle2,
-  },
-  {
-    value: "failed",
-    label: "失敗",
-    icon: XCircle,
-  },
-];
+    {
+      value: "all",
+      label: "すべて",
+      icon: CircleDot,
+    },
+    {
+      value: "pending",
+      label: "待機中",
+      icon: Clock3,
+    },
+    {
+      value: "running",
+      label: "実行中",
+      icon: LoaderCircle,
+    },
+    {
+      value: "completed",
+      label: "完了",
+      icon: CheckCircle2,
+    },
+    {
+      value: "failed",
+      label: "失敗",
+      icon: XCircle,
+    },
+  ];
 
 export function RecentLogCard() {
   const items = useCommandQueueStore(
@@ -184,7 +184,7 @@ export function RecentLogCard() {
         (item) =>
           item.status === "failed" ||
           item.status ===
-            "cancelled",
+          "cancelled",
       ).length,
     [items],
   );
@@ -213,7 +213,7 @@ export function RecentLogCard() {
   return (
     <section
       aria-labelledby="recent-log-title"
-      className="flex min-h-[620px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
+      className="flex h-[480px] min-h-0 flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
     >
       <header className="border-b border-slate-100 px-6 py-5">
         <div className="flex items-start justify-between gap-4">
@@ -279,20 +279,19 @@ export function RecentLogCard() {
                       filter.value,
                     )
                   }
-                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-violet-200 ${
-                    isActive
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-violet-200 ${isActive
                       ? "bg-violet-600 text-white shadow-sm shadow-violet-600/20"
                       : "bg-slate-100 text-slate-600 hover:bg-violet-50 hover:text-violet-700"
-                  }`}
+                    }`}
                 >
                   <FilterIcon
                     size={14}
                     className={
                       filter.value ===
                         "running" &&
-                      getFilterCount(
-                        filter.value,
-                      ) > 0
+                        getFilterCount(
+                          filter.value,
+                        ) > 0
                         ? "animate-spin"
                         : undefined
                     }
@@ -301,11 +300,10 @@ export function RecentLogCard() {
                   {filter.label}
 
                   <span
-                    className={`rounded-md px-1.5 py-0.5 text-[10px] ${
-                      isActive
+                    className={`rounded-md px-1.5 py-0.5 text-[10px] ${isActive
                         ? "bg-white/20 text-white"
                         : "bg-white text-slate-500"
-                    }`}
+                      }`}
                   >
                     {getFilterCount(
                       filter.value,
@@ -365,7 +363,7 @@ export function RecentLogCard() {
                     isLatest={
                       index === 0 &&
                       activeFilter ===
-                        "all"
+                      "all"
                     }
                   />
                 ),
@@ -390,11 +388,10 @@ export function RecentLogCard() {
               )}
 
               <span
-                className={`relative inline-flex size-2 rounded-full ${
-                  isProcessing
+                className={`relative inline-flex size-2 rounded-full ${isProcessing
                     ? "bg-violet-500"
                     : "bg-slate-300"
-                }`}
+                  }`}
               />
             </span>
 
@@ -451,11 +448,10 @@ function QueueLogRow({
       transition={{
         duration: 0.2,
       }}
-      className={`relative rounded-2xl border p-4 transition ${
-        isLatest
+      className={`relative rounded-2xl border p-4 transition ${isLatest
           ? "border-violet-200 bg-violet-50/50 shadow-sm shadow-violet-100"
           : "border-transparent bg-white hover:border-slate-200 hover:bg-slate-50/70"
-      }`}
+        }`}
     >
       {isLatest && (
         <div className="absolute inset-y-4 left-0 w-1 rounded-r-full bg-violet-500" />
@@ -467,12 +463,11 @@ function QueueLogRow({
         >
           <StatusIcon
             size={18}
-            className={`${styles.iconColor} ${
-              item.status ===
-              "running"
+            className={`${styles.iconColor} ${item.status ===
+                "running"
                 ? "animate-spin"
                 : ""
-            }`}
+              }`}
           />
         </div>
 
@@ -543,7 +538,7 @@ function QueueLogRow({
                   {Math.max(
                     0,
                     item.finishedAt -
-                      item.startedAt,
+                    item.startedAt,
                   )}
                   ms
                 </MetadataBadge>
@@ -570,11 +565,10 @@ function SummaryItem({
 }: SummaryItemProps) {
   return (
     <div
-      className={`px-4 py-3 text-center ${
-        withBorder
+      className={`px-4 py-3 text-center ${withBorder
           ? "border-r border-slate-100"
           : ""
-      }`}
+        }`}
     >
       <p
         className={`text-lg font-black ${valueClassName}`}
@@ -617,17 +611,17 @@ function EmptyLogState({
         opacity: 1,
         scale: 1,
       }}
-      className="flex min-h-[380px] flex-col items-center justify-center px-6 text-center"
+      className="flex h-full min-h-[210px] flex-col items-center justify-center px-6 py-8 text-center"
     >
-      <div className="flex size-16 items-center justify-center rounded-3xl bg-slate-100 text-slate-400">
+      <div className="flex size-14 items-center justify-center rounded-3xl bg-slate-100 text-slate-400">
         {hasAnyItems ? (
-          <AlertTriangle size={28} />
+          <AlertTriangle size={26} />
         ) : (
-          <History size={28} />
+          <History size={26} />
         )}
       </div>
 
-      <h3 className="mt-5 text-base font-black text-slate-900">
+      <h3 className="mt-4 text-base font-black text-slate-900">
         {hasAnyItems
           ? "この条件のログはありません"
           : "まだログはありません"}

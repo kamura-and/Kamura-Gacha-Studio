@@ -136,6 +136,14 @@ export function DashboardPage() {
 
       <ConnectionStatusSection />
 
+      <section
+        aria-label="エフェクトプレビューと最近のログ"
+        className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]"
+      >
+        <EffectPreviewCard />
+        <RecentLogCard />
+      </section>
+
       <section aria-labelledby="dashboard-statistics-title">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
@@ -221,14 +229,6 @@ export function DashboardPage() {
             }
           />
         </div>
-      </section>
-
-      <section
-        aria-label="エフェクトプレビューと最近のログ"
-        className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]"
-      >
-        <EffectPreviewCard />
-        <RecentLogCard />
       </section>
     </div>
   );
