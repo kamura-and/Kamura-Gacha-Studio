@@ -36,6 +36,8 @@ type PluginCardProps = {
   ) => void;
 
   onConnectionToggle: () => void;
+
+  onSettingsOpen: () => void;
 };
 
 export function PluginCard({
@@ -44,6 +46,7 @@ export function PluginCard({
   runtime,
   onEnabledChange,
   onConnectionToggle,
+  onSettingsOpen,
 }: PluginCardProps) {
   const Icon = getPluginIcon(
     definition.type,
@@ -229,9 +232,8 @@ export function PluginCard({
 
           <button
             type="button"
-            disabled
-            title="Plugin設定画面は今後実装します"
-            className="inline-flex min-h-11 min-w-24 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-400 opacity-70"
+            onClick={onSettingsOpen}
+            className="inline-flex min-h-11 min-w-24 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-600 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
           >
             <Settings
               aria-hidden="true"
@@ -258,6 +260,9 @@ function getPluginIcon(
 
     case "overlay":
       return Wifi;
+
+    default:
+      return Settings;
   }
 }
 
@@ -280,6 +285,9 @@ function getConnectionButtonLabel(
 
     case "error":
     case "disconnected":
+      return "接続";
+
+    default:
       return "接続";
   }
 }
@@ -314,5 +322,8 @@ function getConnectionDescription(
 
     case "disconnected":
       return "サービスへ接続されていません";
+
+    default:
+      return "接続状態を取得できません";
   }
 }

@@ -22,38 +22,75 @@ type PluginConfigState = {
   reset: () => void;
 };
 
+function createInitialSettings(
+  id: PluginId,
+): PluginSettings {
+  switch (id) {
+    case "tiktok-live":
+      return {
+        username: "",
+        autoConnect: false,
+        receiveGift: true,
+        receiveComment: true,
+      };
+
+    case "minecraft":
+      return {
+        host: "127.0.0.1",
+        port: 19132,
+        password: "",
+        autoConnect: false,
+      };
+
+    case "overlay":
+      return {
+        width: 1920,
+        height: 1080,
+        url: "http://localhost:5173/overlay",
+        autoShow: false,
+      };
+
+    default:
+      return {};
+  }
+}
+
 function createConfig(
   id: PluginId,
 ): PluginConfig {
   return {
     id,
     enabled: true,
-    settings: {},
+    settings:
+      createInitialSettings(id),
     updatedAt: Date.now(),
   };
 }
 
-const initialConfigs: Record<
+function createInitialConfigs(): Record<
   PluginId,
   PluginConfig
-> = {
-  "tiktok-live": createConfig(
-    "tiktok-live",
-  ),
+> {
+  return {
+    "tiktok-live": createConfig(
+      "tiktok-live",
+    ),
 
-  minecraft: createConfig(
-    "minecraft",
-  ),
+    minecraft: createConfig(
+      "minecraft",
+    ),
 
-  overlay: createConfig(
-    "overlay",
-  ),
-};
+    overlay: createConfig(
+      "overlay",
+    ),
+  };
+}
 
 export const usePluginConfigStore =
   create<PluginConfigState>(
     (set) => ({
-      configs: initialConfigs,
+      configs:
+        createInitialConfigs(),
 
       setEnabled: (
         id,
@@ -100,9 +137,7 @@ export const usePluginConfigStore =
       reset: () =>
         set({
           configs:
-            structuredClone(
-              initialConfigs,
-            ),
+            createInitialConfigs(),
         }),
     }),
   );
