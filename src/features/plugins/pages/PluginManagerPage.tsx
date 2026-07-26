@@ -1,17 +1,184 @@
 import {
+  useEffect,
+  useRef,
+} from "react";
+
+import {
   Blocks,
   Cable,
   Unplug,
 } from "lucide-react";
 
-import { PluginCard } from "@/features/plugins/components/PluginCard";
-import { PluginSummary } from "@/features/plugins/components/PluginSummary";
-import { usePluginStore } from "@/features/plugins";
+import { PluginCard } from "../components/PluginCard";
+import { PluginSummary } from "../components/PluginSummary";
+import { pluginDefinitions } from "../definitions/pluginDefinitions";
+import { usePluginConfigStore } from "../store/pluginConfigStore";
+import { usePluginRuntimeStore } from "../store/pluginRuntimeStore";
+
+import type {
+  PluginId,
+} from "../types/plugin";
+
+const CONNECTION_DELAY_MS = 800;
+
+type ConnectionTimer =
+  ReturnType<typeof setTimeout>;
 
 export function PluginManagerPage() {
-  const plugins = usePluginStore(
-    (state) => state.plugins,
-  );
+  const configs =
+    usePluginConfigStore(
+      (state) => state.configs,
+    );
+
+  const setEnabled =
+    usePluginConfigStore(
+      (state) => state.setEnabled,
+    );
+
+  const runtimes =
+    usePluginRuntimeStore(
+      (state) => state.runtimes,
+    );
+
+  const updateRuntime =
+    usePluginRuntimeStore(
+      (state) => state.update,
+    );
+
+  const connectionTimersRef =
+    useRef<
+      Partial<
+        Record<
+          PluginId,
+          ConnectionTimer
+        >
+      >
+    >({});
+
+  useEffect(() => {
+    const timers =
+      connectionTimersRef.current;
+
+    return () => {
+      Object.values(
+        timers,
+      ).forEach((timer) => {
+        if (timer !== undefined) {
+          clearTimeout(timer);
+        }
+      });
+    };
+  }, []);
+
+  const clearConnectionTimer = (
+    id: PluginId,
+  ) => {
+    const timer =
+      connectionTimersRef.current[id];
+
+    if (timer === undefined) {
+      return;
+    }
+
+    clearTimeout(timer);
+
+    delete connectionTimersRef
+      .current[id];
+  };
+
+  const handleEnabledChange = (
+    id: PluginId,
+    enabled: boolean,
+  ) => {
+    setEnabled(id, enabled);
+
+    if (enabled) {
+      return;
+    }
+
+    clearConnectionTimer(id);
+
+    updateRuntime(id, {
+      connectionStatus:
+        "disconnected",
+      connectionDetail:
+        "Pluginが無効化されました",
+      errorMessage: undefined,
+    });
+  };
+
+  const handleConnectionToggle = (
+    id: PluginId,
+  ) => {
+    const config = configs[id];
+    const runtime = runtimes[id];
+
+    if (!config.enabled) {
+      return;
+    }
+
+    clearConnectionTimer(id);
+
+    if (
+      runtime.connectionStatus ===
+      "connected"
+    ) {
+      updateRuntime(id, {
+        connectionStatus:
+          "disconnected",
+        connectionDetail:
+          "手動で切断されました",
+        errorMessage: undefined,
+      });
+
+      return;
+    }
+
+    updateRuntime(id, {
+      connectionStatus:
+        "connecting",
+      connectionDetail:
+        "接続処理を実行しています",
+      errorMessage: undefined,
+    });
+
+    connectionTimersRef.current[
+      id
+    ] = setTimeout(() => {
+      const currentConfig =
+        usePluginConfigStore
+          .getState()
+          .configs[id];
+
+      if (!currentConfig.enabled) {
+        delete connectionTimersRef
+          .current[id];
+
+        return;
+      }
+
+      const now = Date.now();
+
+      updateRuntime(id, {
+        connectionStatus:
+          "connected",
+        connectionDetail:
+          "接続シミュレーションに成功しました",
+        lastConnectedAt: now,
+        lastHeartbeatAt: now,
+        errorMessage: undefined,
+      });
+
+      delete connectionTimersRef
+        .current[id];
+    }, CONNECTION_DELAY_MS);
+  };
+
+  const pluginIds =
+    pluginDefinitions.map(
+      (definition) =>
+        definition.id,
+    );
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-8">
@@ -43,13 +210,18 @@ export function PluginManagerPage() {
                 size={14}
               />
 
-              {plugins.length} Plugins
+              {
+                pluginDefinitions.length
+              }{" "}
+              Plugins
             </div>
           </div>
         </header>
 
         <PluginSummary
-          plugins={plugins}
+          pluginIds={pluginIds}
+          configs={configs}
+          runtimes={runtimes}
         />
 
         <section
@@ -69,15 +241,47 @@ export function PluginManagerPage() {
             </p>
           </div>
 
-          {plugins.length > 0 ? (
+          {pluginDefinitions.length >
+          0 ? (
             <div className="grid gap-6">
-              {plugins.map(
-                (plugin) => (
-                  <PluginCard
-                    key={plugin.id}
-                    plugin={plugin}
-                  />
-                ),
+              {pluginDefinitions.map(
+                (definition) => {
+                  const config =
+                    configs[
+                      definition.id
+                    ];
+
+                  const runtime =
+                    runtimes[
+                      definition.id
+                    ];
+
+                  return (
+                    <PluginCard
+                      key={
+                        definition.id
+                      }
+                      definition={
+                        definition
+                      }
+                      config={config}
+                      runtime={runtime}
+                      onEnabledChange={(
+                        enabled,
+                      ) =>
+                        handleEnabledChange(
+                          definition.id,
+                          enabled,
+                        )
+                      }
+                      onConnectionToggle={() =>
+                        handleConnectionToggle(
+                          definition.id,
+                        )
+                      }
+                    />
+                  );
+                },
               )}
             </div>
           ) : (

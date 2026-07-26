@@ -5,6 +5,7 @@ import type {
 import {
   Cable,
   Gamepad2,
+  LoaderCircle,
   Radio,
   Settings,
   ToggleLeft,
@@ -13,26 +14,48 @@ import {
   Wifi,
 } from "lucide-react";
 
-import { PluginStatusBadge } from "@/features/plugins/components/PluginStatusBadge";
+import { PluginStatusBadge } from "./PluginStatusBadge";
 
 import type {
-  PluginDefinition,
+  PluginConfig,
+  PluginDomainDefinition,
+  PluginRuntime,
   PluginType,
-} from "@/features/plugins";
+} from "../types/plugin";
 
 type PluginCardProps = {
-  plugin: PluginDefinition;
+  definition:
+    PluginDomainDefinition;
+
+  config: PluginConfig;
+
+  runtime: PluginRuntime;
+
+  onEnabledChange: (
+    enabled: boolean,
+  ) => void;
+
+  onConnectionToggle: () => void;
 };
 
 export function PluginCard({
-  plugin,
+  definition,
+  config,
+  runtime,
+  onEnabledChange,
+  onConnectionToggle,
 }: PluginCardProps) {
   const Icon = getPluginIcon(
-    plugin.type,
+    definition.type,
   );
 
-  const connectionDescription =
-    getConnectionDescription(plugin);
+  const isConnecting =
+    runtime.connectionStatus ===
+    "connecting";
+
+  const isConnected =
+    runtime.connectionStatus ===
+    "connected";
 
   return (
     <article className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/50">
@@ -51,43 +74,44 @@ export function PluginCard({
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
                 <h3 className="text-base font-black text-slate-950">
-                  {plugin.name}
+                  {definition.name}
                 </h3>
 
                 <PluginStatusBadge
-                  enabled={plugin.enabled}
+                  enabled={config.enabled}
                   connectionStatus={
-                    plugin.connectionStatus
+                    runtime.connectionStatus
                   }
                 />
               </div>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                {getPluginDescription(
-                  plugin,
-                )}
+                {definition.description}
               </p>
             </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
             <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-500">
-              {plugin.type}
+              {definition.type}
             </span>
 
-            {plugin.version ? (
-              <span className="rounded-lg bg-violet-50 px-2.5 py-1 text-[11px] font-black text-violet-700">
-                v{plugin.version}
-              </span>
-            ) : null}
+            <span className="rounded-lg bg-violet-50 px-2.5 py-1 text-[11px] font-black text-violet-700">
+              v{definition.version}
+            </span>
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 rounded-2xl border border-slate-100 bg-slate-50/80 p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
-              {plugin.connectionStatus ===
-              "connected" ? (
+              {isConnecting ? (
+                <LoaderCircle
+                  aria-hidden="true"
+                  size={16}
+                  className="animate-spin text-amber-600"
+                />
+              ) : isConnected ? (
                 <Wifi
                   aria-hidden="true"
                   size={16}
@@ -108,22 +132,23 @@ export function PluginCard({
               </p>
 
               <p className="mt-1 truncate text-sm font-bold text-slate-700">
-                {connectionDescription}
+                {getConnectionDescription(
+                  config,
+                  runtime,
+                )}
               </p>
             </div>
           </div>
 
-          {plugin.author ? (
-            <div className="lg:text-right">
-              <p className="text-xs font-black text-slate-400">
-                提供元
-              </p>
+          <div className="lg:text-right">
+            <p className="text-xs font-black text-slate-400">
+              提供元
+            </p>
 
-              <p className="mt-1 text-sm font-bold text-slate-700">
-                {plugin.author}
-              </p>
-            </div>
-          ) : null}
+            <p className="mt-1 text-sm font-bold text-slate-700">
+              {definition.author}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -131,15 +156,25 @@ export function PluginCard({
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
-            disabled
-            title="次のSprintでConfigStoreへ接続します"
-            className="inline-flex min-h-11 min-w-24 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-500 opacity-70"
+            aria-pressed={
+              config.enabled
+            }
+            onClick={() =>
+              onEnabledChange(
+                !config.enabled,
+              )
+            }
+            className={[
+              "inline-flex min-h-11 min-w-24 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-black transition",
+              config.enabled
+                ? "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100"
+                : "border-slate-200 bg-white text-slate-500 hover:bg-slate-100",
+            ].join(" ")}
           >
-            {plugin.enabled ? (
+            {config.enabled ? (
               <ToggleRight
                 aria-hidden="true"
                 size={19}
-                className="text-violet-600"
               />
             ) : (
               <ToggleLeft
@@ -148,33 +183,55 @@ export function PluginCard({
               />
             )}
 
-            {plugin.enabled
+            {config.enabled
               ? "有効"
               : "無効"}
           </button>
 
           <button
             type="button"
-            disabled
-            title="次のSprintでConnectorへ接続します"
-            className="inline-flex min-h-11 min-w-24 items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 text-sm font-black text-white shadow-sm shadow-violet-200 opacity-60"
+            onClick={
+              onConnectionToggle
+            }
+            disabled={
+              !config.enabled ||
+              isConnecting
+            }
+            className={[
+              "inline-flex min-h-11 min-w-24 items-center justify-center gap-2 rounded-xl px-4 text-sm font-black shadow-sm transition",
+              !config.enabled
+                ? "cursor-not-allowed bg-slate-200 text-slate-400 shadow-none"
+                : isConnecting
+                  ? "cursor-wait bg-amber-100 text-amber-700 shadow-none"
+                  : isConnected
+                    ? "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200 hover:bg-rose-100"
+                    : "bg-violet-600 text-white shadow-violet-200 hover:bg-violet-700",
+            ].join(" ")}
           >
-            <Cable
-              aria-hidden="true"
-              size={17}
-            />
+            {isConnecting ? (
+              <LoaderCircle
+                aria-hidden="true"
+                size={17}
+                className="animate-spin"
+              />
+            ) : (
+              <Cable
+                aria-hidden="true"
+                size={17}
+              />
+            )}
 
-            {plugin.connectionStatus ===
-            "connected"
-              ? "切断"
-              : "接続"}
+            {getConnectionButtonLabel(
+              config,
+              runtime,
+            )}
           </button>
 
           <button
             type="button"
             disabled
             title="Plugin設定画面は今後実装します"
-            className="inline-flex min-h-11 min-w-24 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-600 opacity-70"
+            className="inline-flex min-h-11 min-w-24 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-400 opacity-70"
           >
             <Settings
               aria-hidden="true"
@@ -204,41 +261,48 @@ function getPluginIcon(
   }
 }
 
-function getPluginDescription(
-  plugin: PluginDefinition,
+function getConnectionButtonLabel(
+  config: PluginConfig,
+  runtime: PluginRuntime,
 ): string {
-  if (plugin.description) {
-    return plugin.description;
+  if (!config.enabled) {
+    return "利用不可";
   }
 
-  switch (plugin.type) {
-    case "tiktok":
-      return "TikTok LIVEのイベントを受信します。";
+  switch (
+    runtime.connectionStatus
+  ) {
+    case "connected":
+      return "切断";
 
-    case "minecraft":
-      return "Minecraftへ妨害コマンドを送信します。";
+    case "connecting":
+      return "接続中";
 
-    case "overlay":
-      return "配信用オーバーレイへ演出を出力します。";
+    case "error":
+    case "disconnected":
+      return "接続";
   }
 }
 
 function getConnectionDescription(
-  plugin: PluginDefinition,
+  config: PluginConfig,
+  runtime: PluginRuntime,
 ): string {
-  if (!plugin.enabled) {
+  if (!config.enabled) {
     return "Pluginは現在無効です";
   }
 
-  if (plugin.errorMessage) {
-    return plugin.errorMessage;
+  if (runtime.errorMessage) {
+    return runtime.errorMessage;
   }
 
-  if (plugin.connectionDetail) {
-    return plugin.connectionDetail;
+  if (runtime.connectionDetail) {
+    return runtime.connectionDetail;
   }
 
-  switch (plugin.connectionStatus) {
+  switch (
+    runtime.connectionStatus
+  ) {
     case "connected":
       return "サービスへ接続されています";
 

@@ -7,11 +7,23 @@ import {
 } from "lucide-react";
 
 import type {
-  PluginDefinition,
-} from "@/features/plugins";
+  PluginConfig,
+  PluginId,
+  PluginRuntime,
+} from "../types/plugin";
 
 type PluginSummaryProps = {
-  plugins: PluginDefinition[];
+  pluginIds: readonly PluginId[];
+
+  configs: Record<
+    PluginId,
+    PluginConfig
+  >;
+
+  runtimes: Record<
+    PluginId,
+    PluginRuntime
+  >;
 };
 
 type SummaryItemProps = {
@@ -23,43 +35,50 @@ type SummaryItemProps = {
 };
 
 export function PluginSummary({
-  plugins,
+  pluginIds,
+  configs,
+  runtimes,
 }: PluginSummaryProps) {
-  const enabledPlugins = plugins.filter(
-    (plugin) => plugin.enabled,
-  );
+  const enabledPluginIds =
+    pluginIds.filter(
+      (id) => configs[id].enabled,
+    );
 
   const connectedCount =
-    enabledPlugins.filter(
-      (plugin) =>
-        plugin.connectionStatus ===
+    enabledPluginIds.filter(
+      (id) =>
+        runtimes[id]
+          .connectionStatus ===
         "connected",
     ).length;
 
   const connectingCount =
-    enabledPlugins.filter(
-      (plugin) =>
-        plugin.connectionStatus ===
+    enabledPluginIds.filter(
+      (id) =>
+        runtimes[id]
+          .connectionStatus ===
         "connecting",
     ).length;
 
   const disconnectedCount =
-    enabledPlugins.filter(
-      (plugin) =>
-        plugin.connectionStatus ===
+    enabledPluginIds.filter(
+      (id) =>
+        runtimes[id]
+          .connectionStatus ===
         "disconnected",
     ).length;
 
   const errorCount =
-    enabledPlugins.filter(
-      (plugin) =>
-        plugin.connectionStatus ===
+    enabledPluginIds.filter(
+      (id) =>
+        runtimes[id]
+          .connectionStatus ===
         "error",
     ).length;
 
   const disabledCount =
-    plugins.length -
-    enabledPlugins.length;
+    pluginIds.length -
+    enabledPluginIds.length;
 
   return (
     <section
@@ -98,7 +117,9 @@ export function PluginSummary({
 
         <SummaryItem
           label="未接続"
-          value={disconnectedCount}
+          value={
+            disconnectedCount
+          }
           icon={Unplug}
           className="border-slate-200 bg-white"
           iconClassName="bg-slate-100 text-slate-600"

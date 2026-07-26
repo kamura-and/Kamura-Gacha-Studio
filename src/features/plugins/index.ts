@@ -7,21 +7,45 @@ export {
   usePluginStore,
 } from "./store/pluginStore";
 
+export {
+  usePluginRuntimeStore,
+} from "./store/pluginRuntimeStore";
+
+export {
+  usePluginConfigStore,
+} from "./store/pluginConfigStore";
+
+export {
+  pluginDefinitions,
+} from "./definitions/pluginDefinitions";
+
+export {
+  PluginManagerPage,
+} from "./pages/PluginManagerPage";
+
+export {
+  PluginCard,
+} from "./components/PluginCard";
+
+export {
+  PluginStatusBadge,
+} from "./components/PluginStatusBadge";
+
+export {
+  PluginSummary,
+} from "./components/PluginSummary";
+
 export type {
+  PluginCapability,
+  PluginConfig,
   PluginConnectionStatus,
   PluginConnectionUpdate,
   PluginDefinition,
+  PluginDomainDefinition,
   PluginId,
+  PluginRuntime,
+  PluginRuntimeUpdate,
+  PluginSettingValue,
+  PluginSettings,
   PluginType,
 } from "./types/plugin";
-
-export * from "./store/pluginRuntimeStore";
-
-export * from "./store/pluginConfigStore";
-
-export * from "./pages/PluginManagerPage";
-
-export * from "./components/PluginCard";
-export * from "./components/PluginStatusBadge";
-export * from "./components/PluginSummary";
-export * from "./pages/PluginManagerPage";
