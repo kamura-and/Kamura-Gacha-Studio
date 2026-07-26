@@ -15,12 +15,15 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { usePluginStore } from "@/features/plugins";
+import { pluginDefinitions } from "@/features/plugins/definitions/pluginDefinitions";
+import { usePluginConfigStore } from "@/features/plugins/store/pluginConfigStore";
+import { usePluginRuntimeStore } from "@/features/plugins/store/pluginRuntimeStore";
 
 import type {
-  PluginDefinition,
+  PluginId,
   PluginType,
-} from "@/features/plugins";
+  PluginConnectionStatus,
+} from "@/features/plugins/types/plugin";
 
 type DisplayStatus =
   | "online"
@@ -29,278 +32,330 @@ type DisplayStatus =
   | "error"
   | "disabled";
 
+type ConnectionPlugin = {
+  id: PluginId;
+  name: string;
+  type: PluginType;
+
+  enabled: boolean;
+
+  connectionStatus: PluginConnectionStatus;
+  connectionDetail?: string;
+  errorMessage?: string;
+
+  lastHeartbeatAt?: number;
+  lastConnectedAt?: number;
+};
+
 type ConnectionItemProps = {
-  plugin: PluginDefinition;
+  plugin: ConnectionPlugin;
 };
-
-const statusStyles: Record<
-  DisplayStatus,
-  {
-    dot: string;
-    badge: string;
-    icon: string;
-  }
-> = {
-  online: {
-    dot: "bg-emerald-500",
-    badge:
-      "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-    icon:
-      "bg-emerald-50 text-emerald-600",
-  },
-
-  waiting: {
-    dot: "bg-amber-500",
-    badge:
-      "bg-amber-50 text-amber-700 ring-amber-600/20",
-    icon:
-      "bg-amber-50 text-amber-600",
-  },
-
-  offline: {
-    dot: "bg-slate-400",
-    badge:
-      "bg-slate-100 text-slate-600 ring-slate-500/20",
-    icon:
-      "bg-slate-100 text-slate-500",
-  },
-
-  error: {
-    dot: "bg-rose-500",
-    badge:
-      "bg-rose-50 text-rose-700 ring-rose-600/20",
-    icon:
-      "bg-rose-50 text-rose-600",
-  },
-
-  disabled: {
-    dot: "bg-slate-300",
-    badge:
-      "bg-slate-100 text-slate-400 ring-slate-400/20",
-    icon:
-      "bg-slate-100 text-slate-400",
-  },
-};
-
-function getPluginIcon(
-  type: PluginType,
-): LucideIcon {
-  switch (type) {
-    case "tiktok":
-      return Radio;
-
-    case "minecraft":
-      return Gamepad2;
-
-    case "overlay":
-      return Wifi;
-  }
-}
-
-function getDisplayStatus(
-  plugin: PluginDefinition,
-): DisplayStatus {
-  if (!plugin.enabled) {
-    return "disabled";
-  }
-
-  switch (
-    plugin.connectionStatus
-  ) {
-    case "connected":
-      return "online";
-
-    case "connecting":
-      return "waiting";
-
-    case "error":
-      return "error";
-
-    case "disconnected":
-      return "offline";
-  }
-}
-
-function getStatusLabel(
-  plugin: PluginDefinition,
-): string {
-  if (!plugin.enabled) {
-    return "無効";
-  }
-
-  switch (
-    plugin.connectionStatus
-  ) {
-    case "connected":
-      return "接続中";
-
-    case "connecting":
-      return "接続処理中";
-
-    case "error":
-      return "エラー";
-
-    case "disconnected":
-      return "未接続";
-  }
-}
-
-function getDescription(
-  plugin: PluginDefinition,
-): string {
-  if (!plugin.enabled) {
-    return "このPluginは無効です";
-  }
-
-  switch (
-    plugin.connectionStatus
-  ) {
-    case "connected":
-      return "サービスへ接続されています";
-
-    case "connecting":
-      return "サービスへ接続しています";
-
-    case "error":
-      return "接続処理でエラーが発生しました";
-
-    case "disconnected":
-      return "サービスへ接続されていません";
-  }
-}
-
-function getDetail(
-  plugin: PluginDefinition,
-): string {
-  if (!plugin.enabled) {
-    return "Plugin設定で有効化してください";
-  }
-
-  if (plugin.errorMessage) {
-    return plugin.errorMessage;
-  }
-
-  if (plugin.connectionDetail) {
-    return plugin.connectionDetail;
-  }
-
-  if (
-    plugin.connectionStatus ===
-    "connected"
-  ) {
-    const timestamp =
-      plugin.lastHeartbeatAt ??
-      plugin.lastConnectedAt;
-
-    if (timestamp) {
-      return `最終確認：${formatRelativeTime(
-        timestamp,
-      )}`;
-    }
-
-    return "接続済み";
-  }
-
-  if (
-    plugin.connectionStatus ===
-    "connecting"
-  ) {
-    return "接続結果を待っています";
-  }
-
-  return "接続情報はありません";
-}
-
-function ConnectionItem({
-  plugin,
-}: ConnectionItemProps) {
-  const status =
-    getDisplayStatus(plugin);
-
-  const styles =
-    statusStyles[status];
-
-  const Icon =
-    getPluginIcon(plugin.type);
-
-  return (
-    <article className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/60">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-300 to-transparent opacity-0 transition group-hover:opacity-100" />
-
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-start gap-4">
-          <div
-            className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${styles.icon}`}
-          >
-            <Icon
-              size={22}
-              strokeWidth={2}
-            />
-          </div>
-
-          <div className="min-w-0">
-            <h3 className="truncate text-base font-bold text-slate-900">
-              {plugin.name}
-            </h3>
-
-            <p className="mt-1 text-sm font-medium text-slate-600">
-              {getDescription(
-                plugin,
-              )}
-            </p>
-          </div>
-        </div>
-
-        <span
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${styles.badge}`}
-        >
-          <span
-            className={`size-2 rounded-full ${styles.dot} ${
-              status === "online"
-                ? "animate-pulse"
-                : ""
-            }`}
-          />
-
-          {getStatusLabel(
-            plugin,
-          )}
-        </span>
-      </div>
-
-      <div className="mt-5 flex items-center gap-2 rounded-2xl bg-slate-50 px-3.5 py-3 text-sm text-slate-500">
-        {plugin.connectionStatus ===
-        "connecting" ? (
-          <LoaderCircle
-            size={15}
-            className="shrink-0 animate-spin text-amber-500"
-          />
-        ) : plugin.connectionStatus ===
-          "error" ? (
-          <XCircle
-            size={15}
-            className="shrink-0 text-rose-500"
-          />
-        ) : (
-          <Clock3
-            size={15}
-            className="shrink-0 text-slate-400"
-          />
-        )}
-
-        <span className="truncate">
-          {getDetail(plugin)}
-        </span>
-      </div>
-    </article>
-  );
-}
 
 export function ConnectionStatusSection() {
+  const statusStyles: Record<
+    DisplayStatus,
+    {
+      dot: string;
+      badge: string;
+      icon: string;
+    }
+  > = {
+    online: {
+      dot: "bg-emerald-500",
+      badge:
+        "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
+      icon:
+        "bg-emerald-50 text-emerald-600",
+    },
+
+    waiting: {
+      dot: "bg-amber-500",
+      badge:
+        "bg-amber-50 text-amber-700 ring-amber-600/20",
+      icon:
+        "bg-amber-50 text-amber-600",
+    },
+
+    offline: {
+      dot: "bg-slate-400",
+      badge:
+        "bg-slate-100 text-slate-600 ring-slate-500/20",
+      icon:
+        "bg-slate-100 text-slate-500",
+    },
+
+    error: {
+      dot: "bg-rose-500",
+      badge:
+        "bg-rose-50 text-rose-700 ring-rose-600/20",
+      icon:
+        "bg-rose-50 text-rose-600",
+    },
+
+    disabled: {
+      dot: "bg-slate-300",
+      badge:
+        "bg-slate-100 text-slate-400 ring-slate-400/20",
+      icon:
+        "bg-slate-100 text-slate-400",
+    },
+  };
+
+  function getPluginIcon(
+    type: PluginType,
+  ): LucideIcon {
+    switch (type) {
+      case "tiktok":
+        return Radio;
+
+      case "minecraft":
+        return Gamepad2;
+
+      case "overlay":
+        return Wifi;
+    }
+  }
+
+  function getDisplayStatus(
+    plugin: ConnectionPlugin,
+  ): DisplayStatus {
+    if (!plugin.enabled) {
+      return "disabled";
+    }
+
+    switch (
+    plugin.connectionStatus
+    ) {
+      case "connected":
+        return "online";
+
+      case "connecting":
+        return "waiting";
+
+      case "error":
+        return "error";
+
+      case "disconnected":
+        return "offline";
+    }
+  }
+
+  function getStatusLabel(
+    plugin: ConnectionPlugin,
+  ): string {
+    if (!plugin.enabled) {
+      return "無効";
+    }
+
+    switch (
+    plugin.connectionStatus
+    ) {
+      case "connected":
+        return "接続中";
+
+      case "connecting":
+        return "接続処理中";
+
+      case "error":
+        return "エラー";
+
+      case "disconnected":
+        return "未接続";
+    }
+  }
+
+  function getDescription(
+    plugin: ConnectionPlugin,
+  ): string {
+    if (!plugin.enabled) {
+      return "このPluginは無効です";
+    }
+
+    switch (
+    plugin.connectionStatus
+    ) {
+      case "connected":
+        return "サービスへ接続されています";
+
+      case "connecting":
+        return "サービスへ接続しています";
+
+      case "error":
+        return "接続処理でエラーが発生しました";
+
+      case "disconnected":
+        return "サービスへ接続されていません";
+    }
+  }
+
+  function getDetail(
+    plugin: ConnectionPlugin,
+  ): string {
+    if (!plugin.enabled) {
+      return "Plugin設定で有効化してください";
+    }
+
+    if (plugin.errorMessage) {
+      return plugin.errorMessage;
+    }
+
+    if (plugin.connectionDetail) {
+      return plugin.connectionDetail;
+    }
+
+    if (
+      plugin.connectionStatus ===
+      "connected"
+    ) {
+      const timestamp =
+        plugin.lastHeartbeatAt ??
+        plugin.lastConnectedAt;
+
+      if (timestamp) {
+        return `最終確認：${formatRelativeTime(
+          timestamp,
+        )}`;
+      }
+
+      return "接続済み";
+    }
+
+    if (
+      plugin.connectionStatus ===
+      "connecting"
+    ) {
+      return "接続結果を待っています";
+    }
+
+    return "接続情報はありません";
+  }
+
+  function ConnectionItem({
+    plugin,
+  }: ConnectionItemProps) {
+    const status =
+      getDisplayStatus(plugin);
+
+    const styles =
+      statusStyles[status];
+
+    const Icon =
+      getPluginIcon(plugin.type);
+
+    return (
+      <article className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/60">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-300 to-transparent opacity-0 transition group-hover:opacity-100" />
+
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-4">
+            <div
+              className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${styles.icon}`}
+            >
+              <Icon
+                size={22}
+                strokeWidth={2}
+              />
+            </div>
+
+            <div className="min-w-0">
+              <h3 className="truncate text-base font-bold text-slate-900">
+                {plugin.name}
+              </h3>
+
+              <p className="mt-1 text-sm font-medium text-slate-600">
+                {getDescription(
+                  plugin,
+                )}
+              </p>
+            </div>
+          </div>
+
+          <span
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-inset ${styles.badge}`}
+          >
+            <span
+              className={`size-2 rounded-full ${styles.dot} ${status === "online"
+                ? "animate-pulse"
+                : ""
+                }`}
+            />
+
+            {getStatusLabel(
+              plugin,
+            )}
+          </span>
+        </div>
+
+        <div className="mt-5 flex items-center gap-2 rounded-2xl bg-slate-50 px-3.5 py-3 text-sm text-slate-500">
+          {plugin.connectionStatus ===
+            "connecting" ? (
+            <LoaderCircle
+              size={15}
+              className="shrink-0 animate-spin text-amber-500"
+            />
+          ) : plugin.connectionStatus ===
+            "error" ? (
+            <XCircle
+              size={15}
+              className="shrink-0 text-rose-500"
+            />
+          ) : (
+            <Clock3
+              size={15}
+              className="shrink-0 text-slate-400"
+            />
+          )}
+
+          <span className="truncate">
+            {getDetail(plugin)}
+          </span>
+        </div>
+      </article>
+    );
+  }
+
+  const configs =
+    usePluginConfigStore(
+      (state) => state.configs,
+    );
+
+  const runtimes =
+    usePluginRuntimeStore(
+      (state) => state.runtimes,
+    );
+
   const plugins =
-    usePluginStore(
-      (state) =>
-        state.plugins,
+    pluginDefinitions.map(
+      (definition) => {
+        const config =
+          configs[definition.id];
+
+        const runtime =
+          runtimes[definition.id];
+
+        return {
+          id: definition.id,
+          name: definition.name,
+          type: definition.type,
+          enabled:
+            config.enabled,
+
+          connectionStatus:
+            runtime.connectionStatus,
+
+          connectionDetail:
+            runtime.connectionDetail,
+
+          errorMessage:
+            runtime.errorMessage,
+
+          lastHeartbeatAt:
+            runtime.lastHeartbeatAt,
+
+          lastConnectedAt:
+            runtime.lastConnectedAt,
+        };
+      },
     );
 
   const enabledPlugins =
