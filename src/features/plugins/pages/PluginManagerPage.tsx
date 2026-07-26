@@ -1,7 +1,4 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { useState } from "react";
 
 import {
   Blocks,
@@ -9,11 +6,7 @@ import {
   Unplug,
 } from "lucide-react";
 
-import {
-  connectorManager,
-  registerDefaultConnectors,
-} from "../connectors";
-
+import { connectorManager } from "../connectors";
 import { PluginCard } from "../components/PluginCard";
 import { PluginSettingsDialog } from "../components/PluginSettingsDialog";
 import { PluginSummary } from "../components/PluginSummary";
@@ -22,16 +15,9 @@ import { usePluginConfigStore } from "../store/pluginConfigStore";
 import { usePluginRuntimeStore } from "../store/pluginRuntimeStore";
 
 import type {
-  ConnectorEvent,
-  ConnectorStatus,
-} from "../connectors";
-
-import type {
   PluginId,
   PluginSettings,
 } from "../types/plugin";
-
-registerDefaultConnectors();
 
 export function PluginManagerPage() {
   const [
@@ -61,30 +47,6 @@ export function PluginManagerPage() {
       (state) => state.runtimes,
     );
 
-  const updateRuntime =
-    usePluginRuntimeStore(
-      (state) => state.update,
-    );
-
-  useEffect(() => {
-    return connectorManager.subscribe(
-      (event) => {
-        applyConnectorEventToRuntime(
-          event,
-          updateRuntime,
-        );
-      },
-    );
-  }, [updateRuntime]);
-
-  useEffect(() => {
-    return () => {
-      void connectorManager.disconnectAll(
-        "Plugin管理画面を終了しました",
-      );
-    };
-  }, []);
-
   const handleEnabledChange = (
     id: PluginId,
     enabled: boolean,
@@ -92,14 +54,6 @@ export function PluginManagerPage() {
     setEnabled(id, enabled);
 
     if (enabled) {
-      updateRuntime(id, {
-        connectionStatus:
-          "disconnected",
-        connectionDetail:
-          "Pluginが有効化されました",
-        errorMessage: undefined,
-      });
-
       return;
     }
 
@@ -109,22 +63,12 @@ export function PluginManagerPage() {
         "Pluginが無効化されました",
       )
       .catch((error: unknown) => {
-        updateRuntime(id, {
-          connectionStatus: "error",
-          connectionDetail:
-            "Pluginの切断に失敗しました",
-          errorMessage:
-            getErrorMessage(error),
-        });
+        logConnectorError(
+          "Pluginの切断に失敗しました",
+          id,
+          error,
+        );
       });
-
-    updateRuntime(id, {
-      connectionStatus:
-        "disconnected",
-      connectionDetail:
-        "Pluginが無効化されました",
-      errorMessage: undefined,
-    });
   };
 
   const handleConnectionToggle = (
@@ -138,11 +82,12 @@ export function PluginManagerPage() {
       return;
     }
 
+    const status =
+      connector.getStatus();
+
     if (
-      connector.getStatus() ===
-        "connected" ||
-      connector.getStatus() ===
-        "connecting"
+      status === "connected" ||
+      status === "connecting"
     ) {
       void connectorManager
         .disconnect(
@@ -150,32 +95,24 @@ export function PluginManagerPage() {
           "手動で切断されました",
         )
         .catch((error: unknown) => {
-          updateRuntime(id, {
-            connectionStatus:
-              "error",
-            connectionDetail:
-              "切断処理に失敗しました",
-            errorMessage:
-              getErrorMessage(error),
-          });
+          logConnectorError(
+            "切断処理に失敗しました",
+            id,
+            error,
+          );
         });
 
       return;
     }
 
     void connectorManager
-      .connect(
-        id,
-        config,
-      )
+      .connect(id, config)
       .catch((error: unknown) => {
-        updateRuntime(id, {
-          connectionStatus: "error",
-          connectionDetail:
-            "接続処理に失敗しました",
-          errorMessage:
-            getErrorMessage(error),
-        });
+        logConnectorError(
+          "接続処理に失敗しました",
+          id,
+          error,
+        );
       });
   };
 
@@ -192,9 +129,7 @@ export function PluginManagerPage() {
   const handleSettingsSave = (
     settings: PluginSettings,
   ) => {
-    if (
-      selectedPluginId === null
-    ) {
+    if (selectedPluginId === null) {
       return;
     }
 
@@ -202,23 +137,6 @@ export function PluginManagerPage() {
       selectedPluginId,
       settings,
     );
-
-    const connector =
-      connectorManager.get(
-        selectedPluginId,
-      );
-
-    if (
-      connector?.isConnected()
-    ) {
-      updateRuntime(
-        selectedPluginId,
-        {
-          connectionDetail:
-            "設定が変更されました。再接続すると反映されます",
-        },
-      );
-    }
   };
 
   const selectedDefinition =
@@ -398,156 +316,13 @@ export function PluginManagerPage() {
   );
 }
 
-type UpdateRuntime = ReturnType<
-  typeof usePluginRuntimeStore.getState
->["update"];
-
-function applyConnectorEventToRuntime(
-  event: ConnectorEvent,
-  updateRuntime: UpdateRuntime,
-): void {
-  switch (event.type) {
-    case "status-changed":
-      applyConnectorStatus(
-        event.pluginId,
-        event.status,
-        event.detail,
-        updateRuntime,
-      );
-
-      return;
-
-    case "connected":
-      updateRuntime(
-        event.pluginId,
-        {
-          connectionStatus:
-            "connected",
-          connectionDetail:
-            event.detail ??
-            "サービスへ接続しました",
-          lastConnectedAt:
-            event.occurredAt,
-          lastHeartbeatAt:
-            event.occurredAt,
-          errorMessage: undefined,
-        },
-      );
-
-      return;
-
-    case "disconnected":
-      updateRuntime(
-        event.pluginId,
-        {
-          connectionStatus:
-            "disconnected",
-          connectionDetail:
-            event.detail ??
-            "サービスから切断しました",
-          errorMessage: undefined,
-        },
-      );
-
-      return;
-
-    case "error":
-      updateRuntime(
-        event.pluginId,
-        {
-          connectionStatus:
-            "error",
-          connectionDetail:
-            event.message,
-          errorMessage:
-            event.message,
-        },
-      );
-
-      return;
-
-    case "message":
-      updateRuntime(
-        event.pluginId,
-        {
-          lastHeartbeatAt:
-            event.occurredAt,
-        },
-      );
-  }
-}
-
-function applyConnectorStatus(
+function logConnectorError(
+  message: string,
   pluginId: PluginId,
-  status: ConnectorStatus,
-  detail: string | undefined,
-  updateRuntime: UpdateRuntime,
-): void {
-  switch (status) {
-    case "connecting":
-      updateRuntime(pluginId, {
-        connectionStatus:
-          "connecting",
-        connectionDetail:
-          detail ??
-          "接続処理を実行しています",
-        errorMessage: undefined,
-      });
-
-      return;
-
-    case "connected":
-      updateRuntime(pluginId, {
-        connectionStatus:
-          "connected",
-        connectionDetail:
-          detail ??
-          "サービスへ接続しました",
-        errorMessage: undefined,
-      });
-
-      return;
-
-    case "disconnected":
-      updateRuntime(pluginId, {
-        connectionStatus:
-          "disconnected",
-        connectionDetail:
-          detail ??
-          "サービスへ接続されていません",
-        errorMessage: undefined,
-      });
-
-      return;
-
-    case "error":
-      updateRuntime(pluginId, {
-        connectionStatus: "error",
-        connectionDetail:
-          detail ??
-          "接続処理でエラーが発生しました",
-        errorMessage:
-          detail ??
-          "接続処理でエラーが発生しました",
-      });
-
-      return;
-
-    case "disconnecting":
-      updateRuntime(pluginId, {
-        connectionDetail:
-          detail ??
-          "切断処理を実行しています",
-      });
-  }
-}
-
-function getErrorMessage(
   error: unknown,
-): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "不明なエラーが発生しました";
+): void {
+  console.error(
+    `[PluginManagerPage] ${message}`,
+    { pluginId, error },
+  );
 }
