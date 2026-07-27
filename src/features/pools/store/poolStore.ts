@@ -2,9 +2,7 @@ import { create } from "zustand";
 
 import { poolRepository } from "../repositories/poolRepository";
 
-import type {
-  GachaPool
-} from "../types/pool";
+import type { GachaPool } from "../types/pool";
 
 type PoolStore = {
   pools: GachaPool[];
@@ -30,9 +28,11 @@ export const usePoolStore =
       pools: [],
 
       loadPools() {
+        const pools =
+          poolRepository.loadAll();
+
         set({
-          pools:
-            poolRepository.loadAll(),
+          pools,
         });
       },
 
