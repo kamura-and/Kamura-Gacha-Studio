@@ -14,6 +14,7 @@ import {
   Wifi,
 } from "lucide-react";
 
+import { MinecraftCommandTester } from "./MinecraftCommandTester";
 import { PluginStatusBadge } from "./PluginStatusBadge";
 
 import type {
@@ -25,7 +26,7 @@ import type {
 
 type PluginCardProps = {
   definition:
-    PluginDomainDefinition;
+  PluginDomainDefinition;
 
   config: PluginConfig;
 
@@ -244,6 +245,11 @@ export function PluginCard({
           </button>
         </div>
       </div>
+      {definition.type === "minecraft" &&
+        config.enabled &&
+        isConnected ? (
+        <MinecraftCommandTester />
+      ) : null}
     </article>
   );
 }
@@ -275,7 +281,7 @@ function getConnectionButtonLabel(
   }
 
   switch (
-    runtime.connectionStatus
+  runtime.connectionStatus
   ) {
     case "connected":
       return "切断";
@@ -309,7 +315,7 @@ function getConnectionDescription(
   }
 
   switch (
-    runtime.connectionStatus
+  runtime.connectionStatus
   ) {
     case "connected":
       return "サービスへ接続されています";

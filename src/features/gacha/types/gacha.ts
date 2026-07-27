@@ -25,7 +25,25 @@ export type GachaItem = {
   id: string;
   name: string;
   description: string;
+
+  /**
+   * 保存済みエフェクトのID。
+   *
+   * 指定されている場合は、
+   * EffectRepositoryからエフェクトを取得して実行する。
+   *
+   * 未指定の場合は、
+   * 従来どおりcommandsを実行する。
+   */
+  effectId?: string | null;
+
+  /**
+   * 旧形式との互換用コマンド。
+   *
+   * effectIdが未指定の場合に使用する。
+   */
   commands: GachaCommand[];
+
   rarity: GachaRarity;
   probability: number;
   isEnabled: boolean;

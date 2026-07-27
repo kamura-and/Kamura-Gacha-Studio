@@ -12,7 +12,7 @@ import { NavLink } from "react-router-dom";
 const navigationItems = [
   {
     label: "ダッシュボード",
-    path: "/",
+    path: "/home",
     icon: LayoutDashboard,
   },
   {

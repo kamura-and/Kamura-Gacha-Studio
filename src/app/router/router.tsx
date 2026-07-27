@@ -10,6 +10,8 @@ import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { EffectEditorPage } from "@/features/effects/pages/EffectEditorPage";
 import { EffectListPage } from "@/features/effects/pages/EffectListPage";
 
+import { GachaPage } from "@/features/gacha/pages/GachaPage";
+
 import { PluginManagerPage } from "@/features/plugins";
 
 import { QueuePage } from "@/features/queue/pages/QueuePage";
@@ -34,6 +36,12 @@ export const router = createHashRouter([
         path: "home",
 
         element: <DashboardPage />,
+      },
+
+      {
+        path: "gacha",
+
+        element: <GachaPage />,
       },
 
       {
