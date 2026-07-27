@@ -1,5 +1,10 @@
 import { create } from "zustand";
 
+import {
+  createJSONStorage,
+  persist,
+} from "zustand/middleware";
+
 import type {
   PluginConfig,
   PluginId,
@@ -7,7 +12,10 @@ import type {
 } from "../types/plugin";
 
 type PluginConfigState = {
-  configs: Record<PluginId, PluginConfig>;
+  configs: Record<
+    PluginId,
+    PluginConfig
+  >;
 
   setEnabled: (
     id: PluginId,
@@ -46,7 +54,8 @@ function createInitialSettings(
       return {
         width: 1920,
         height: 1080,
-        url: "http://localhost:5173/overlay",
+        url:
+          "http://localhost:5173/overlay",
         autoShow: false,
       };
 
@@ -87,57 +96,76 @@ function createInitialConfigs(): Record<
 }
 
 export const usePluginConfigStore =
-  create<PluginConfigState>(
-    (set) => ({
-      configs:
-        createInitialConfigs(),
+  create<PluginConfigState>()(
+    persist(
+      (set) => ({
+        configs:
+          createInitialConfigs(),
 
-      setEnabled: (
-        id,
-        enabled,
-      ) =>
-        set((state) => ({
-          configs: {
-            ...state.configs,
+        setEnabled: (
+          id,
+          enabled,
+        ) =>
+          set((state) => ({
+            configs: {
+              ...state.configs,
 
-            [id]: {
-              ...state.configs[id],
-              enabled,
-              updatedAt:
-                Date.now(),
-            },
-          },
-        })),
-
-      updateSettings: (
-        id,
-        settings,
-      ) =>
-        set((state) => ({
-          configs: {
-            ...state.configs,
-
-            [id]: {
-              ...state.configs[id],
-
-              settings: {
-                ...state
-                  .configs[id]
-                  .settings,
-
-                ...settings,
+              [id]: {
+                ...state.configs[id],
+                enabled,
+                updatedAt:
+                  Date.now(),
               },
-
-              updatedAt:
-                Date.now(),
             },
-          },
-        })),
+          })),
 
-      reset: () =>
-        set({
+        updateSettings: (
+          id,
+          settings,
+        ) =>
+          set((state) => ({
+            configs: {
+              ...state.configs,
+
+              [id]: {
+                ...state.configs[id],
+
+                settings: {
+                  ...state
+                    .configs[id]
+                    .settings,
+
+                  ...settings,
+                },
+
+                updatedAt:
+                  Date.now(),
+              },
+            },
+          })),
+
+        reset: () =>
+          set({
+            configs:
+              createInitialConfigs(),
+          }),
+      }),
+      {
+        name:
+          "kamura-plugin-configs",
+
+        storage:
+          createJSONStorage(
+            () =>
+              localStorage,
+          ),
+
+        partialize: (
+          state,
+        ) => ({
           configs:
-            createInitialConfigs(),
+            state.configs,
         }),
-    }),
+      },
+    ),
   );
