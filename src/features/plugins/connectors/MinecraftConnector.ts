@@ -3,21 +3,193 @@ import type {
 } from "../types/plugin";
 
 import {
-  SimulatedPluginConnector,
-} from "./SimulatedPluginConnector";
+  BasePluginConnector,
+} from "./PluginConnector";
 
-export class MinecraftConnector extends SimulatedPluginConnector {
+import type {
+  ConnectorConnectContext,
+  ConnectorDisconnectContext,
+} from "./PluginConnector";
+
+import {
+  clearActiveMinecraftConnection,
+  setActiveMinecraftConnection,
+  testMinecraftConnection,
+} from "../../minecraft/services/minecraftConnector";
+
+import type {
+  MinecraftConnectionSettings,
+} from "../../minecraft/services/minecraftConnector";
+
+export class MinecraftConnector
+  extends BasePluginConnector {
   public readonly pluginId =
     "minecraft" as const;
 
-  protected validateConfig(
+  private operationVersion = 0;
+
+  public async connect(
+    context: ConnectorConnectContext,
+  ): Promise<void> {
+    const {
+      config,
+      signal,
+    } = context;
+
+    if (
+      this.getStatus() ===
+      "connected"
+    ) {
+      return;
+    }
+
+    if (
+      this.getStatus() ===
+      "connecting"
+    ) {
+      return;
+    }
+
+    const operationVersion =
+      ++this.operationVersion;
+
+    try {
+      this.assertConfig(
+        config,
+      );
+
+      const settings =
+        this.getConnectionSettings(
+          config,
+        );
+
+      throwIfAborted(
+        signal,
+      );
+
+      this.setStatus(
+        "connecting",
+        `${settings.host}:${settings.port} への接続を確認しています`,
+      );
+
+      const result =
+        await testMinecraftConnection(
+          settings,
+        );
+
+      if (
+        operationVersion !==
+        this.operationVersion
+      ) {
+        return;
+      }
+
+      throwIfAborted(
+        signal,
+      );
+
+      setActiveMinecraftConnection(
+        settings,
+      );
+
+      this.emitConnected(
+        `${result.address} へ接続しました`,
+      );
+    } catch (error) {
+      if (
+        operationVersion !==
+        this.operationVersion
+      ) {
+        return;
+      }
+
+      clearActiveMinecraftConnection();
+
+      if (
+        isAbortError(error)
+      ) {
+        this.emitDisconnected(
+          "接続処理がキャンセルされました",
+        );
+
+        return;
+      }
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Minecraftへの接続に失敗しました";
+
+      this.emitError(
+        message,
+        error,
+      );
+
+      throw error;
+    }
+  }
+
+  public async disconnect(
+    context?: ConnectorDisconnectContext,
+  ): Promise<void> {
+    if (
+      this.getStatus() ===
+      "disconnected"
+    ) {
+      clearActiveMinecraftConnection();
+
+      return;
+    }
+
+    ++this.operationVersion;
+
+    this.setStatus(
+      "disconnecting",
+      "Minecraft接続設定を解除しています",
+    );
+
+    clearActiveMinecraftConnection();
+
+    this.emitDisconnected(
+      context?.reason ??
+        "Minecraftから切断しました",
+    );
+  }
+
+  private assertConfig(
     config: PluginConfig,
   ): void {
+    if (!config.enabled) {
+      throw new Error(
+        "無効なPluginには接続できません",
+      );
+    }
+
+    if (
+      config.id !==
+      this.pluginId
+    ) {
+      throw new Error(
+        [
+          "PluginConfigのIDが一致しません。",
+          `expected=${this.pluginId}`,
+          `actual=${config.id}`,
+        ].join(" "),
+      );
+    }
+  }
+
+  private getConnectionSettings(
+    config: PluginConfig,
+  ): MinecraftConnectionSettings {
     const host =
       config.settings.host;
 
     const port =
       config.settings.port;
+
+    const password =
+      config.settings.password;
 
     if (
       typeof host !== "string" ||
@@ -38,24 +210,53 @@ export class MinecraftConnector extends SimulatedPluginConnector {
         "Minecraftのポート番号が正しくありません",
       );
     }
-  }
-
-  protected createConnectedDetail(
-    config: PluginConfig,
-  ): string {
-    const host =
-      config.settings.host;
-
-    const port =
-      config.settings.port;
 
     if (
-      typeof host === "string" &&
-      typeof port === "number"
+      typeof password !==
+        "string" ||
+      password.trim().length === 0
     ) {
-      return `${host.trim()}:${port} へ接続しました`;
+      throw new Error(
+        "MinecraftのRCONパスワードが設定されていません",
+      );
     }
 
-    return "Minecraftへ接続しました";
+    return {
+      host: host.trim(),
+      port,
+      password,
+    };
   }
+}
+
+function throwIfAborted(
+  signal?: AbortSignal,
+): void {
+  if (!signal?.aborted) {
+    return;
+  }
+
+  throw createAbortError();
+}
+
+function createAbortError():
+  Error {
+  const error =
+    new Error(
+      "接続処理がキャンセルされました",
+    );
+
+  error.name =
+    "AbortError";
+
+  return error;
+}
+
+function isAbortError(
+  error: unknown,
+): boolean {
+  return (
+    error instanceof Error &&
+    error.name === "AbortError"
+  );
 }
