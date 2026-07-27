@@ -1,11 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffectStore } from "@/features/effects/store/effectStore";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   CircleDot,
   Dices,
   Plus,
   RotateCcw,
   Search,
-  SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
@@ -24,17 +28,36 @@ const rarityFilters: Array<{
   value: RarityFilter;
   label: string;
 }> = [
-  { value: "all", label: "すべて" },
-  { value: "common", label: "Common" },
-  { value: "rare", label: "Rare" },
-  { value: "epic", label: "Epic" },
-  { value: "legendary", label: "Legendary" },
-  { value: "ultra", label: "Ultra Rare" },
-  { value: "secret", label: "Secret" },
-];
+    { value: "all", label: "すべて" },
+    { value: "common", label: "コモン" },
+    { value: "rare", label: "レア" },
+    { value: "epic", label: "エピック" },
+    {
+      value: "legendary",
+      label: "レジェンダリー",
+    },
+    {
+      value: "ultra",
+      label: "ウルトラレア",
+    },
+    {
+      value: "secret",
+      label: "シークレット",
+    },
+  ];
 
 export function GachaPage() {
-  const items = useGachaStore((state) => state.items);
+  const items = useGachaStore(
+    (state) => state.items,
+  );
+
+  const effects = useEffectStore(
+    (state) => state.effects,
+  );
+
+  const loadEffects = useEffectStore(
+    (state) => state.loadEffects,
+  );
 
   const upsertItem = useGachaStore(
     (state) => state.upsertItem,
@@ -52,6 +75,10 @@ export function GachaPage() {
     (state) => state.resetItems,
   );
 
+  useEffect(() => {
+    void loadEffects();
+  }, [loadEffects]);
+
   const [searchQuery, setSearchQuery] = useState("");
 
   const [rarityFilter, setRarityFilter] =
@@ -68,41 +95,52 @@ export function GachaPage() {
       .toLowerCase();
 
     return items.filter((item) => {
+      const linkedEffect = item.effectId
+        ? effects.find(
+          (effect) =>
+            effect.id === item.effectId,
+        )
+        : undefined;
+
       const matchesSearch =
-  normalizedQuery.length === 0 ||
-  item.name
-    .toLowerCase()
-    .includes(normalizedQuery) ||
-  item.description
-    .toLowerCase()
-    .includes(normalizedQuery) ||
-  item.commands.some((command) =>
-    command.value
-      .toLowerCase()
-      .includes(normalizedQuery),
-  );
+        normalizedQuery.length === 0 ||
+        item.name
+          .toLowerCase()
+          .includes(normalizedQuery) ||
+        item.description
+          .toLowerCase()
+          .includes(normalizedQuery) ||
+        linkedEffect?.name
+          .toLowerCase()
+          .includes(normalizedQuery) ||
+        linkedEffect?.description
+          .toLowerCase()
+          .includes(normalizedQuery) ||
+        item.commands.some((command) =>
+          command.value
+            .toLowerCase()
+            .includes(normalizedQuery),
+        );
 
       const matchesRarity =
         rarityFilter === "all" ||
         item.rarity === rarityFilter;
 
-      return matchesSearch && matchesRarity;
+      return (
+        matchesSearch &&
+        matchesRarity
+      );
     });
-  }, [items, rarityFilter, searchQuery]);
+  }, [
+    effects,
+    items,
+    rarityFilter,
+    searchQuery,
+  ]);
 
   const enabledItems = useMemo(
     () => items.filter((item) => item.isEnabled),
     [items],
-  );
-
-  const totalProbability = useMemo(
-    () =>
-      enabledItems.reduce(
-        (total, item) =>
-          total + item.probability,
-        0,
-      ),
-    [enabledItems],
   );
 
   const handleOpenCreateModal = () => {
@@ -171,8 +209,8 @@ export function GachaPage() {
               </h1>
 
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-                ガチャの排出率、レアリティ、
-                Minecraftコマンドを管理します。
+                保存済みエフェクトを景品として登録し、
+                レアリティと排出率を管理します。
               </p>
 
               <p className="mt-2 text-xs font-semibold text-emerald-600">
@@ -234,40 +272,6 @@ export function GachaPage() {
               {enabledItems.length}
             </p>
           </div>
-
-          <div
-            className={`rounded-3xl border bg-white p-5 shadow-sm ${
-              totalProbability === 100
-                ? "border-emerald-200"
-                : "border-amber-200"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className={`flex size-10 items-center justify-center rounded-2xl ${
-                  totalProbability === 100
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-100 text-amber-700"
-                }`}
-              >
-                <SlidersHorizontal size={19} />
-              </div>
-
-              <p className="text-sm font-bold text-slate-600">
-                排出率合計
-              </p>
-            </div>
-
-            <p
-              className={`mt-4 text-3xl font-black ${
-                totalProbability === 100
-                  ? "text-emerald-700"
-                  : "text-amber-700"
-              }`}
-            >
-              {totalProbability}%
-            </p>
-          </div>
         </section>
 
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -285,7 +289,7 @@ export function GachaPage() {
                   onChange={(event) =>
                     setSearchQuery(event.target.value)
                   }
-                  placeholder="ガチャ名・説明・コマンドを検索"
+                  placeholder="ガチャ名・説明・エフェクトを検索"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-100"
                 />
               </div>
@@ -314,11 +318,10 @@ export function GachaPage() {
                     onClick={() =>
                       setRarityFilter(filter.value)
                     }
-                    className={`rounded-xl px-3 py-2 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-violet-200 ${
-                      isActive
-                        ? "bg-violet-600 text-white shadow-sm"
-                        : "bg-slate-100 text-slate-600 hover:bg-violet-50 hover:text-violet-700"
-                    }`}
+                    className={`rounded-xl px-3 py-2 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-violet-200 ${isActive
+                      ? "bg-violet-600 text-white shadow-sm"
+                      : "bg-slate-100 text-slate-600 hover:bg-violet-50 hover:text-violet-700"
+                      }`}
                   >
                     {filter.label}
                   </button>
@@ -327,20 +330,6 @@ export function GachaPage() {
             </div>
           </div>
         </section>
-
-        {totalProbability !== 100 && (
-          <section className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
-            <p className="text-sm font-black text-amber-800">
-              有効なガチャの排出率合計が100%ではありません。
-            </p>
-
-            <p className="mt-1 text-sm text-amber-700">
-              現在の合計は
-              {totalProbability}
-              %です。抽選実装前に調整してください。
-            </p>
-          </section>
-        )}
 
         <section>
           <div className="mb-4 flex items-center justify-between gap-4">
@@ -407,6 +396,7 @@ export function GachaPage() {
         onClose={handleCloseModal}
         onSubmit={handleSubmitItem}
       />
+
     </>
   );
 }

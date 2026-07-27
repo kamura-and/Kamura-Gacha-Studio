@@ -1,32 +1,53 @@
-import type { GachaItem } from "@/features/gacha/types/gacha";
-
-export type WeightedGachaEntry = {
-  item: GachaItem;
+export type WeightTableEntry<T> = {
+  item: T;
+  weight: number;
   start: number;
   end: number;
 };
 
-export function createWeightTable(
-  items: GachaItem[],
-): WeightedGachaEntry[] {
+/**
+ * 任意のデータと重みから抽選テーブルを作成します。
+ *
+ * 景品自身から確率を取得せず、
+ * 呼び出し側がweightの取得方法を指定します。
+ */
+export function createWeightTable<T>(
+  items: T[],
+  getWeight: (item: T) => number,
+): WeightTableEntry<T>[] {
   let cursor = 0;
 
-  return items.map((item) => {
-    const start = cursor;
-    const end = start + item.probability;
-
-    cursor = end;
-
-    return {
+  return items
+    .map((item) => ({
       item,
-      start,
-      end,
-    };
-  });
+      weight: getWeight(item),
+    }))
+    .filter(
+      (entry) =>
+        Number.isFinite(entry.weight) &&
+        entry.weight > 0,
+    )
+    .map((entry) => {
+      const start = cursor;
+      const end =
+        start + entry.weight;
+
+      cursor = end;
+
+      return {
+        ...entry,
+        start,
+        end,
+      };
+    });
 }
 
-export function getWeightTotal(
-  table: WeightedGachaEntry[],
-) {
-  return table.at(-1)?.end ?? 0;
+export function getWeightTotal<T>(
+  table: WeightTableEntry<T>[],
+): number {
+  return table.reduce(
+    (total, entry) =>
+      total + entry.weight,
+    0,
+  );
 }

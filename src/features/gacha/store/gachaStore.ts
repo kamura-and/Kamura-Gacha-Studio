@@ -1,7 +1,9 @@
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import {
+  createJSONStorage,
+  persist,
+} from "zustand/middleware";
 
-import { sampleGachaItems } from "@/features/gacha/data/sampleGachaItems";
 import type {
   GachaCommand,
   GachaItem,
@@ -26,6 +28,7 @@ type LegacyGachaItem = {
   description: string;
   command?: string;
   commands?: GachaCommand[];
+  effectId?: string;
   rarity: GachaRarity;
   probability: number;
   isEnabled: boolean;
@@ -40,16 +43,9 @@ function createCommandId() {
   return `command-${crypto.randomUUID()}`;
 }
 
-function cloneSampleItems(): GachaItem[] {
-  return sampleGachaItems.map((item) => ({
-    ...item,
-    commands: item.commands.map((command) => ({
-      ...command,
-    })),
-  }));
-}
-
-function migrateItem(item: LegacyGachaItem): GachaItem {
+function migrateItem(
+  item: LegacyGachaItem,
+): GachaItem {
   if (Array.isArray(item.commands)) {
     return {
       ...item,
@@ -61,6 +57,7 @@ function migrateItem(item: LegacyGachaItem): GachaItem {
     id: item.id,
     name: item.name,
     description: item.description,
+    effectId: item.effectId,
     commands: item.command
       ? [
           {
@@ -73,109 +70,141 @@ function migrateItem(item: LegacyGachaItem): GachaItem {
         ]
       : [],
     rarity: item.rarity,
-    probability: item.probability,
     isEnabled: item.isEnabled,
     createdAt: item.createdAt,
   };
 }
 
-export const useGachaStore = create<GachaStore>()(
-  persist(
-    (set) => ({
-      items: cloneSampleItems(),
+export const useGachaStore =
+  create<GachaStore>()(
+    persist(
+      (set) => ({
+        items: [],
 
-      addItem: (item) => {
-        set((state) => ({
-          items: [item, ...state.items],
-        }));
-      },
+        addItem: (item) => {
+          set((state) => ({
+            items: [
+              item,
+              ...state.items,
+            ],
+          }));
+        },
 
-      updateItem: (updatedItem) => {
-        set((state) => ({
-          items: state.items.map((item) =>
-            item.id === updatedItem.id
-              ? updatedItem
-              : item,
-          ),
-        }));
-      },
+        updateItem: (updatedItem) => {
+          set((state) => ({
+            items: state.items.map(
+              (item) =>
+                item.id ===
+                updatedItem.id
+                  ? updatedItem
+                  : item,
+            ),
+          }));
+        },
 
-      upsertItem: (submittedItem) => {
-        set((state) => {
-          const itemExists = state.items.some(
-            (item) => item.id === submittedItem.id,
-          );
+        upsertItem: (
+          submittedItem,
+        ) => {
+          set((state) => {
+            const itemExists =
+              state.items.some(
+                (item) =>
+                  item.id ===
+                  submittedItem.id,
+              );
 
-          if (!itemExists) {
+            if (!itemExists) {
+              return {
+                items: [
+                  submittedItem,
+                  ...state.items,
+                ],
+              };
+            }
+
             return {
-              items: [submittedItem, ...state.items],
+              items: state.items.map(
+                (item) =>
+                  item.id ===
+                  submittedItem.id
+                    ? submittedItem
+                    : item,
+              ),
+            };
+          });
+        },
+
+        deleteItem: (id) => {
+          set((state) => ({
+            items: state.items.filter(
+              (item) =>
+                item.id !== id,
+            ),
+          }));
+        },
+
+        toggleItemEnabled: (id) => {
+          set((state) => ({
+            items: state.items.map(
+              (item) =>
+                item.id === id
+                  ? {
+                      ...item,
+                      isEnabled:
+                        !item.isEnabled,
+                    }
+                  : item,
+            ),
+          }));
+        },
+
+        replaceItems: (items) => {
+          set({
+            items,
+          });
+        },
+
+        resetItems: () => {
+          set({
+            items: [],
+          });
+        },
+      }),
+      {
+        name: "kamura-gacha-items",
+        version: 3,
+        storage:
+          createJSONStorage(
+            () => localStorage,
+          ),
+
+        partialize: (state) => ({
+          items: state.items,
+        }),
+
+        migrate: (
+          persistedState,
+        ) => {
+          const state =
+            persistedState as PersistedGachaState;
+
+          if (
+            !Array.isArray(
+              state.items,
+            )
+          ) {
+            return {
+              items: [],
             };
           }
 
           return {
-            items: state.items.map((item) =>
-              item.id === submittedItem.id
-                ? submittedItem
-                : item,
-            ),
+            items:
+              state.items.map(
+                migrateItem,
+              ),
           };
-        });
+        },
       },
-
-      deleteItem: (id) => {
-        set((state) => ({
-          items: state.items.filter(
-            (item) => item.id !== id,
-          ),
-        }));
-      },
-
-      toggleItemEnabled: (id) => {
-        set((state) => ({
-          items: state.items.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  isEnabled: !item.isEnabled,
-                }
-              : item,
-          ),
-        }));
-      },
-
-      replaceItems: (items) => {
-        set({ items });
-      },
-
-      resetItems: () => {
-        set({
-          items: cloneSampleItems(),
-        });
-      },
-    }),
-    {
-      name: "kamura-gacha-items",
-      version: 2,
-      storage: createJSONStorage(() => localStorage),
-
-      partialize: (state) => ({
-        items: state.items,
-      }),
-
-      migrate: (persistedState) => {
-        const state =
-          persistedState as PersistedGachaState;
-
-        if (!Array.isArray(state.items)) {
-          return {
-            items: cloneSampleItems(),
-          };
-        }
-
-        return {
-          items: state.items.map(migrateItem),
-        };
-      },
-    },
-  ),
-);
+    ),
+  );

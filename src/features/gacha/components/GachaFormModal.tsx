@@ -33,7 +33,6 @@ type GachaFormValues = {
   name: string;
   description: string;
   rarity: GachaRarity;
-  probability: string;
   isEnabled: boolean;
   effectId: string;
 };
@@ -41,7 +40,6 @@ type GachaFormValues = {
 type GachaFormErrors = {
   name?: string;
   description?: string;
-  probability?: string;
   effectId?: string;
 };
 
@@ -58,27 +56,27 @@ const rarityOptions: Array<{
 }> = [
   {
     value: "common",
-    label: "Common",
+    label: "コモン",
   },
   {
     value: "rare",
-    label: "Rare",
+    label: "レア",
   },
   {
     value: "epic",
-    label: "Epic",
+    label: "エピック",
   },
   {
     value: "legendary",
-    label: "Legendary",
+    label: "レジェンダリー",
   },
   {
     value: "ultra",
-    label: "Ultra Rare",
+    label: "ウルトラレア",
   },
   {
     value: "secret",
-    label: "Secret",
+    label: "シークレット",
   },
 ];
 
@@ -93,7 +91,6 @@ function createEmptyFormValues(): GachaFormValues {
     name: "",
     description: "",
     rarity: "common",
-    probability: "10",
     isEnabled: true,
     effectId: "",
   };
@@ -156,7 +153,7 @@ export function GachaFormModal({
       return;
     }
 
-    loadEffects();
+    void loadEffects();
 
     if (item) {
       setFormValues({
@@ -164,9 +161,6 @@ export function GachaFormModal({
         description:
           item.description,
         rarity: item.rarity,
-        probability: String(
-          item.probability,
-        ),
         isEnabled:
           item.isEnabled,
         effectId:
@@ -247,11 +241,6 @@ export function GachaFormModal({
     const nextErrors:
       GachaFormErrors = {};
 
-    const probability =
-      Number(
-        formValues.probability,
-      );
-
     if (!formValues.name.trim()) {
       nextErrors.name =
         "景品名を入力してください。";
@@ -262,21 +251,6 @@ export function GachaFormModal({
     ) {
       nextErrors.description =
         "説明を入力してください。";
-    }
-
-    if (
-      formValues.probability.trim() ===
-        "" ||
-      Number.isNaN(probability)
-    ) {
-      nextErrors.probability =
-        "排出率を数値で入力してください。";
-    } else if (
-      probability < 0 ||
-      probability > 100
-    ) {
-      nextErrors.probability =
-        "排出率は0〜100の範囲で入力してください。";
     }
 
     if (
@@ -307,12 +281,6 @@ export function GachaFormModal({
       return;
     }
 
-    /*
-     * 旧ガチャのcommandsは、
-     * effectId移行後も消さずに保持する。
-     *
-     * 新規作成時は空配列とする。
-     */
     const legacyCommands:
       GachaCommand[] =
       item?.commands.map(
@@ -323,29 +291,25 @@ export function GachaFormModal({
 
     const submittedItem:
       GachaItem = {
-      id:
-        item?.id ??
-        createId("gacha"),
-      name:
-        formValues.name.trim(),
-      description:
-        formValues.description.trim(),
-      effectId:
-        formValues.effectId.trim(),
-      commands:
-        legacyCommands,
-      rarity:
-        formValues.rarity,
-      probability:
-        Number(
-          formValues.probability,
-        ),
-      isEnabled:
-        formValues.isEnabled,
-      createdAt:
-        item?.createdAt ??
-        new Date().toISOString(),
-    };
+        id:
+          item?.id ??
+          createId("gacha"),
+        name:
+          formValues.name.trim(),
+        description:
+          formValues.description.trim(),
+        effectId:
+          formValues.effectId.trim(),
+        commands:
+          legacyCommands,
+        rarity:
+          formValues.rarity,
+        isEnabled:
+          formValues.isEnabled,
+        createdAt:
+          item?.createdAt ??
+          new Date().toISOString(),
+      };
 
     onSubmit(submittedItem);
     onClose();
@@ -437,8 +401,8 @@ export function GachaFormModal({
               className="min-h-0 flex-1 overflow-y-auto"
             >
               <div className="space-y-7 px-6 py-6 sm:px-8">
-                <section className="grid gap-5 md:grid-cols-2">
-                  <div className="md:col-span-2">
+                <section className="grid gap-5">
+                  <div>
                     <label
                       htmlFor="gacha-name"
                       className="text-sm font-black text-slate-800"
@@ -473,7 +437,7 @@ export function GachaFormModal({
                     ) : null}
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div>
                     <label
                       htmlFor="gacha-description"
                       className="text-sm font-black text-slate-800"
@@ -550,50 +514,10 @@ export function GachaFormModal({
                         ),
                       )}
                     </select>
-                  </div>
 
-                  <div>
-                    <label
-                      htmlFor="gacha-probability"
-                      className="text-sm font-black text-slate-800"
-                    >
-                      排出率
-                    </label>
-
-                    <div className="relative mt-2">
-                      <input
-                        id="gacha-probability"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        value={
-                          formValues.probability
-                        }
-                        onChange={(
-                          event,
-                        ) => {
-                          updateFormField(
-                            "probability",
-                            event.target
-                              .value,
-                          );
-                        }}
-                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-11 text-sm font-bold outline-none focus:border-violet-300 focus:ring-4 focus:ring-violet-100"
-                      />
-
-                      <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-black text-slate-400">
-                        %
-                      </span>
-                    </div>
-
-                    {errors.probability ? (
-                      <FieldError
-                        message={
-                          errors.probability
-                        }
-                      />
-                    ) : null}
+                    <p className="mt-2 text-xs text-slate-500">
+                      出やすさはガチャ箱側の「重み」で設定します。
+                    </p>
                   </div>
                 </section>
 
@@ -762,7 +686,7 @@ export function GachaFormModal({
                       </p>
 
                       <p className="mt-1 text-xs text-slate-500">
-                        無効にすると抽選対象から除外されます。
+                        無効にするとガチャ箱の抽選対象から除外されます。
                       </p>
                     </div>
 

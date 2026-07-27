@@ -5,6 +5,7 @@ import {
   History,
   Home,
   ListTodo,
+  PackageOpen,
   Settings,
   Sparkles,
   Zap,
@@ -36,6 +37,13 @@ const mainNavigationItems: NavigationItem[] = [
     label: "ガチャ",
     icon: Dices,
   },
+
+  {
+    to: "/pools",
+    label: "ガチャ箱",
+    icon: PackageOpen,
+  },
+
   {
     to: "/triggers",
     label: "発動条件",

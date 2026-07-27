@@ -1,30 +1,36 @@
-import type { GachaItem } from "@/features/gacha/types/gacha";
+import type {
+  GachaItem,
+} from "@/features/gacha/types/gacha";
+
 import {
   defaultRandomSource,
   normalizeRandomValue,
   type RandomSource,
 } from "@/features/gacha/services/random";
+
 import {
   getEnabledGachaItems,
-  isProbabilityTotalValid,
 } from "@/features/gacha/services/probability";
-import {
-  createWeightTable,
-  getWeightTotal,
-} from "@/features/gacha/services/weight";
 
 export type DrawGachaOptions = {
   random?: RandomSource;
-  requireTotal100?: boolean;
 };
 
+/**
+ * 旧形式との互換用抽選処理です。
+ *
+ * 景品単体は確率を持たないため、
+ * 有効な景品から均等に抽選します。
+ *
+ * 実際のガチャ箱抽選では、
+ * PoolEntryのweightを使用してください。
+ */
 export function drawGacha(
   items: GachaItem[],
   options: DrawGachaOptions = {},
 ): GachaItem {
   const {
     random = defaultRandomSource,
-    requireTotal100 = true,
   } = options;
 
   const enabledItems =
@@ -32,52 +38,30 @@ export function drawGacha(
 
   if (enabledItems.length === 0) {
     throw new Error(
-      "抽選可能なガチャがありません。",
-    );
-  }
-
-  if (
-    requireTotal100 &&
-    !isProbabilityTotalValid(enabledItems)
-  ) {
-    throw new Error(
-      "有効なガチャの排出率合計が100%ではありません。",
-    );
-  }
-
-  const table =
-    createWeightTable(enabledItems);
-
-  const totalWeight = getWeightTotal(table);
-
-  if (totalWeight <= 0) {
-    throw new Error(
-      "抽選の合計ウェイトが0以下です。",
+      "抽選可能なガチャ景品がありません。",
     );
   }
 
   const randomValue =
     normalizeRandomValue(random());
 
-  const target =
-    randomValue * totalWeight;
+  const selectedIndex =
+    Math.min(
+      Math.floor(
+        randomValue *
+          enabledItems.length,
+      ),
+      enabledItems.length - 1,
+    );
 
-  const selectedEntry = table.find(
-    (entry) =>
-      target >= entry.start &&
-      target < entry.end,
-  );
+  const selectedItem =
+    enabledItems[selectedIndex];
 
-  const fallbackEntry =
-  table[table.length - 1];
-
-  if (!selectedEntry && !fallbackEntry) {
+  if (!selectedItem) {
     throw new Error(
-      "ガチャの抽選結果を取得できませんでした。",
+      "ガチャ景品の抽選結果を取得できませんでした。",
     );
   }
 
-  return (
-    selectedEntry ?? fallbackEntry
-  ).item;
+  return selectedItem;
 }

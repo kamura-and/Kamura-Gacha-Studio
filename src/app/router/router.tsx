@@ -12,6 +12,8 @@ import { EffectListPage } from "@/features/effects/pages/EffectListPage";
 
 import { GachaPage } from "@/features/gacha/pages/GachaPage";
 
+import { PoolPage } from "@/features/pools/pages/PoolPage";
+
 import { PluginManagerPage } from "@/features/plugins";
 
 import { QueuePage } from "@/features/queue/pages/QueuePage";
@@ -42,6 +44,12 @@ export const router = createHashRouter([
         path: "gacha",
 
         element: <GachaPage />,
+      },
+
+      {
+        path: "pools",
+
+        element: <PoolPage />,
       },
 
       {

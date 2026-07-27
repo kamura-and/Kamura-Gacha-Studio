@@ -45,7 +45,6 @@ export type GachaItem = {
   commands: GachaCommand[];
 
   rarity: GachaRarity;
-  probability: number;
   isEnabled: boolean;
   createdAt: string;
 };
