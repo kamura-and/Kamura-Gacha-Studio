@@ -1,3 +1,7 @@
+import {
+  executionHistoryRuntime,
+} from "../../history/runtime/ExecutionHistoryRuntime";
+
 import type {
   RuntimeEvent,
 } from "../../runtime/events";
@@ -7,16 +11,8 @@ import {
 } from "../../runtime/events/RuntimeEventDispatcher";
 
 import {
-  actionRuntime,
-} from "../../actions/runtime/ActionRuntime";
-
-import {
-  gachaRuntime,
-} from "../../gacha/runtime/GachaRuntime";
-
-import {
-  buildGachaCommands,
-} from "../../gacha/services/buildGachaCommands";
+  gachaExecutionRuntime,
+} from "../../gacha/runtime/GachaExecutionRuntime";
 
 import {
   triggerMatcher,
@@ -102,23 +98,47 @@ export class TriggerRuntime {
     event: RuntimeEvent,
   ): void {
     try {
-      const spinResult =
-        gachaRuntime.spin(
-          trigger.gachaPoolId,
-        );
+      const result =
+        gachaExecutionRuntime.execute({
+          gachaPoolId:
+            trigger.gachaPoolId,
+        });
+      
+        executionHistoryRuntime.recordSuccess({
+        eventId:
+          event.id,
 
-      const commands =
-        buildGachaCommands(
-          spinResult.item,
-        );
+        triggerId:
+          trigger.id,
 
-      actionRuntime.execute({
+        triggerName:
+          trigger.name,
+
+        gachaPoolId:
+          result.spin.gachaPoolId,
+
+        poolEntryId:
+          result.spin.poolEntry.id,
+
         gachaItemId:
-          spinResult.item.id,
+          result.spin.item.id,
+
         gachaItemName:
-          spinResult.item.name,
-        commands,
+          result.spin.item.name,
+
+        effectId:
+          result.spin.item.effectId,
+
+        mode:
+          result.mode,
+
+        commandCount:
+          result.legacyCommandCount,
+
+        drawnAt:
+          result.spin.drawnAt,
       });
+
 
       console.info(
         "[TriggerRuntime]",
@@ -126,22 +146,30 @@ export class TriggerRuntime {
         {
           eventId:
             event.id,
+
           triggerId:
             trigger.id,
+
           triggerName:
             trigger.name,
+
           gachaPoolId:
-            spinResult.gachaPoolId,
+            result.spin.gachaPoolId,
+
           gachaItemId:
-            spinResult.item.id,
+            result.spin.item.id,
+
           gachaItemName:
-            spinResult.item.name,
-          commandCount:
-            commands.length,
+            result.spin.item.name,
+
+          executionMode:
+            result.mode,
+
           drawnAt:
-            spinResult.drawnAt,
+            result.spin.drawnAt,
         },
       );
+
     } catch (error) {
       console.error(
         "[TriggerRuntime]",
