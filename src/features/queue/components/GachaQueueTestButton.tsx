@@ -1,7 +1,16 @@
 import type { GachaItem } from "@/features/gacha/types/gacha";
 
-import { enqueueCommandsAndStart } from "../services/commandQueueEngine";
-import { useCommandQueueStore } from "../store/commandQueueStore";
+import {
+  effectRuntime,
+} from "@/features/effects/runtime/EffectRuntime";
+
+import {
+  enqueueCommandsAndStart,
+} from "../services/commandQueueEngine";
+
+import {
+  useCommandQueueStore,
+} from "../store/commandQueueStore";
 
 type GachaQueueTestButtonProps = {
   item: GachaItem;
@@ -12,35 +21,134 @@ export function GachaQueueTestButton({
   item,
   className,
 }: GachaQueueTestButtonProps) {
-  const isProcessing = useCommandQueueStore(
-    (state) => state.isProcessing,
-  );
+  const isProcessing =
+    useCommandQueueStore(
+      (state) => state.isProcessing,
+    );
 
-  const enabledCommandCount = item.commands.filter(
-    (command) => command.enabled,
-  ).length;
+  const effectId =
+    item.effectId?.trim();
 
-  const handleTestExecute = () => {
-    enqueueCommandsAndStart({
-      gachaItemId: item.id,
-      gachaItemName: item.name,
-      commands: item.commands,
-    });
+  const enabledCommandCount =
+    item.commands.filter(
+      (command) => command.enabled,
+    ).length;
+
+  const hasEffect =
+    Boolean(effectId);
+
+  const canTestExecute =
+    hasEffect ||
+    enabledCommandCount > 0;
+
+  const handleTestExecute = (): void => {
+    try {
+      if (effectId) {
+        const result =
+          effectRuntime.execute({
+            effectId,
+
+            gachaItemId:
+              item.id,
+
+            gachaItemName:
+              item.name,
+          });
+
+        console.info(
+          "[GachaQueueTestButton]",
+          "Effect test executed",
+          {
+            gachaItemId:
+              item.id,
+
+            gachaItemName:
+              item.name,
+
+            effectId:
+              result.effectId,
+
+            effectName:
+              result.effectName,
+
+            actionCount:
+              result.actionCount,
+
+            commandCount:
+              result.commandCount,
+          },
+        );
+
+        return;
+      }
+
+      enqueueCommandsAndStart({
+        gachaItemId:
+          item.id,
+
+        gachaItemName:
+          item.name,
+
+        commands:
+          item.commands,
+      });
+
+      console.info(
+        "[GachaQueueTestButton]",
+        "Legacy command test executed",
+        {
+          gachaItemId:
+            item.id,
+
+          gachaItemName:
+            item.name,
+
+          commandCount:
+            enabledCommandCount,
+        },
+      );
+    } catch (error) {
+      console.error(
+        "[GachaQueueTestButton]",
+        "Test execution failed",
+        {
+          gachaItemId:
+            item.id,
+
+          gachaItemName:
+            item.name,
+
+          effectId:
+            item.effectId,
+        },
+        error,
+      );
+    }
   };
+
+  const buttonTitle = (() => {
+    if (effectId) {
+      return "連携エフェクトをテスト実行";
+    }
+
+    if (enabledCommandCount > 0) {
+      return `${enabledCommandCount}件のコマンドをテスト実行`;
+    }
+
+    return "連携エフェクトまたは有効なコマンドがありません";
+  })();
 
   return (
     <button
       type="button"
       className={className}
       onClick={handleTestExecute}
-      disabled={enabledCommandCount === 0}
-      title={
-        enabledCommandCount === 0
-          ? "有効なコマンドがありません"
-          : `${enabledCommandCount}件のコマンドをテスト実行`
-      }
+      disabled={!canTestExecute}
+      title={buttonTitle}
     >
-      {isProcessing ? "キューに追加" : "テスト実行"}
+      {isProcessing
+        ? "キューに追加"
+        : "テスト実行"}
     </button>
   );
 }

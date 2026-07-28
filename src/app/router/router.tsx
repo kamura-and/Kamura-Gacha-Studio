@@ -12,6 +12,8 @@ import { EffectListPage } from "@/features/effects/pages/EffectListPage";
 
 import { GachaPage } from "@/features/gacha/pages/GachaPage";
 
+import { ExecutionHistoryPage } from "@/features/history/pages/ExecutionHistoryPage";
+
 import { PoolPage } from "@/features/pools/pages/PoolPage";
 
 import { PluginManagerPage } from "@/features/plugins";
@@ -74,6 +76,14 @@ export const router = createHashRouter([
         path: "queue",
 
         element: <QueuePage />,
+      },
+
+      {
+        path: "logs",
+
+        element: (
+          <ExecutionHistoryPage />
+        ),
       },
 
       {
