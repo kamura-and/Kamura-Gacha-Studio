@@ -14,6 +14,10 @@ import {
   executionHistoryRepository,
 } from "@/features/history/repository/ExecutionHistoryRepository";
 
+import {
+  EXECUTION_HISTORY_UPDATED_EVENT,
+} from "@/features/history/runtime/ExecutionHistoryRuntime";
+
 import type {
   ExecutionHistoryEntry,
   ExecutionHistoryMode,
@@ -102,9 +106,26 @@ export function ExecutionHistoryPage() {
       );
     }, []);
 
-  useEffect(() => {
-    loadEntries();
-  }, [loadEntries]);
+useEffect(() => {
+  loadEntries();
+
+  const handleHistoryUpdated =
+    (): void => {
+      loadEntries();
+    };
+
+  window.addEventListener(
+    EXECUTION_HISTORY_UPDATED_EVENT,
+    handleHistoryUpdated,
+  );
+
+  return () => {
+    window.removeEventListener(
+      EXECUTION_HISTORY_UPDATED_EVENT,
+      handleHistoryUpdated,
+    );
+  };
+}, [loadEntries]);
 
   const handleRemove = (
     entry: ExecutionHistoryEntry,

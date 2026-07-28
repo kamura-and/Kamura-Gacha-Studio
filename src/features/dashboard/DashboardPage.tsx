@@ -9,9 +9,9 @@ import {
 
 import { ConnectionStatusSection } from "@/features/dashboard/components/ConnectionStatusSection";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
-import { EffectPreviewCard } from "@/features/dashboard/components/EffectPreviewCard";
 import { RecentLogCard } from "@/features/dashboard/components/RecentLogCard";
 import { StatCard } from "@/features/dashboard/components/StatCard";
+import { TestGachaCard } from "@/features/dashboard/components/TestGachaCard";
 import { pluginDefinitions } from "@/features/plugins/definitions/pluginDefinitions";
 import { usePluginConfigStore } from "@/features/plugins/store/pluginConfigStore";
 import { usePluginRuntimeStore } from "@/features/plugins/store/pluginRuntimeStore";
@@ -137,10 +137,10 @@ export function DashboardPage() {
       <ConnectionStatusSection />
 
       <section
-        aria-label="エフェクトプレビューと最近のログ"
+        aria-label="テストガチャ箱と最近のログ"
         className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]"
       >
-        <EffectPreviewCard />
+        <TestGachaCard />
         <RecentLogCard />
       </section>
 

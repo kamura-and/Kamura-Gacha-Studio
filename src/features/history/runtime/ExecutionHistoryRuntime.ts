@@ -7,6 +7,9 @@ import type {
   ExecutionHistoryMode,
 } from "../types/ExecutionHistory";
 
+export const EXECUTION_HISTORY_UPDATED_EVENT =
+  "kamura:execution-history-updated";
+
 export type RecordExecutionSuccessInput = {
   eventId?: string;
 
@@ -56,6 +59,20 @@ function normalizeCommandCount(
   }
 
   return Math.floor(commandCount);
+}
+
+function notifyHistoryUpdated(): void {
+  if (
+    typeof window === "undefined"
+  ) {
+    return;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent(
+      EXECUTION_HISTORY_UPDATED_EVENT,
+    ),
+  );
 }
 
 export class ExecutionHistoryRuntime {
@@ -110,6 +127,8 @@ export class ExecutionHistoryRuntime {
     executionHistoryRepository.add(
       entry,
     );
+
+    notifyHistoryUpdated();
 
     console.info(
       "[ExecutionHistoryRuntime]",

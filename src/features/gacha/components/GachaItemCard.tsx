@@ -1,9 +1,7 @@
-import { useState } from "react";
 import {
   Check,
   Clock3,
   Command,
-  Copy,
   Layers3,
   MessageCircle,
   Monitor,
@@ -116,9 +114,6 @@ export function GachaItemCard({
   onDelete,
   onEdit,
 }: GachaItemCardProps) {
-  const [copied, setCopied] =
-    useState(false);
-
   const linkedEffect = useEffectStore(
     (state) =>
       item.effectId
@@ -186,52 +181,6 @@ export function GachaItemCard({
         queueItem.status ===
           "failed",
     ).length;
-
-  const copyableCommands =
-    enabledCommands.filter(
-      (command) =>
-        command.type !== "wait" &&
-        command.value
-          .trim()
-          .length > 0,
-    );
-
-  const handleCopy = async () => {
-    const copyText =
-      copyableCommands
-        .map((command) => {
-          return [
-            `[${getActionLabel(
-              command.type,
-            )} / ${
-              command.delay
-            }ms]`,
-            command.value,
-          ].join("\n");
-        })
-        .join("\n\n");
-
-    if (!copyText) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(
-        copyText,
-      );
-
-      setCopied(true);
-
-      window.setTimeout(() => {
-        setCopied(false);
-      }, 1500);
-    } catch (error) {
-      console.error(
-        "アクションをコピーできませんでした。",
-        error,
-      );
-    }
-  };
 
   const handleDelete = () => {
     const shouldDelete =
@@ -545,10 +494,10 @@ export function GachaItemCard({
         </div>
       )}
 
-      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2">
         <GachaQueueTestButton
           item={item}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex min-w-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40"
         />
 
         <button
@@ -556,43 +505,18 @@ export function GachaItemCard({
           onClick={() =>
             onEdit(item.id)
           }
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-violet-500"
+          className="inline-flex min-w-0 items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-violet-500"
         >
           <Pencil size={15} />
           編集
         </button>
-      </div>
-
-      <div className="mt-2 flex gap-2">
-        <button
-          type="button"
-          onClick={
-            handleCopy
-          }
-          disabled={
-            copyableCommands.length ===
-            0
-          }
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {copied ? (
-            <Check size={15} />
-          ) : (
-            <Copy size={15} />
-          )}
-
-          {copied
-            ? "コピー済み"
-            : "コピー"}
-        </button>
 
         <button
           type="button"
-          onClick={
-            handleDelete
-          }
+          onClick={handleDelete}
           className="inline-flex items-center justify-center rounded-xl border border-rose-200 px-3 py-2.5 text-rose-600 transition hover:bg-rose-50"
           aria-label={`${item.name}を削除`}
+          title="削除"
         >
           <Trash2 size={16} />
         </button>

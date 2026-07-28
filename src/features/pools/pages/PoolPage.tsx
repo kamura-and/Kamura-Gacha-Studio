@@ -6,7 +6,9 @@ import {
 import {
   Boxes,
   Dices,
+  LoaderCircle,
   Pencil,
+  Play,
   Plus,
   Search,
   Trash2,
@@ -16,7 +18,14 @@ import { PoolFormModal } from "@/features/pools/components/PoolFormModal";
 import { usePoolStore } from "@/features/pools/store/poolStore";
 import type { GachaPool } from "@/features/pools/types/pool";
 
+import { gachaExecutionRuntime } from "@/features/gacha/runtime/GachaExecutionRuntime";
 import { useGachaStore } from "@/features/gacha/store/gachaStore";
+
+type PoolTestResult = {
+  poolId: string;
+  tone: "success" | "error";
+  message: string;
+};
 
 export function PoolPage() {
   const pools = usePoolStore(
@@ -51,6 +60,12 @@ export function PoolPage() {
 
   const [editingPool, setEditingPool] =
     useState<GachaPool | null>(null);
+
+  const [testingPoolId, setTestingPoolId] =
+    useState<string | null>(null);
+
+  const [testResult, setTestResult] =
+    useState<PoolTestResult | null>(null);
 
   useEffect(() => {
     loadPools();
@@ -141,6 +156,56 @@ export function PoolPage() {
     }
 
     deletePool(pool.id);
+
+    if (testResult?.poolId === pool.id) {
+      setTestResult(null);
+    }
+  };
+
+  const handleTest = (
+    pool: GachaPool,
+  ) => {
+    if (testingPoolId) {
+      return;
+    }
+
+    setTestingPoolId(pool.id);
+    setTestResult(null);
+
+    try {
+      const result =
+        gachaExecutionRuntime.execute({
+          gachaPoolId: pool.id,
+        });
+
+      setTestResult({
+        poolId: pool.id,
+        tone: "success",
+        message:
+          `「${result.spin.item.name}」を抽選し、実行しました。`,
+      });
+    } catch (error) {
+      console.error(
+        "[PoolPage]",
+        "ガチャ箱のテスト実行に失敗しました。",
+        {
+          gachaPoolId: pool.id,
+          gachaPoolName: pool.name,
+        },
+        error,
+      );
+
+      setTestResult({
+        poolId: pool.id,
+        tone: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "ガチャ箱のテスト実行に失敗しました。",
+      });
+    } finally {
+      setTestingPoolId(null);
+    }
   };
 
   return (
@@ -246,6 +311,37 @@ export function PoolPage() {
                     0,
                   );
 
+                const hasEnabledEntry =
+                  pool.entries.some(
+                    (entry) => {
+                      const item =
+                        gachaItems.find(
+                          (candidate) =>
+                            candidate.id ===
+                            entry.gachaItemId,
+                        );
+
+                      return (
+                        item?.isEnabled &&
+                        entry.weight > 0
+                      );
+                    },
+                  );
+
+                const isTesting =
+                  testingPoolId === pool.id;
+
+                const canTest =
+                  pool.enabled &&
+                  hasEnabledEntry &&
+                  !testingPoolId;
+
+                const currentTestResult =
+                  testResult?.poolId ===
+                  pool.id
+                    ? testResult
+                    : null;
+
                 return (
                   <article
                     key={pool.id}
@@ -277,7 +373,35 @@ export function PoolPage() {
                         </p>
                       </div>
 
-                      <div className="flex shrink-0 gap-1">
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleTest(pool)
+                          }
+                          disabled={!canTest}
+                          aria-label={`${pool.name}をテスト実行`}
+                          title={
+                            !pool.enabled
+                              ? "無効なガチャ箱はテストできません"
+                              : !hasEnabledEntry
+                                ? "実行可能な景品がありません"
+                                : "テスト実行"
+                          }
+                          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-violet-100 px-3 text-xs font-black text-violet-700 transition hover:bg-violet-200 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          {isTesting ? (
+                            <LoaderCircle
+                              size={15}
+                              className="animate-spin"
+                            />
+                          ) : (
+                            <Play size={15} />
+                          )}
+
+                          テスト
+                        </button>
+
                         <button
                           type="button"
                           onClick={() =>
@@ -324,6 +448,21 @@ export function PoolPage() {
                           </p>
                         </div>
                       </div>
+
+                      {currentTestResult ? (
+                        <div
+                          className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-bold ${
+                            currentTestResult.tone ===
+                            "success"
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-rose-200 bg-rose-50 text-rose-700"
+                          }`}
+                        >
+                          {
+                            currentTestResult.message
+                          }
+                        </div>
+                      ) : null}
 
                       <div className="space-y-2">
                         {pool.entries.map(
