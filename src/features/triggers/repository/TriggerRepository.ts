@@ -354,6 +354,24 @@ function createTrigger(
 
     matchMode:
       input.matchMode ?? "all",
+    activationPolicy:
+      input.activationPolicy,
+
+    aggregationScope:
+      input.aggregationScope,
+
+    threshold:
+      input.threshold,
+
+    countField:
+      normalizeOptionalText(
+        input.countField,
+      ),
+
+    userIdField:
+      normalizeOptionalText(
+        input.userIdField,
+      ),
 
     gachaPoolId:
       normalizeRequiredText(
@@ -385,17 +403,17 @@ function updateTrigger(
     name:
       input.name !== undefined
         ? normalizeRequiredText(
-            input.name,
-            "Trigger名",
-          )
+          input.name,
+          "Trigger名",
+        )
         : current.name,
 
     description:
       input.description !==
-      undefined
+        undefined
         ? normalizeOptionalText(
-            input.description,
-          )
+          input.description,
+        )
         : current.description,
 
     enabled:
@@ -406,45 +424,80 @@ function updateTrigger(
       input.pluginId === null
         ? undefined
         : input.pluginId ??
-          current.pluginId,
+        current.pluginId,
 
     eventCategory:
       input.eventCategory === null
         ? undefined
         : input.eventCategory ??
-          current.eventCategory,
+        current.eventCategory,
 
     eventType:
       input.eventType === null
         ? undefined
         : input.eventType !==
-            undefined
+          undefined
           ? normalizeOptionalText(
-              input.eventType,
-            )
+            input.eventType,
+          )
           : current.eventType,
 
     conditions:
       input.conditions !==
-      undefined
+        undefined
         ? input.conditions.map(
-            createCondition,
-          )
+          createCondition,
+        )
         : current.conditions.map(
-            cloneCondition,
-          ),
+          cloneCondition,
+        ),
 
     matchMode:
       input.matchMode ??
       current.matchMode,
+    activationPolicy:
+      input.activationPolicy === null
+        ? undefined
+        : input.activationPolicy ??
+        current.activationPolicy,
+
+    aggregationScope:
+      input.aggregationScope === null
+        ? undefined
+        : input.aggregationScope ??
+        current.aggregationScope,
+
+    threshold:
+      input.threshold === null
+        ? undefined
+        : input.threshold ??
+        current.threshold,
+
+    countField:
+      input.countField === null
+        ? undefined
+        : input.countField !== undefined
+          ? normalizeOptionalText(
+            input.countField,
+          )
+          : current.countField,
+
+    userIdField:
+      input.userIdField === null
+        ? undefined
+        : input.userIdField !== undefined
+          ? normalizeOptionalText(
+            input.userIdField,
+          )
+          : current.userIdField,
 
     gachaPoolId:
       input.gachaPoolId !==
-      undefined
+        undefined
         ? normalizeRequiredText(
-            input.gachaPoolId,
-            "ガチャプールID",
-          )
+          input.gachaPoolId,
+          "ガチャプールID",
+        )
         : current.gachaPoolId,
 
     updatedAt: Date.now(),
@@ -494,6 +547,20 @@ function validateTrigger(
     );
   }
 
+  if (
+    trigger.threshold !== undefined &&
+    (
+      !Number.isFinite(
+        trigger.threshold,
+      ) ||
+      trigger.threshold < 1
+    )
+  ) {
+    throw new Error(
+      "thresholdは1以上の有限な数値である必要があります。",
+    );
+  }
+
   const conditionIds =
     new Set<string>();
 
@@ -524,9 +591,9 @@ function validateCondition(
 ): void {
   const requiresNoValue =
     condition.operator ===
-      "exists" ||
+    "exists" ||
     condition.operator ===
-      "notExists";
+    "notExists";
 
   if (requiresNoValue) {
     return;
@@ -548,7 +615,7 @@ function validateCondition(
   const requiresArray =
     condition.operator === "in" ||
     condition.operator ===
-      "notIn";
+    "notIn";
 
   if (
     requiresArray &&
@@ -569,20 +636,45 @@ function createUpdateInput(
   input: CreateTriggerInput,
 ): UpdateTriggerInput {
   return {
-    name: input.name,
+    name:
+      input.name,
+
     description:
       input.description,
-    enabled: input.enabled,
+
+    enabled:
+      input.enabled,
+
     pluginId:
       input.pluginId,
+
     eventCategory:
       input.eventCategory,
+
     eventType:
       input.eventType,
+
     conditions:
       input.conditions,
+
     matchMode:
       input.matchMode,
+
+    activationPolicy:
+      input.activationPolicy,
+
+    aggregationScope:
+      input.aggregationScope,
+
+    threshold:
+      input.threshold,
+
+    countField:
+      input.countField,
+
+    userIdField:
+      input.userIdField,
+
     gachaPoolId:
       input.gachaPoolId,
   };
@@ -692,9 +784,9 @@ function createDomainId(
 ): string {
   if (
     typeof crypto !==
-      "undefined" &&
+    "undefined" &&
     typeof crypto.randomUUID ===
-      "function"
+    "function"
   ) {
     return `${prefix}_${crypto.randomUUID()}`;
   }

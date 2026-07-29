@@ -9,26 +9,33 @@ import type {
 type GiftPayload = {
   giftId: string;
   repeatCount: number;
+  userId?: string;
 };
 
 type CreateGiftEventInput = {
   giftId?: string;
   repeatCount?: number;
   pluginId?: PluginId;
+  userId?: string;
 };
 
 export function createGiftEvent(
   input: CreateGiftEventInput = {},
 ): RuntimeEvent<GiftPayload> {
   return {
-    id: crypto.randomUUID(),
+    id:
+      crypto.randomUUID(),
 
-    category: "gift",
+    category:
+      "gift",
 
-    type: "gift",
+    type:
+      "gift",
 
     source: {
-      kind: "plugin",
+      kind:
+        "plugin",
+
       pluginId:
         input.pluginId ??
         "tiktok-live",
@@ -42,9 +49,13 @@ export function createGiftEvent(
       repeatCount:
         input.repeatCount ??
         1,
+
+      userId:
+        input.userId,
     },
 
-    occurredAt: Date.now(),
+    occurredAt:
+      Date.now(),
 
     metadata: {},
   };
