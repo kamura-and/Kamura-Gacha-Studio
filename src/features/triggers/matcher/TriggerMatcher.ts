@@ -1,6 +1,6 @@
 import type {
   RuntimeEvent,
-} from "../../runtime/events";
+} from "../../runtime/types";
 
 import type {
   Trigger,

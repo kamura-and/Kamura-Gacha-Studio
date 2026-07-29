@@ -20,6 +20,8 @@ import { PluginManagerPage } from "@/features/plugins";
 
 import { QueuePage } from "@/features/queue/pages/QueuePage";
 
+import { TriggerPage } from "@/features/triggers/pages/TriggerPage";
+
 export const router = createHashRouter([
   {
     element: <AppLayout />,
@@ -52,6 +54,12 @@ export const router = createHashRouter([
         path: "pools",
 
         element: <PoolPage />,
+      },
+
+      {
+        path: "triggers",
+
+        element: <TriggerPage />,
       },
 
       {

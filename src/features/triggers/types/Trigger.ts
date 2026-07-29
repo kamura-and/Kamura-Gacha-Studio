@@ -4,7 +4,7 @@ import type {
 
 import type {
   RuntimeEventCategory,
-} from "../../runtime/events";
+} from "../../runtime/types";
 
 import type {
   TriggerCondition,

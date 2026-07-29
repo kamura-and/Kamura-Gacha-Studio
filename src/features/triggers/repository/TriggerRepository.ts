@@ -10,9 +10,16 @@ import type {
   TriggerConditionInput,
 } from "../types/TriggerCondition";
 
+const TRIGGER_STORAGE_KEY =
+  "kamura.triggers";
+
 export class TriggerRepository {
   private readonly triggers =
     new Map<TriggerId, Trigger>();
+
+  public constructor() {
+    this.loadFromStorage();
+  }
 
   public add(
     input: CreateTriggerInput,
@@ -37,6 +44,8 @@ export class TriggerRepository {
       trigger.id,
       cloneTrigger(trigger),
     );
+
+    this.saveToStorage();
 
     return cloneTrigger(trigger);
   }
@@ -67,6 +76,8 @@ export class TriggerRepository {
       id,
       cloneTrigger(next),
     );
+
+    this.saveToStorage();
 
     return cloneTrigger(next);
   }
@@ -99,9 +110,14 @@ export class TriggerRepository {
   public remove(
     id: TriggerId,
   ): boolean {
-    return this.triggers.delete(
-      id,
-    );
+    const removed =
+      this.triggers.delete(id);
+
+    if (removed) {
+      this.saveToStorage();
+    }
+
+    return removed;
   }
 
   public findById(
@@ -161,30 +177,137 @@ export class TriggerRepository {
 
   public clear(): void {
     this.triggers.clear();
+    this.saveToStorage();
   }
 
   public replaceAll(
     inputs: CreateTriggerInput[],
   ): Trigger[] {
-    const nextRepository =
-      new TriggerRepository();
+    const nextTriggers =
+      new Map<TriggerId, Trigger>();
 
     inputs.forEach((input) => {
-      nextRepository.add(input);
+      const trigger =
+        createTrigger(input);
+
+      if (nextTriggers.has(trigger.id)) {
+        throw new Error(
+          [
+            "Triggerの一括更新に失敗しました。",
+            `同じIDが重複しています: ${trigger.id}`,
+          ].join(" "),
+        );
+      }
+
+      nextTriggers.set(
+        trigger.id,
+        cloneTrigger(trigger),
+      );
     });
 
-    this.clear();
+    this.triggers.clear();
 
-    nextRepository
-      .findAll()
-      .forEach((trigger) => {
+    nextTriggers.forEach(
+      (trigger, id) => {
         this.triggers.set(
+          id,
+          cloneTrigger(trigger),
+        );
+      },
+    );
+
+    this.saveToStorage();
+
+    return this.findAll();
+  }
+
+  private loadFromStorage(): void {
+    const storage = getLocalStorage();
+
+    if (!storage) {
+      return;
+    }
+
+    const raw = storage.getItem(
+      TRIGGER_STORAGE_KEY,
+    );
+
+    if (!raw) {
+      return;
+    }
+
+    try {
+      const parsed: unknown =
+        JSON.parse(raw);
+
+      if (!Array.isArray(parsed)) {
+        throw new Error(
+          "保存データが配列ではありません。",
+        );
+      }
+
+      const loadedTriggers =
+        new Map<TriggerId, Trigger>();
+
+      parsed.forEach((value) => {
+        const trigger = createTrigger(
+          value as CreateTriggerInput,
+        );
+
+        if (
+          loadedTriggers.has(
+            trigger.id,
+          )
+        ) {
+          throw new Error(
+            `同じIDが重複しています: ${trigger.id}`,
+          );
+        }
+
+        loadedTriggers.set(
           trigger.id,
           cloneTrigger(trigger),
         );
       });
 
-    return this.findAll();
+      this.triggers.clear();
+
+      loadedTriggers.forEach(
+        (trigger, id) => {
+          this.triggers.set(
+            id,
+            cloneTrigger(trigger),
+          );
+        },
+      );
+    } catch (error) {
+      console.error(
+        "[TriggerRepository]",
+        "保存済みTriggerの読み込みに失敗しました。",
+        error,
+      );
+    }
+  }
+
+  private saveToStorage(): void {
+    const storage = getLocalStorage();
+
+    if (!storage) {
+      return;
+    }
+
+    try {
+      storage.setItem(
+        TRIGGER_STORAGE_KEY,
+        JSON.stringify(this.findAll()),
+      );
+    } catch (error) {
+      console.error(
+        "[TriggerRepository]",
+        "Triggerの保存に失敗しました。",
+        error,
+      );
+    }
   }
 }
 
@@ -588,4 +711,15 @@ function createDomainId(
     timestamp,
     random,
   ].join("_");
+}
+
+function getLocalStorage(): Storage | null {
+  if (
+    typeof window === "undefined" ||
+    !window.localStorage
+  ) {
+    return null;
+  }
+
+  return window.localStorage;
 }

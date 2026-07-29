@@ -4,11 +4,11 @@ import {
 
 import type {
   RuntimeEvent,
-} from "../../runtime/events";
+} from "../../runtime/types";
 
 import {
   runtimeEventDispatcher,
-} from "../../runtime/events/RuntimeEventDispatcher";
+} from "../../runtime/types/RuntimeEventDispatcher";
 
 import {
   gachaExecutionRuntime,
