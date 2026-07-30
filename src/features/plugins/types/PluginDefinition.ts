@@ -1,7 +1,8 @@
 export type PluginId =
   | "tiktok-live"
   | "minecraft"
-  | "overlay";
+  | "overlay"
+  | "fake";
 
 export type PluginType =
   | "tiktok"

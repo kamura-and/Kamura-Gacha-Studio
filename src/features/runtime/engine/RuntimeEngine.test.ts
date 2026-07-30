@@ -1,96 +1,504 @@
-import { describe, expect, it, vi } from "vitest";
+import {
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
-import { processRuntimeEvent } from "./RuntimeEngine";
+import {
+  executeTrigger,
+} from "./RuntimeEngine";
 
-import { createGiftEvent } from "@/test/fixtures/createGiftEvent";
-import { createGiftTrigger } from "@/test/fixtures/createGiftTrigger";
-import { createGachaItem } from "@/test/fixtures/createGachaItem";
-import { createGachaPool } from "@/test/fixtures/createGachaPool";
+import {
+  createGiftTrigger,
+} from "@/test/fixtures/createGiftTrigger";
 
-describe("RuntimeEngine", () => {
-  it("queues commands for a matching trigger", () => {
-    const pool = createGachaPool({
-      entries: [
-        {
-          id: "entry-1",
-          gachaItemId: "item-1",
-          weight: 100,
-        },
-      ],
-    });
+import {
+  createGachaItem,
+} from "@/test/fixtures/createGachaItem";
 
-    const trigger = createGiftTrigger({
-      gachaPoolId: pool.id,
-    });
+import {
+  createGachaPool,
+} from "@/test/fixtures/createGachaPool";
 
-    const item = createGachaItem({
-      id: "item-1",
-      commands: [
-        {
-          id: "command-1",
-          type: "minecraft",
-          value: "say hello",
-          delay: 0,
-          enabled: true,
-        },
-      ],
-    });
+describe(
+  "RuntimeEngine",
+  () => {
+    it(
+      "queues commands for a trigger",
+      () => {
+        const pool =
+          createGachaPool({
+            entries: [
+              {
+                id:
+                  "entry-1",
 
-    const enqueueCommands = vi.fn();
+                gachaItemId:
+                  "item-1",
 
-    const result = processRuntimeEvent(
-      createGiftEvent(),
-      {
-        findEnabledTriggers: () => [trigger],
+                weight:
+                  100,
+              },
+            ],
+          });
 
-        findPoolById: (id) =>
-          id === pool.id
-            ? pool
-            : undefined,
+        const trigger =
+          createGiftTrigger({
+            gachaPoolId:
+              pool.id,
+          });
 
-        findGachaItemById: (id) =>
-          id === item.id
-            ? item
-            : undefined,
+        const item =
+          createGachaItem({
+            id:
+              "item-1",
 
-        findEffectById: () => undefined,
+            commands: [
+              {
+                id:
+                  "command-1",
 
-        buildEffectCommands: () => [],
+                type:
+                  "minecraft",
 
-        enqueueCommands,
+                value:
+                  "say hello",
 
-        random: () => 0,
+                delay:
+                  0,
+
+                enabled:
+                  true,
+              },
+            ],
+          });
+
+        const enqueueCommands =
+          vi.fn();
+
+        const result =
+          executeTrigger(
+            trigger,
+            {
+              findPoolById:
+                (id) =>
+                  id === pool.id
+                    ? pool
+                    : undefined,
+
+              findGachaItemById:
+                (id) =>
+                  id === item.id
+                    ? item
+                    : undefined,
+
+              findEffectById:
+                () =>
+                  undefined,
+
+              buildEffectCommands:
+                () =>
+                  [],
+
+              enqueueCommands,
+
+              random:
+                () =>
+                  0,
+            },
+          );
+
+        expect(
+          result.status,
+        ).toBe(
+          "queued",
+        );
+
+        expect(
+          result.triggerId,
+        ).toBe(
+          trigger.id,
+        );
+
+        expect(
+          result.poolId,
+        ).toBe(
+          pool.id,
+        );
+
+        expect(
+          result.gachaItemId,
+        ).toBe(
+          item.id,
+        );
+
+        expect(
+          result.commandCount,
+        ).toBe(
+          1,
+        );
+
+        expect(
+          enqueueCommands,
+        ).toHaveBeenCalledTimes(
+          1,
+        );
+
+        expect(
+          enqueueCommands,
+        ).toHaveBeenCalledWith({
+          gachaItemId:
+            "item-1",
+
+          gachaItemName:
+            item.name,
+
+          commands: [
+            expect.objectContaining({
+              type:
+                "minecraft",
+
+              value:
+                "say hello",
+
+              enabled:
+                true,
+            }),
+          ],
+        });
       },
     );
 
-    expect(
-      result.matchedTriggerCount,
-    ).toBe(1);
+    it(
+      "returns pool-not-found when the pool does not exist",
+      () => {
+        const trigger =
+          createGiftTrigger({
+            gachaPoolId:
+              "missing-pool",
+          });
 
-    expect(
-      result.executions,
-    ).toHaveLength(1);
+        const enqueueCommands =
+          vi.fn();
 
-    expect(
-      result.executions[0].status,
-    ).toBe("queued");
+        const result =
+          executeTrigger(
+            trigger,
+            {
+              findPoolById:
+                () =>
+                  undefined,
 
-    expect(
-      enqueueCommands,
-    ).toHaveBeenCalledTimes(1);
+              findGachaItemById:
+                () =>
+                  undefined,
 
-    expect(
-      enqueueCommands,
-    ).toHaveBeenCalledWith({
-      gachaItemId: "item-1",
-      gachaItemName: item.name,
-      commands: [
-        expect.objectContaining({
-          type: "minecraft",
-          value: "say hello",
-          enabled: true,
-        }),
-      ],
-    });
-  });
-});
+              findEffectById:
+                () =>
+                  undefined,
+
+              buildEffectCommands:
+                () =>
+                  [],
+
+              enqueueCommands,
+            },
+          );
+
+        expect(
+          result,
+        ).toEqual({
+          triggerId:
+            trigger.id,
+
+          poolId:
+            "missing-pool",
+
+          commandCount:
+            0,
+
+          status:
+            "pool-not-found",
+        });
+
+        expect(
+          enqueueCommands,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
+      "returns item-not-selected when the pool cannot select an item",
+      () => {
+        const pool =
+          createGachaPool({
+            entries:
+              [],
+          });
+
+        const trigger =
+          createGiftTrigger({
+            gachaPoolId:
+              pool.id,
+          });
+
+        const enqueueCommands =
+          vi.fn();
+
+        const result =
+          executeTrigger(
+            trigger,
+            {
+              findPoolById:
+                (id) =>
+                  id === pool.id
+                    ? pool
+                    : undefined,
+
+              findGachaItemById:
+                () =>
+                  undefined,
+
+              findEffectById:
+                () =>
+                  undefined,
+
+              buildEffectCommands:
+                () =>
+                  [],
+
+              enqueueCommands,
+            },
+          );
+
+        expect(
+          result.status,
+        ).toBe(
+          "item-not-selected",
+        );
+
+        expect(
+          result.commandCount,
+        ).toBe(
+          0,
+        );
+
+        expect(
+          enqueueCommands,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
+      "returns execution-not-resolved when item execution cannot be resolved",
+      () => {
+        const pool =
+          createGachaPool({
+            entries: [
+              {
+                id:
+                  "entry-1",
+
+                gachaItemId:
+                  "item-1",
+
+                weight:
+                  100,
+              },
+            ],
+          });
+
+        const trigger =
+          createGiftTrigger({
+            gachaPoolId:
+              pool.id,
+          });
+
+        const item =
+          createGachaItem({
+            id:
+              "item-1",
+
+            commands:
+              [],
+          });
+
+        const enqueueCommands =
+          vi.fn();
+
+        const result =
+          executeTrigger(
+            trigger,
+            {
+              findPoolById:
+                (id) =>
+                  id === pool.id
+                    ? pool
+                    : undefined,
+
+              findGachaItemById:
+                (id) =>
+                  id === item.id
+                    ? item
+                    : undefined,
+
+              findEffectById:
+                () =>
+                  undefined,
+
+              buildEffectCommands:
+                () =>
+                  [],
+
+              enqueueCommands,
+
+              random:
+                () =>
+                  0,
+            },
+          );
+
+        expect(
+          result.status,
+        ).toBe(
+          "execution-not-resolved",
+        );
+
+        expect(
+          result.gachaItemId,
+        ).toBe(
+          item.id,
+        );
+
+        expect(
+          result.commandCount,
+        ).toBe(
+          0,
+        );
+
+        expect(
+          enqueueCommands,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it(
+      "counts only enabled commands",
+      () => {
+        const pool =
+          createGachaPool({
+            entries: [
+              {
+                id:
+                  "entry-1",
+
+                gachaItemId:
+                  "item-1",
+
+                weight:
+                  100,
+              },
+            ],
+          });
+
+        const trigger =
+          createGiftTrigger({
+            gachaPoolId:
+              pool.id,
+          });
+
+        const item =
+          createGachaItem({
+            id:
+              "item-1",
+
+            commands: [
+              {
+                id:
+                  "command-1",
+
+                type:
+                  "minecraft",
+
+                value:
+                  "say enabled",
+
+                delay:
+                  0,
+
+                enabled:
+                  true,
+              },
+
+              {
+                id:
+                  "command-2",
+
+                type:
+                  "minecraft",
+
+                value:
+                  "say disabled",
+
+                delay:
+                  0,
+
+                enabled:
+                  false,
+              },
+            ],
+          });
+
+        const enqueueCommands =
+          vi.fn();
+
+        const result =
+          executeTrigger(
+            trigger,
+            {
+              findPoolById:
+                () =>
+                  pool,
+
+              findGachaItemById:
+                () =>
+                  item,
+
+              findEffectById:
+                () =>
+                  undefined,
+
+              buildEffectCommands:
+                () =>
+                  [],
+
+              enqueueCommands,
+
+              random:
+                () =>
+                  0,
+            },
+          );
+
+        expect(
+          result.status,
+        ).toBe(
+          "queued",
+        );
+
+        expect(
+          result.commandCount,
+        ).toBe(
+          1,
+        );
+
+        expect(
+          enqueueCommands,
+        ).toHaveBeenCalledTimes(
+          1,
+        );
+      },
+    );
+  },
+);

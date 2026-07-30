@@ -59,6 +59,9 @@ function createInitialSettings(
         autoShow: false,
       };
 
+    case "fake":
+      return {};
+
     default:
       return {};
   }
@@ -91,6 +94,10 @@ function createInitialConfigs(): Record<
 
     overlay: createConfig(
       "overlay",
+    ),
+
+    fake: createConfig(
+      "fake",
     ),
   };
 }
@@ -166,6 +173,27 @@ export const usePluginConfigStore =
           configs:
             state.configs,
         }),
+
+        merge: (
+          persistedState,
+          currentState,
+        ) => {
+          const persisted =
+            persistedState as
+              | Partial<PluginConfigState>
+              | undefined;
+
+          return {
+            ...currentState,
+
+            ...persisted,
+
+            configs: {
+              ...currentState.configs,
+              ...persisted?.configs,
+            },
+          };
+        },
       },
     ),
   );

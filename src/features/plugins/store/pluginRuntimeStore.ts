@@ -25,39 +25,45 @@ type PluginRuntimeState = {
   reset: () => void;
 };
 
-function createRuntime(): PluginRuntime {
+function createRuntime(
+  id: PluginId,
+): PluginRuntime {
   return {
-    id: "minecraft" as PluginId,
+    id,
     connectionStatus:
       "disconnected",
     updatedAt: Date.now(),
   };
 }
 
-const initialState: Record<
+function createInitialState(): Record<
   PluginId,
   PluginRuntime
-> = {
-  "tiktok-live": {
-    ...createRuntime(),
-    id: "tiktok-live",
-  },
+> {
+  return {
+    "tiktok-live": createRuntime(
+      "tiktok-live",
+    ),
 
-  minecraft: {
-    ...createRuntime(),
-    id: "minecraft",
-  },
+    minecraft: createRuntime(
+      "minecraft",
+    ),
 
-  overlay: {
-    ...createRuntime(),
-    id: "overlay",
-  },
-};
+    overlay: createRuntime(
+      "overlay",
+    ),
+
+    fake: createRuntime(
+      "fake",
+    ),
+  };
+}
 
 export const usePluginRuntimeStore =
   create<PluginRuntimeState>(
     (set) => ({
-      runtimes: initialState,
+      runtimes:
+        createInitialState(),
 
       setConnectionStatus: (
         id,
@@ -91,6 +97,8 @@ export const usePluginRuntimeStore =
 
               ...update,
 
+              id,
+
               updatedAt:
                 Date.now(),
             },
@@ -100,9 +108,7 @@ export const usePluginRuntimeStore =
       reset: () =>
         set({
           runtimes:
-            structuredClone(
-              initialState,
-            ),
+            createInitialState(),
         }),
     }),
   );
