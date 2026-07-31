@@ -3,9 +3,16 @@ import {
   type Child,
 } from "@tauri-apps/plugin-shell";
 
+import {
+  parsePluginHostMessage,
+} from "./PluginHostMessageParser";
+
 import type {
   PluginHostCommand,
+  PluginHostMessage,
+  PluginHostMessageListener,
   PluginHostState,
+  PluginHostUnsubscribe,
 } from "./types";
 
 export class PluginHostService {
@@ -15,12 +22,29 @@ export class PluginHostService {
   private child: Child | null =
     null;
 
+  private readonly messageListeners =
+    new Set<PluginHostMessageListener>();
+
   getState(): PluginHostState {
     return this.state;
   }
 
   isRunning(): boolean {
     return this.state === "running";
+  }
+
+  onMessage(
+    listener: PluginHostMessageListener,
+  ): PluginHostUnsubscribe {
+    this.messageListeners.add(
+      listener,
+    );
+
+    return () => {
+      this.messageListeners.delete(
+        listener,
+      );
+    };
   }
 
   async start(): Promise<void> {
@@ -38,8 +62,7 @@ export class PluginHostService {
       command.stdout.on(
         "data",
         (line: string) => {
-          console.log(
-            "[PluginHost:stdout]",
+          this.handleStdoutLine(
             line,
           );
         },
@@ -48,7 +71,7 @@ export class PluginHostService {
       command.stderr.on(
         "data",
         (line: string) => {
-          console.error(
+          console.info(
             "[PluginHost:stderr]",
             line,
           );
@@ -156,5 +179,65 @@ export class PluginHostService {
       "[PluginHostService] Command sent.",
       command,
     );
+  }
+
+  private handleStdoutLine(
+    line: string,
+  ): void {
+    const trimmedLine =
+      line.trim();
+
+    if (trimmedLine.length === 0) {
+      return;
+    }
+
+    try {
+      const message =
+        parsePluginHostMessage(
+          trimmedLine,
+        );
+
+      console.log(
+        "[PluginHost:message]",
+        message,
+      );
+
+      this.emitMessage(
+        message,
+      );
+    } catch (error: unknown) {
+      console.warn(
+        "[PluginHostService] Invalid stdout message.",
+        {
+          line:
+            trimmedLine,
+
+          error:
+            error instanceof Error
+              ? error.message
+              : String(error),
+        },
+      );
+    }
+  }
+
+  private emitMessage(
+    message: PluginHostMessage,
+  ): void {
+    for (
+      const listener
+      of this.messageListeners
+    ) {
+      try {
+        listener(
+          message,
+        );
+      } catch (error: unknown) {
+        console.error(
+          "[PluginHostService] Message listener failed.",
+          error,
+        );
+      }
+    }
   }
 }

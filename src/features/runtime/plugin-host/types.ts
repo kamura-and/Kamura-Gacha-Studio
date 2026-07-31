@@ -15,3 +15,10 @@ export interface PluginHostMessage {
   payload: Record<string, unknown>;
   occurredAt: number;
 }
+
+export type PluginHostMessageListener = (
+  message: PluginHostMessage,
+) => void;
+
+export type PluginHostUnsubscribe =
+  () => void;
