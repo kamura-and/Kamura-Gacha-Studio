@@ -27,6 +27,17 @@ export type GachaItem = {
   description: string;
 
   /**
+   * 景品画像のData URL。
+   *
+   * PNG・JPEG・WebPなどの画像を、
+   * Base64形式で保存する。
+   *
+   * 未指定の場合は、
+   * 従来どおりアイコンを表示する。
+   */
+  imageDataUrl?: string | null;
+
+  /**
    * 保存済みエフェクトのID。
    *
    * 指定されている場合は、

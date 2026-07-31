@@ -20,6 +20,12 @@ export type ExecuteEffectInput = {
   gachaItemId: string;
 
   gachaItemName: string;
+
+  gachaItemDescription?: string;
+
+  gachaItemRarity?: string;
+
+  gachaItemImageDataUrl?: string | null;
 };
 
 export type ExecuteEffectResult = {
@@ -97,6 +103,15 @@ export class EffectRuntime {
       gachaItemName:
         input.gachaItemName,
 
+      gachaItemDescription:
+        input.gachaItemDescription,
+
+      gachaItemRarity:
+        input.gachaItemRarity,
+
+      gachaItemImageDataUrl:
+        input.gachaItemImageDataUrl,
+
       commands,
     });
 
@@ -136,10 +151,9 @@ export class EffectRuntime {
     return effect.actions.flatMap(
       (action) => {
         try {
-          return action.definition
-            .buildCommands(
-              action.values,
-            );
+          return action.definition.buildCommands(
+            action.values,
+          );
         } catch (error) {
           console.error(
             "[EffectRuntime]",

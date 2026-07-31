@@ -1,7 +1,9 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
+  type ChangeEvent,
   type FormEvent,
 } from "react";
 
@@ -32,6 +34,7 @@ import type {
 type GachaFormValues = {
   name: string;
   description: string;
+  imageDataUrl: string;
   rarity: GachaRarity;
   isEnabled: boolean;
   effectId: string;
@@ -54,31 +57,31 @@ const rarityOptions: Array<{
   value: GachaRarity;
   label: string;
 }> = [
-  {
-    value: "common",
-    label: "コモン",
-  },
-  {
-    value: "rare",
-    label: "レア",
-  },
-  {
-    value: "epic",
-    label: "エピック",
-  },
-  {
-    value: "legendary",
-    label: "レジェンダリー",
-  },
-  {
-    value: "ultra",
-    label: "ウルトラレア",
-  },
-  {
-    value: "secret",
-    label: "シークレット",
-  },
-];
+    {
+      value: "common",
+      label: "コモン",
+    },
+    {
+      value: "rare",
+      label: "レア",
+    },
+    {
+      value: "epic",
+      label: "エピック",
+    },
+    {
+      value: "legendary",
+      label: "レジェンダリー",
+    },
+    {
+      value: "ultra",
+      label: "ウルトラレア",
+    },
+    {
+      value: "secret",
+      label: "シークレット",
+    },
+  ];
 
 function createId(
   prefix: string,
@@ -90,6 +93,7 @@ function createEmptyFormValues(): GachaFormValues {
   return {
     name: "",
     description: "",
+    imageDataUrl: "",
     rarity: "common",
     isEnabled: true,
     effectId: "",
@@ -118,6 +122,9 @@ export function GachaFormModal({
   ] = useState<GachaFormValues>(
     createEmptyFormValues,
   );
+
+  const fileInputRef =
+    useRef<HTMLInputElement>(null);
 
   const [
     errors,
@@ -158,11 +165,19 @@ export function GachaFormModal({
     if (item) {
       setFormValues({
         name: item.name,
+
         description:
           item.description,
-        rarity: item.rarity,
+
+        imageDataUrl:
+          item.imageDataUrl ?? "",
+
+        rarity:
+          item.rarity,
+
         isEnabled:
           item.isEnabled,
+
         effectId:
           item.effectId ?? "",
       });
@@ -237,6 +252,189 @@ export function GachaFormModal({
     );
   }
 
+  async function resizeImage(
+    file: File,
+  ): Promise<string> {
+    return new Promise(
+      (resolve, reject) => {
+        const reader =
+          new FileReader();
+
+        reader.onerror = () => {
+          reject(
+            new Error(
+              "画像ファイルの読み込みに失敗しました。",
+            ),
+          );
+        };
+
+        reader.onload = () => {
+          if (
+            typeof reader.result !==
+            "string"
+          ) {
+            reject(
+              new Error(
+                "画像データを取得できませんでした。",
+              ),
+            );
+
+            return;
+          }
+
+          const image =
+            new Image();
+
+          image.onerror = () => {
+            reject(
+              new Error(
+                "画像を読み込めませんでした。",
+              ),
+            );
+          };
+
+          image.onload = () => {
+            const MAX_SIZE = 1024;
+
+            let width =
+              image.width;
+
+            let height =
+              image.height;
+
+            if (
+              width > height &&
+              width > MAX_SIZE
+            ) {
+              height =
+                (height *
+                  MAX_SIZE) /
+                width;
+
+              width =
+                MAX_SIZE;
+            } else if (
+              height > MAX_SIZE
+            ) {
+              width =
+                (width *
+                  MAX_SIZE) /
+                height;
+
+              height =
+                MAX_SIZE;
+            }
+
+            const canvas =
+              document.createElement(
+                "canvas",
+              );
+
+            canvas.width =
+              Math.round(width);
+
+            canvas.height =
+              Math.round(height);
+
+            const context =
+              canvas.getContext(
+                "2d",
+              );
+
+            if (!context) {
+              reject(
+                new Error(
+                  "画像を処理できませんでした。",
+                ),
+              );
+
+              return;
+            }
+
+            context.drawImage(
+              image,
+              0,
+              0,
+              canvas.width,
+              canvas.height,
+            );
+
+            resolve(
+              canvas.toDataURL(
+                "image/jpeg",
+                0.85,
+              ),
+            );
+          };
+
+          image.src =
+            reader.result;
+        };
+
+        reader.readAsDataURL(file);
+      },
+    );
+  }
+
+  async function handleImageChange(
+    event:
+      ChangeEvent<HTMLInputElement>,
+  ) {
+    const file =
+      event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (
+      !file.type.startsWith(
+        "image/",
+      )
+    ) {
+      window.alert(
+        "画像ファイルを選択してください。",
+      );
+
+      event.target.value = "";
+
+      return;
+    }
+
+    try {
+      const dataUrl =
+        await resizeImage(file);
+
+      updateFormField(
+        "imageDataUrl",
+        dataUrl,
+      );
+    } catch (error) {
+      console.error(
+        "画像の処理に失敗しました。",
+        error,
+      );
+
+      window.alert(
+        "画像の読み込みに失敗しました。別の画像を選択してください。",
+      );
+
+      event.target.value = "";
+    }
+  }
+
+  function removeImage() {
+    updateFormField(
+      "imageDataUrl",
+      "",
+    );
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value =
+        "";
+    }
+  }
+
   function validateForm(): boolean {
     const nextErrors:
       GachaFormErrors = {};
@@ -291,25 +489,28 @@ export function GachaFormModal({
 
     const submittedItem:
       GachaItem = {
-        id:
-          item?.id ??
-          createId("gacha"),
-        name:
-          formValues.name.trim(),
-        description:
-          formValues.description.trim(),
-        effectId:
-          formValues.effectId.trim(),
-        commands:
-          legacyCommands,
-        rarity:
-          formValues.rarity,
-        isEnabled:
-          formValues.isEnabled,
-        createdAt:
-          item?.createdAt ??
-          new Date().toISOString(),
-      };
+      id:
+        item?.id ??
+        createId("gacha"),
+      name:
+        formValues.name.trim(),
+      description:
+        formValues.description.trim(),
+      imageDataUrl:
+        formValues.imageDataUrl.trim() ||
+        null,
+      effectId:
+        formValues.effectId.trim(),
+      commands:
+        legacyCommands,
+      rarity:
+        formValues.rarity,
+      isEnabled:
+        formValues.isEnabled,
+      createdAt:
+        item?.createdAt ??
+        new Date().toISOString(),
+    };
 
     onSubmit(submittedItem);
     onClose();
@@ -472,7 +673,75 @@ export function GachaFormModal({
                       />
                     ) : null}
                   </div>
+                  <div>
+                    <label
+                      htmlFor="gacha-image"
+                      className="text-sm font-black text-slate-800"
+                    >
+                      景品画像
+                    </label>
 
+                    <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      {formValues.imageDataUrl ? (
+                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                          <img
+                            src={
+                              formValues.imageDataUrl
+                            }
+                            alt="景品画像のプレビュー"
+                            className="h-48 w-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex h-48 items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white px-4 text-center">
+                          <p className="text-sm font-bold text-slate-400">
+                            画像はまだありません
+                          </p>
+                        </div>
+                      )}
+
+                      <input
+                        id="gacha-image"
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        onChange={
+                          handleImageChange
+                        }
+                      />
+
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            fileInputRef.current?.click();
+                          }}
+                          className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-violet-500"
+                        >
+                          {formValues.imageDataUrl
+                            ? "画像を変更"
+                            : "画像を選択"}
+                        </button>
+
+                        {formValues.imageDataUrl ? (
+                          <button
+                            type="button"
+                            onClick={
+                              removeImage
+                            }
+                            className="rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-black text-rose-600 transition hover:bg-rose-50"
+                          >
+                            画像を削除
+                          </button>
+                        ) : null}
+                      </div>
+
+                      <p className="mt-3 text-xs leading-5 text-slate-500">
+                        PNG・JPG・WEBPに対応しています。画像は最大1024pxに縮小して保存します。
+                      </p>
+                    </div>
+                  </div>
                   <div>
                     <label
                       htmlFor="gacha-rarity"
@@ -611,7 +880,7 @@ export function GachaFormModal({
                                 </p>
 
                                 {effect.tags.length >
-                                0 ? (
+                                  0 ? (
                                   <div className="mt-3 flex flex-wrap gap-1.5">
                                     {effect.tags.map(
                                       (

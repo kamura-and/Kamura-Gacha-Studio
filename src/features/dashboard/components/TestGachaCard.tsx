@@ -8,19 +8,17 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
+
 import {
   AnimatePresence,
   motion,
 } from "motion/react";
+
 import {
   useEffect,
   useMemo,
   useState,
 } from "react";
-
-import {
-  executionHistoryRuntime,
-} from "@/features/history/runtime/ExecutionHistoryRuntime";
 
 import {
   gachaExecutionRuntime,
@@ -33,6 +31,14 @@ import type {
 import {
   useGachaStore,
 } from "@/features/gacha/store/gachaStore";
+
+import {
+  executionHistoryRuntime,
+} from "@/features/history/runtime/ExecutionHistoryRuntime";
+
+import {
+  gachaOverlayRuntime,
+} from "@/features/overlay/runtime/GachaOverlayRuntime";
 
 import {
   usePoolStore,
@@ -57,36 +63,47 @@ const rarityStyles = {
   common: {
     badge:
       "bg-slate-100 text-slate-700",
+
     icon:
       "bg-slate-100 text-slate-600",
   },
+
   rare: {
     badge:
       "bg-sky-100 text-sky-700",
+
     icon:
       "bg-sky-100 text-sky-600",
   },
+
   epic: {
     badge:
       "bg-violet-100 text-violet-700",
+
     icon:
       "bg-violet-100 text-violet-600",
   },
+
   legendary: {
     badge:
       "bg-amber-100 text-amber-700",
+
     icon:
       "bg-amber-100 text-amber-600",
   },
+
   ultra: {
     badge:
       "bg-fuchsia-100 text-fuchsia-700",
+
     icon:
       "bg-fuchsia-100 text-fuchsia-600",
   },
+
   secret: {
     badge:
       "bg-rose-100 text-rose-700",
+
     icon:
       "bg-rose-100 text-rose-600",
   },
@@ -96,7 +113,7 @@ function createDashboardEventId(): string {
   if (
     typeof crypto !== "undefined" &&
     typeof crypto.randomUUID ===
-      "function"
+    "function"
   ) {
     return `dashboard-test-${crypto.randomUUID()}`;
   }
@@ -263,8 +280,8 @@ export function TestGachaCard() {
 
   const rarityStyle = result
     ? rarityStyles[
-        result.spin.item.rarity
-      ]
+    result.spin.item.rarity
+    ]
     : undefined;
 
   const handleDraw = async () => {
@@ -277,6 +294,10 @@ export function TestGachaCard() {
 
     setIsDrawing(true);
     setErrorMessage("");
+
+    gachaOverlayRuntime.showDrawing(
+      selectedPool.name,
+    );
 
     try {
       await new Promise<void>(
@@ -337,6 +358,26 @@ export function TestGachaCard() {
 
       setResult(executionResult);
 
+      gachaOverlayRuntime.showResult({
+        itemId:
+          executionResult.spin.item.id,
+
+        itemName:
+          executionResult.spin.item.name,
+
+        description:
+          executionResult.spin.item
+            .description,
+
+        rarity:
+          executionResult.spin.item
+            .rarity,
+
+        imageDataUrl:
+          executionResult.spin.item
+            .imageDataUrl ?? null,
+      });
+
       setDrawCount(
         (currentCount) =>
           currentCount + 1,
@@ -348,10 +389,17 @@ export function TestGachaCard() {
         error,
       );
 
-      setErrorMessage(
+      const nextErrorMessage =
         error instanceof Error
           ? error.message
-          : "テストガチャの実行に失敗しました。",
+          : "テストガチャの実行に失敗しました。";
+
+      setErrorMessage(
+        nextErrorMessage,
+      );
+
+      gachaOverlayRuntime.showError(
+        nextErrorMessage,
       );
     } finally {
       setIsDrawing(false);
@@ -410,6 +458,8 @@ export function TestGachaCard() {
 
               setResult(undefined);
               setErrorMessage("");
+
+              gachaOverlayRuntime.hide();
             }}
             disabled={
               isDrawing ||
@@ -541,8 +591,8 @@ export function TestGachaCard() {
                     >
                       {
                         rarityLabels[
-                          result.spin.item
-                            .rarity
+                        result.spin.item
+                          .rarity
                         ]
                       }
                     </span>
@@ -649,25 +699,25 @@ export function TestGachaCard() {
             isDrawing ||
             !selectedPool ||
             selectedPoolStats.enabledItemCount ===
-              0 ||
+            0 ||
             selectedPoolStats.totalWeight <=
-              0
+            0
           }
           whileHover={
             isDrawing ||
-            !selectedPool
+              !selectedPool
               ? undefined
               : {
-                  scale: 1.01,
-                }
+                scale: 1.01,
+              }
           }
           whileTap={
             isDrawing ||
-            !selectedPool
+              !selectedPool
               ? undefined
               : {
-                  scale: 0.98,
-                }
+                scale: 0.98,
+              }
           }
           className="mt-6 flex w-full items-center justify-center gap-3 rounded-2xl bg-violet-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -677,16 +727,19 @@ export function TestGachaCard() {
                 size={20}
                 className="animate-spin"
               />
+
               抽選しています
             </>
           ) : drawCount === 0 ? (
             <>
               <Dices size={21} />
+
               ガチャ箱を回す
             </>
           ) : (
             <>
               <RotateCcw size={20} />
+
               もう一度回す
             </>
           )}

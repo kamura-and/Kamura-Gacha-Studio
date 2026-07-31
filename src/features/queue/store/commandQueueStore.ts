@@ -11,11 +11,17 @@ type CommandQueueState = {
   isProcessing: boolean;
   currentItemId: string | null;
 
-  enqueueCommands: (input: EnqueueCommandsInput) => CommandQueueItem[];
+  enqueueCommands: (
+    input: EnqueueCommandsInput,
+  ) => CommandQueueItem[];
 
-  setProcessing: (isProcessing: boolean) => void;
+  setProcessing: (
+    isProcessing: boolean,
+  ) => void;
 
-  setCurrentItem: (itemId: string | null) => void;
+  setCurrentItem: (
+    itemId: string | null,
+  ) => void;
 
   updateItemStatus: (
     itemId: string,
@@ -34,143 +40,210 @@ type CommandQueueState = {
 
 function createQueueItemId(): string {
   if (
-    typeof globalThis.crypto !== "undefined" &&
-    typeof globalThis.crypto.randomUUID === "function"
+    typeof globalThis.crypto !==
+      "undefined" &&
+    typeof globalThis.crypto
+      .randomUUID === "function"
   ) {
     return globalThis.crypto.randomUUID();
   }
 
-  return `queue-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return [
+    "queue",
+    Date.now().toString(36),
+    Math.random()
+      .toString(36)
+      .slice(2),
+  ].join("-");
 }
 
-export const useCommandQueueStore = create<CommandQueueState>((set) => ({
-  items: [],
-  isProcessing: false,
-  currentItemId: null,
+export const useCommandQueueStore =
+  create<CommandQueueState>((set) => ({
+    items: [],
+    isProcessing: false,
+    currentItemId: null,
 
-  enqueueCommands: ({
-    gachaItemId,
-    gachaItemName,
-    commands,
-  }) => {
-    const createdAt = Date.now();
+    enqueueCommands: ({
+      gachaItemId,
+      gachaItemName,
+      gachaItemDescription,
+      gachaItemRarity,
+      gachaItemImageDataUrl,
+      commands,
+    }) => {
+      const createdAt = Date.now();
 
-    const queueItems: CommandQueueItem[] =
-      commands
+      const queueItems:
+        CommandQueueItem[] = commands
         .filter(
           (command) =>
             command.enabled !== false,
         )
         .map((command, index) => ({
           id: createQueueItemId(),
+
           gachaItemId,
+
           gachaItemName,
+
+          gachaItemDescription,
+
+          gachaItemRarity,
+
+          gachaItemImageDataUrl,
+
           command: {
             ...command,
-            delay: command.delay ?? 0,
+
+            delay:
+              command.delay ?? 0,
+
             enabled:
               command.enabled !== false,
           },
+
           status: "pending",
-          createdAt: createdAt + index,
+
+          createdAt:
+            createdAt + index,
         }));
 
-    set((state) => ({
-      items: [
-        ...state.items,
-        ...queueItems,
-      ],
-    }));
+      set((state) => ({
+        items: [
+          ...state.items,
+          ...queueItems,
+        ],
+      }));
 
-    return queueItems;
-  },
+      return queueItems;
+    },
 
-  setProcessing: (isProcessing) => {
-    set({ isProcessing });
-  },
+    setProcessing: (
+      isProcessing,
+    ) => {
+      set({ isProcessing });
+    },
 
-  setCurrentItem: (currentItemId) => {
-    set({ currentItemId });
-  },
+    setCurrentItem: (
+      currentItemId,
+    ) => {
+      set({ currentItemId });
+    },
 
-  updateItemStatus: (itemId, status, options) => {
-    const now = Date.now();
+    updateItemStatus: (
+      itemId,
+      status,
+      options,
+    ) => {
+      const now = Date.now();
 
-    set((state) => ({
-      items: state.items.map((item) => {
-        if (item.id !== itemId) {
-          return item;
-        }
+      set((state) => ({
+        items: state.items.map(
+          (item) => {
+            if (item.id !== itemId) {
+              return item;
+            }
 
-        const nextItem: CommandQueueItem = {
-          ...item,
-          status,
-        };
+            const nextItem:
+              CommandQueueItem = {
+              ...item,
+              status,
+            };
 
-        if (status === "running") {
-          nextItem.startedAt = now;
-          nextItem.finishedAt = undefined;
-          nextItem.error = undefined;
-        }
+            if (
+              status === "running"
+            ) {
+              nextItem.startedAt =
+                now;
 
-        if (
-          status === "completed" ||
-          status === "failed" ||
-          status === "cancelled"
-        ) {
-          nextItem.finishedAt = now;
-        }
+              nextItem.finishedAt =
+                undefined;
 
-        if (status === "failed") {
-          nextItem.error = options?.error ?? "不明なエラーが発生しました。";
-        }
+              nextItem.error =
+                undefined;
+            }
 
-        if (status !== "failed") {
-          nextItem.error = undefined;
-        }
+            if (
+              status ===
+                "completed" ||
+              status === "failed" ||
+              status ===
+                "cancelled"
+            ) {
+              nextItem.finishedAt =
+                now;
+            }
 
-        return nextItem;
-      }),
-    }));
-  },
+            if (
+              status === "failed"
+            ) {
+              nextItem.error =
+                options?.error ??
+                "不明なエラーが発生しました。";
+            }
 
-  cancelPendingItems: () => {
-    const now = Date.now();
+            if (
+              status !== "failed"
+            ) {
+              nextItem.error =
+                undefined;
+            }
 
-    set((state) => ({
-      items: state.items.map((item) => {
-        if (item.status !== "pending") {
-          return item;
-        }
+            return nextItem;
+          },
+        ),
+      }));
+    },
+
+    cancelPendingItems: () => {
+      const now = Date.now();
+
+      set((state) => ({
+        items: state.items.map(
+          (item) => {
+            if (
+              item.status !==
+              "pending"
+            ) {
+              return item;
+            }
+
+            return {
+              ...item,
+              status:
+                "cancelled",
+              finishedAt: now,
+              error: undefined,
+            };
+          },
+        ),
+      }));
+    },
+
+    clearFinishedItems: () => {
+      set((state) => ({
+        items: state.items.filter(
+          (item) =>
+            item.status ===
+              "pending" ||
+            item.status ===
+              "running",
+        ),
+      }));
+    },
+
+    clearAllItems: () => {
+      set((state) => {
+        const runningItems =
+          state.items.filter(
+            (item) =>
+              item.status ===
+              "running",
+          );
 
         return {
-          ...item,
-          status: "cancelled",
-          finishedAt: now,
-          error: undefined,
+          items: runningItems,
         };
-      }),
-    }));
-  },
-
-  clearFinishedItems: () => {
-    set((state) => ({
-      items: state.items.filter(
-        (item) =>
-          item.status === "pending" || item.status === "running",
-      ),
-    }));
-  },
-
-  clearAllItems: () => {
-    set((state) => {
-      const runningItems = state.items.filter(
-        (item) => item.status === "running",
-      );
-
-      return {
-        items: runningItems,
-      };
-    });
-  },
-}));
+      });
+    },
+  }));

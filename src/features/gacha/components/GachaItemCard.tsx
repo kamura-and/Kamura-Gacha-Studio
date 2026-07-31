@@ -118,10 +118,10 @@ export function GachaItemCard({
     (state) =>
       item.effectId
         ? state.effects.find(
-            (effect) =>
-              effect.id ===
-              item.effectId,
-          )
+          (effect) =>
+            effect.id ===
+            item.effectId,
+        )
         : undefined,
   );
 
@@ -151,35 +151,35 @@ export function GachaItemCard({
 
   const isCurrentlyRunning =
     currentQueueItem?.gachaItemId ===
-      item.id &&
+    item.id &&
     currentQueueItem.status ===
-      "running";
+    "running";
 
   const queuedCount =
     queueItems.filter(
       (queueItem) =>
         queueItem.gachaItemId ===
-          item.id &&
+        item.id &&
         queueItem.status ===
-          "pending",
+        "pending",
     ).length;
 
   const completedCount =
     queueItems.filter(
       (queueItem) =>
         queueItem.gachaItemId ===
-          item.id &&
+        item.id &&
         queueItem.status ===
-          "completed",
+        "completed",
     ).length;
 
   const failedCount =
     queueItems.filter(
       (queueItem) =>
         queueItem.gachaItemId ===
-          item.id &&
+        item.id &&
         queueItem.status ===
-          "failed",
+        "failed",
     ).length;
 
   const handleDelete = () => {
@@ -215,20 +215,33 @@ export function GachaItemCard({
           : "border-slate-200 opacity-60",
       ].join(" ")}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+      <div className="flex items-start gap-4">
+        {item.imageDataUrl ? (
+          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+            <img
+              src={item.imageDataUrl}
+              alt={item.name}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-xs font-bold text-slate-400">
+            No Image
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={[
                 "rounded-full px-2.5 py-1 text-[11px] font-black",
                 rarityStyles[
-                  item.rarity
+                item.rarity
                 ],
               ].join(" ")}
             >
               {
                 rarityLabels[
-                  item.rarity
+                item.rarity
                 ]
               }
             </span>
@@ -267,9 +280,9 @@ export function GachaItemCard({
             ) : null}
 
             {completedCount > 0 &&
-            !isCurrentlyRunning &&
-            queuedCount === 0 &&
-            failedCount === 0 ? (
+              !isCurrentlyRunning &&
+              queuedCount === 0 &&
+              failedCount === 0 ? (
               <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-black text-sky-700">
                 実行済み
               </span>
@@ -284,41 +297,41 @@ export function GachaItemCard({
             {item.description}
           </p>
         </div>
-
-        <button
-          type="button"
-          onClick={() =>
-            onToggleEnabled(item.id)
-          }
-          className={[
-            "relative h-7 w-12 shrink-0 rounded-full transition",
-            item.isEnabled
-              ? "bg-emerald-500"
-              : "bg-slate-300",
-          ].join(" ")}
-          aria-label={`${item.name}の有効状態を切り替える`}
-          aria-pressed={
-            item.isEnabled
-          }
-        >
-          <motion.span
-            className="absolute top-1 flex size-5 items-center justify-center rounded-full bg-white shadow-sm"
-            animate={{
-              left: item.isEnabled
-                ? 24
-                : 4,
-            }}
+        <div className="ml-auto">
+          <button
+            type="button"
+            onClick={() =>
+              onToggleEnabled(item.id)
+            }
+            className={[
+              "relative h-7 w-12 shrink-0 rounded-full transition",
+              item.isEnabled
+                ? "bg-emerald-500"
+                : "bg-slate-300",
+            ].join(" ")}
+            aria-label={`${item.name}の有効状態を切り替える`}
+            aria-pressed={
+              item.isEnabled
+            }
           >
-            {item.isEnabled ? (
-              <Check
-                size={12}
-                className="text-emerald-600"
-              />
-            ) : null}
-          </motion.span>
-        </button>
+            <motion.span
+              className="absolute top-1 flex size-5 items-center justify-center rounded-full bg-white shadow-sm"
+              animate={{
+                left: item.isEnabled
+                  ? 24
+                  : 4,
+              }}
+            >
+              {item.isEnabled ? (
+                <Check
+                  size={12}
+                  className="text-emerald-600"
+                />
+              ) : null}
+            </motion.span>
+          </button>
+        </div>
       </div>
-
       {item.effectId ? (
         <div className="mt-5 rounded-2xl border border-violet-200 bg-violet-50/60 p-4">
           <div className="flex items-center justify-between gap-3">
@@ -412,7 +425,7 @@ export function GachaItemCard({
           </div>
 
           {item.commands.length >
-          0 ? (
+            0 ? (
             <div className="mt-3 space-y-2">
               {item.commands
                 .slice(0, 4)
@@ -452,18 +465,17 @@ export function GachaItemCard({
 
                         <p className="truncate font-mono text-[11px] text-slate-500">
                           {command.type ===
-                          "wait"
-                            ? `${
-                                command.value ||
-                                command.delay
-                              }ms 待機`
+                            "wait"
+                            ? `${command.value ||
+                            command.delay
+                            }ms 待機`
                             : command.value ||
-                              "値が未設定です"}
+                            "値が未設定です"}
                         </p>
                       </div>
 
                       {command.type !==
-                      "wait" ? (
+                        "wait" ? (
                         <span className="shrink-0 text-[11px] font-bold text-slate-400">
                           +
                           {
@@ -483,7 +495,7 @@ export function GachaItemCard({
           )}
 
           {item.commands.length >
-          4 ? (
+            4 ? (
             <p className="mt-3 text-center text-xs font-bold text-slate-400">
               ほか{" "}
               {item.commands

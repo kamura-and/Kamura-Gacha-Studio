@@ -8,7 +8,15 @@ import {
 
 export type ExecuteActionCommandsInput = {
   gachaItemId: string;
+
   gachaItemName: string;
+
+  gachaItemDescription?: string;
+
+  gachaItemRarity?: string;
+
+  gachaItemImageDataUrl?: string | null;
+
   commands: GeneratedActionCommand[];
 };
 
@@ -35,8 +43,19 @@ export class ActionRuntime {
     enqueueCommandsAndStart({
       gachaItemId:
         input.gachaItemId,
+
       gachaItemName:
         input.gachaItemName,
+
+      gachaItemDescription:
+        input.gachaItemDescription,
+
+      gachaItemRarity:
+        input.gachaItemRarity,
+
+      gachaItemImageDataUrl:
+        input.gachaItemImageDataUrl,
+
       commands,
     });
 
@@ -46,6 +65,10 @@ export class ActionRuntime {
       {
         gachaItemId:
           input.gachaItemId,
+
+        gachaItemName:
+          input.gachaItemName,
+
         commandCount:
           commands.length,
       },

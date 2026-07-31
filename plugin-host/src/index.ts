@@ -15,6 +15,10 @@ import {
   FakePlugin,
 } from "./plugins/FakePlugin.js";
 
+import {
+  TikTokPlugin,
+} from "./plugins/TikTokPlugin.js";
+
 type PluginHostMessage = {
   type: string;
 
@@ -26,20 +30,37 @@ type PluginHostMessage = {
   occurredAt: number;
 };
 
+type PluginHostCommandType =
+  | "plugin.list"
+  | "plugin.start"
+  | "plugin.stop"
+  | "tiktok.connect"
+  | "tiktok.disconnect"
+  | "tiktok.status"
+  | "plugin-host.stop";
+
 type PluginHostCommand = {
   requestId: string;
 
   type:
-    | "plugin.list"
-    | "plugin.start"
-    | "plugin.stop"
-    | "plugin-host.stop";
+    PluginHostCommandType;
 
   payload: Record<
     string,
     unknown
   >;
 };
+
+const validCommandTypes =
+  new Set<PluginHostCommandType>([
+    "plugin.list",
+    "plugin.start",
+    "plugin.stop",
+    "tiktok.connect",
+    "tiktok.disconnect",
+    "tiktok.status",
+    "plugin-host.stop",
+  ]);
 
 function writeMessage(
   type: string,
@@ -79,6 +100,17 @@ function isRecord(
   );
 }
 
+function isPluginHostCommandType(
+  value: unknown,
+): value is PluginHostCommandType {
+  return (
+    typeof value === "string"
+    && validCommandTypes.has(
+      value as PluginHostCommandType,
+    )
+  );
+}
+
 function parseCommand(
   line: string,
 ): PluginHostCommand {
@@ -102,13 +134,14 @@ function parseCommand(
   }
 
   if (
-    parsed.type !== "plugin.list"
-    && parsed.type !== "plugin.start"
-    && parsed.type !== "plugin.stop"
-    && parsed.type !== "plugin-host.stop"
+    !isPluginHostCommandType(
+      parsed.type,
+    )
   ) {
     throw new Error(
-      `Unknown command type: ${String(parsed.type)}`,
+      `Unknown command type: ${String(
+        parsed.type,
+      )}`,
     );
   }
 
@@ -142,18 +175,41 @@ function getPluginId(
 
   if (
     typeof pluginId !== "string"
-    || pluginId.length === 0
+    || pluginId.trim().length === 0
   ) {
     throw new Error(
       'Command payload requires a non-empty "pluginId".',
     );
   }
 
-  return pluginId;
+  return pluginId.trim();
+}
+
+function getTikTokUniqueId(
+  command: PluginHostCommand,
+): string {
+  const uniqueId =
+    command.payload.uniqueId;
+
+  if (
+    typeof uniqueId !== "string"
+    || uniqueId.trim().length === 0
+  ) {
+    throw new Error(
+      'Command payload requires a non-empty "uniqueId".',
+    );
+  }
+
+  return uniqueId
+    .trim()
+    .replace(/^@/, "");
 }
 
 const pluginManager =
   new PluginManager();
+
+const tikTokPlugin =
+  new TikTokPlugin();
 
 const pluginContext:
   PluginContext = {
@@ -227,6 +283,10 @@ async function handleCommand(
           plugins:
             pluginManager
               .getStatuses(),
+
+          tikTok:
+            tikTokPlugin
+              .getStatus(),
         },
       );
 
@@ -272,6 +332,56 @@ async function handleCommand(
           plugins:
             pluginManager
               .getStatuses(),
+        },
+      );
+
+      return;
+    }
+
+    case "tiktok.connect": {
+      const uniqueId =
+        getTikTokUniqueId(
+          command,
+        );
+
+      await tikTokPlugin.connect(
+        uniqueId,
+      );
+
+      writeCommandSucceeded(
+        command,
+        {
+          tikTok:
+            tikTokPlugin
+              .getStatus(),
+        },
+      );
+
+      return;
+    }
+
+    case "tiktok.disconnect": {
+      await tikTokPlugin.disconnect();
+
+      writeCommandSucceeded(
+        command,
+        {
+          tikTok:
+            tikTokPlugin
+              .getStatus(),
+        },
+      );
+
+      return;
+    }
+
+    case "tiktok.status": {
+      writeCommandSucceeded(
+        command,
+        {
+          tikTok:
+            tikTokPlugin
+              .getStatus(),
         },
       );
 
@@ -337,10 +447,24 @@ function startCommandReader(): void {
     "line",
     (line: string) => {
       commandChain =
-        commandChain.then(
-          () =>
-            handleCommandLine(line),
-        );
+        commandChain
+          .then(
+            () =>
+              handleCommandLine(
+                line,
+              ),
+          )
+          .catch(
+            (error: unknown) => {
+              writeLog(
+                `Command chain failed: ${
+                  error instanceof Error
+                    ? error.message
+                    : String(error)
+                }`,
+              );
+            },
+          );
     },
   );
 
@@ -364,6 +488,10 @@ Promise<void> {
     new FakePlugin(),
   );
 
+  pluginManager.register(
+    tikTokPlugin,
+  );
+
   await pluginManager.startAll(
     pluginContext,
   );
@@ -382,6 +510,10 @@ Promise<void> {
       plugins:
         pluginManager
           .getStatuses(),
+
+      tikTok:
+        tikTokPlugin
+          .getStatus(),
     },
   );
 
@@ -397,6 +529,10 @@ Promise<void> {
             plugins:
               pluginManager
                 .getStatuses(),
+
+            tikTok:
+              tikTokPlugin
+                .getStatus(),
           },
         );
       },
@@ -447,6 +583,10 @@ async function stopPluginHost(
       plugins:
         pluginManager
           .getStatuses(),
+
+      tikTok:
+        tikTokPlugin
+          .getStatus(),
     },
   );
 

@@ -15,6 +15,12 @@ import type {
   PluginHostUnsubscribe,
 } from "./types";
 
+const NODE_COMMAND_NAME =
+  "node-plugin-host";
+
+const PLUGIN_HOST_SCRIPT_PATH =
+  "../plugin-host/dist/index.js";
+
 export class PluginHostService {
   private state: PluginHostState =
     "stopped";
@@ -52,12 +58,17 @@ export class PluginHostService {
       return;
     }
 
-    this.state = "starting";
+    this.state =
+      "starting";
 
     try {
-      const command = Command.sidecar(
-        "binaries/plugin-host",
-      );
+      const command =
+        Command.create(
+          NODE_COMMAND_NAME,
+          [
+            PLUGIN_HOST_SCRIPT_PATH,
+          ],
+        );
 
       command.stdout.on(
         "data",
@@ -96,25 +107,36 @@ export class PluginHostService {
             data,
           );
 
-          this.child = null;
-          this.state = "stopped";
+          this.child =
+            null;
+
+          this.state =
+            "stopped";
         },
       );
 
       this.child =
         await command.spawn();
 
-      this.state = "running";
+      this.state =
+        "running";
 
       console.log(
-        "[PluginHostService] Plugin Host spawned.",
+        "[PluginHostService] Plugin Host spawned with Node.js.",
         {
-          pid: this.child.pid,
+          pid:
+            this.child.pid,
+
+          scriptPath:
+            PLUGIN_HOST_SCRIPT_PATH,
         },
       );
     } catch (error: unknown) {
-      this.child = null;
-      this.state = "stopped";
+      this.child =
+        null;
+
+      this.state =
+        "stopped";
 
       console.error(
         "[PluginHostService] Failed to start Plugin Host.",
@@ -133,19 +155,27 @@ export class PluginHostService {
       return;
     }
 
-    this.state = "stopping";
+    this.state =
+      "stopping";
+
+    const child =
+      this.child;
 
     try {
-      await this.child.kill();
+      await child.kill();
 
-      this.child = null;
-      this.state = "stopped";
+      this.child =
+        null;
+
+      this.state =
+        "stopped";
 
       console.log(
         "[PluginHostService] Plugin Host stopped.",
       );
     } catch (error: unknown) {
-      this.state = "running";
+      this.state =
+        "running";
 
       console.error(
         "[PluginHostService] Failed to stop Plugin Host.",
@@ -187,7 +217,9 @@ export class PluginHostService {
     const trimmedLine =
       line.trim();
 
-    if (trimmedLine.length === 0) {
+    if (
+      trimmedLine.length === 0
+    ) {
       return;
     }
 

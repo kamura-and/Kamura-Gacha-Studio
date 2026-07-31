@@ -29,6 +29,21 @@ export type CommandQueueItem = {
   gachaItemName: string;
 
   /**
+   * ガチャ景品の説明
+   */
+  gachaItemDescription?: string;
+
+  /**
+   * ガチャ景品のレアリティ
+   */
+  gachaItemRarity?: string;
+
+  /**
+   * ガチャ景品画像
+   */
+  gachaItemImageDataUrl?: string | null;
+
+  /**
    * 実行するコマンド本体
    */
   command: GeneratedActionCommand;
@@ -61,7 +76,15 @@ export type CommandQueueItem = {
 
 export type EnqueueCommandsInput = {
   gachaItemId: string;
+
   gachaItemName: string;
+
+  gachaItemDescription?: string;
+
+  gachaItemRarity?: string;
+
+  gachaItemImageDataUrl?: string | null;
+
   commands: GeneratedActionCommand[];
 };
 
