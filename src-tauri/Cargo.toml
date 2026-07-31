@@ -23,3 +23,4 @@ tauri = { version = "2.11.3", features = [] }
 tauri-plugin-log = "2"
 rcon = { version = "0.6.0", features = ["rt-tokio"] }
 tokio = { version = "1", features = ["net"] }
+tauri-plugin-shell = "2"
