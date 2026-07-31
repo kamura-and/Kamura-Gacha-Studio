@@ -1,5 +1,18 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import {
+  isTauri,
+} from "@tauri-apps/api/core";
+
+import {
+  getCurrentWindow,
+} from "@tauri-apps/api/window";
+
+import {
+  StrictMode,
+} from "react";
+
+import {
+  createRoot,
+} from "react-dom/client";
 
 import App from "./App";
 import "./index.css";
@@ -12,181 +25,196 @@ import {
   PluginHostService,
 } from "./features/runtime/plugin-host";
 
-const pluginHost =
-  new PluginHostService();
+function getCurrentWindowLabel():
+  string {
+  if (!isTauri()) {
+    return "main";
+  }
 
-let pluginListRequested =
-  false;
+  return getCurrentWindow().label;
+}
 
-pluginHost.onMessage(
-  (message) => {
-    if (
-      message.type ===
-      "plugin-host.ready"
-      && !pluginListRequested
-    ) {
-      pluginListRequested =
-        true;
+const currentWindowLabel =
+  getCurrentWindowLabel();
 
-      (async () => {
-        try {
-          await pluginHost.sendCommand({
-            requestId:
-              `plugin-list-${Date.now()}`,
+const isMainWindow =
+  currentWindowLabel === "main";
 
-            type:
-              "plugin.list",
+if (isMainWindow) {
+  const pluginHost =
+    new PluginHostService();
 
-            payload: {},
-          });
+  let pluginListRequested =
+    false;
 
-          await pluginHost.sendCommand({
-            requestId:
-              `tiktok-connect-${Date.now()}`,
+  pluginHost.onMessage(
+    (message) => {
+      if (
+        message.type ===
+          "plugin-host.ready" &&
+        !pluginListRequested
+      ) {
+        pluginListRequested =
+          true;
 
-            type:
-              "tiktok.connect",
+        void (async () => {
+          try {
+            await pluginHost.sendCommand({
+              requestId:
+                `plugin-list-${Date.now()}`,
 
-            payload: {
-              // あなたのTikTokユーザー名（@は不要）
-              uniqueId:
-                "kamura_kaguragi",
-            },
-          });
-        } catch (
-        error: unknown
-        ) {
-          console.error(
-            "[PluginHostService] Failed to initialize Plugin Host.",
-            error,
-          );
-        }
-      })();
-    }
+              type:
+                "plugin.list",
 
-    if (
-      message.type ===
-      "command.succeeded"
-    ) {
-      console.log(
-        "[PluginHostService] Command succeeded.",
-        message.payload,
-      );
-    }
+              payload: {},
+            });
 
-    if (
-      message.type ===
-      "command.failed"
-    ) {
-      console.error(
-        "[PluginHostService] Command failed:",
-        JSON.stringify(
+            /*
+             * TikTok接続は現在凍結中なので、
+             * 自動接続処理は実行しません。
+             *
+             * 再開する場合はここへ
+             * tiktok.connectを戻します。
+             */
+          } catch (
+            error: unknown
+          ) {
+            console.error(
+              "[PluginHostService] Failed to initialize Plugin Host.",
+              error,
+            );
+          }
+        })();
+      }
+
+      if (
+        message.type ===
+        "command.succeeded"
+      ) {
+        console.log(
+          "[PluginHostService] Command succeeded.",
           message.payload,
-          null,
-          2,
-        ),
-      );
-    }
+        );
+      }
 
-    // TikTok接続イベント
-    if (
-      message.type ===
-      "tiktok.connecting"
-    ) {
-      console.log(
-        "🟡 TikTok Connecting",
-        message.payload,
-      );
-    }
+      if (
+        message.type ===
+        "command.failed"
+      ) {
+        console.error(
+          "[PluginHostService] Command failed:",
+          JSON.stringify(
+            message.payload,
+            null,
+            2,
+          ),
+        );
+      }
 
-    if (
-      message.type ===
-      "tiktok.connected"
-    ) {
-      console.log(
-        "🟢 TikTok Connected",
-        message.payload,
-      );
-    }
+      if (
+        message.type ===
+        "tiktok.connecting"
+      ) {
+        console.log(
+          "🟡 TikTok Connecting",
+          message.payload,
+        );
+      }
 
-    if (
-      message.type ===
-      "tiktok.disconnected"
-    ) {
-      console.log(
-        "⚪ TikTok Disconnected",
-        message.payload,
-      );
-    }
+      if (
+        message.type ===
+        "tiktok.connected"
+      ) {
+        console.log(
+          "🟢 TikTok Connected",
+          message.payload,
+        );
+      }
 
-    if (
-      message.type ===
-      "tiktok.error"
-    ) {
-      console.error(
-        "🔴 TikTok Error",
-        message.payload,
-      );
-    }
+      if (
+        message.type ===
+        "tiktok.disconnected"
+      ) {
+        console.log(
+          "⚪ TikTok Disconnected",
+          message.payload,
+        );
+      }
 
-    // TikTokイベント
-    if (
-      message.type ===
-      "tiktok.gift"
-    ) {
-      console.log(
-        "🎁 Gift",
-        message.payload,
-      );
-    }
+      if (
+        message.type ===
+        "tiktok.error"
+      ) {
+        console.error(
+          "🔴 TikTok Error",
+          message.payload,
+        );
+      }
 
-    if (
-      message.type ===
-      "tiktok.like"
-    ) {
-      console.log(
-        "👍 Like",
-        message.payload,
-      );
-    }
+      if (
+        message.type ===
+        "tiktok.gift"
+      ) {
+        console.log(
+          "🎁 Gift",
+          message.payload,
+        );
+      }
 
-    if (
-      message.type ===
-      "tiktok.follow"
-    ) {
-      console.log(
-        "➕ Follow",
-        message.payload,
-      );
-    }
+      if (
+        message.type ===
+        "tiktok.like"
+      ) {
+        console.log(
+          "👍 Like",
+          message.payload,
+        );
+      }
 
-    if (
-      message.type ===
-      "tiktok.share"
-    ) {
-      console.log(
-        "📤 Share",
-        message.payload,
-      );
-    }
-  },
-);
+      if (
+        message.type ===
+        "tiktok.follow"
+      ) {
+        console.log(
+          "➕ Follow",
+          message.payload,
+        );
+      }
 
-void pluginHost
-  .start()
-  .catch(
-    (error: unknown) => {
-      console.error(
-        "[PluginHostService] Failed to start Plugin Host.",
-        error,
-      );
+      if (
+        message.type ===
+        "tiktok.share"
+      ) {
+        console.log(
+          "📤 Share",
+          message.payload,
+        );
+      }
     },
   );
 
-startPresentationOverlayBridge();
+  void pluginHost
+    .start()
+    .catch(
+      (error: unknown) => {
+        console.error(
+          "[PluginHostService] Failed to start Plugin Host.",
+          error,
+        );
+      },
+    );
+
+  /*
+   * PresentationからOverlayへの送信処理は
+   * メインウィンドウだけで起動します。
+   */
+  startPresentationOverlayBridge();
+}
 
 createRoot(
-  document.getElementById("root")!,
+  document.getElementById(
+    "root",
+  )!,
 ).render(
   <StrictMode>
     <App />
