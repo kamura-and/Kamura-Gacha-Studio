@@ -12,6 +12,7 @@ import type {
  * 責務
  *
  * - Plugin登録
+ * - Plugin取得
  * - Plugin開始
  * - Plugin停止
  * - RuntimeEventBusとの接続
@@ -59,6 +60,19 @@ export class PluginRuntime {
     pluginId: string,
   ): void {
     this.plugins.delete(
+      pluginId,
+    );
+  }
+
+  /**
+   * 登録済みPluginを取得する。
+   *
+   * 未登録の場合はundefinedを返す。
+   */
+  public get(
+    pluginId: string,
+  ): RuntimePlugin | undefined {
+    return this.plugins.get(
       pluginId,
     );
   }

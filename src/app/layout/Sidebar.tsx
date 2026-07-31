@@ -1,5 +1,6 @@
 import {
   Blocks,
+  Bug,
   CircleDotDashed,
   Dices,
   History,
@@ -69,6 +70,11 @@ const systemNavigationItems: NavigationItem[] = [
     to: "/plugins",
     label: "プラグイン",
     icon: Blocks,
+  },
+  {
+    to: "/runtime-debug",
+    label: "デバッグ",
+    icon: Bug,
   },
   {
     to: "/settings",

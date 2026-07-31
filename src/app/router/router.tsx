@@ -22,6 +22,10 @@ import { QueuePage } from "@/features/queue/pages/QueuePage";
 
 import { TriggerPage } from "@/features/triggers/pages/TriggerPage";
 
+import {
+  RuntimeDebugPage,
+} from "@/features/runtime/debug/pages/RuntimeDebugPage";
+
 export const router = createHashRouter([
   {
     element: <AppLayout />,
@@ -98,6 +102,14 @@ export const router = createHashRouter([
         path: "plugins",
 
         element: <PluginManagerPage />,
+      },
+
+      {
+        path: "runtime-debug",
+
+        element: (
+          <RuntimeDebugPage />
+        ),
       },
 
       {
