@@ -24,6 +24,10 @@ import {
   gachaExecutionRuntime,
 } from "@/features/gacha/runtime/GachaExecutionRuntime";
 
+import {
+  presentationRuntime,
+} from "@/features/presentation/runtime/PresentationRuntime";
+
 import type {
   ExecuteGachaResult,
 } from "@/features/gacha/runtime/GachaExecutionRuntime";
@@ -284,7 +288,8 @@ export function TestGachaCard() {
     ]
     : undefined;
 
-  const handleDraw = async () => {
+  const handleDraw =
+  async (): Promise<void> => {
     if (
       isDrawing ||
       !selectedPool
@@ -294,10 +299,6 @@ export function TestGachaCard() {
 
     setIsDrawing(true);
     setErrorMessage("");
-
-    gachaOverlayRuntime.showDrawing(
-      selectedPool.name,
-    );
 
     try {
       await new Promise<void>(
@@ -356,26 +357,34 @@ export function TestGachaCard() {
           executionResult.spin.drawnAt,
       });
 
-      setResult(executionResult);
+      setResult(
+        executionResult,
+      );
 
-      gachaOverlayRuntime.showResult({
-        itemId:
-          executionResult.spin.item.id,
+      await presentationRuntime.play({
+        presetId:
+          "chest",
 
-        itemName:
-          executionResult.spin.item.name,
+        item: {
+          id:
+            executionResult.spin.item.id,
 
-        description:
-          executionResult.spin.item
-            .description,
+          name:
+            executionResult.spin.item
+              .name,
 
-        rarity:
-          executionResult.spin.item
-            .rarity,
+          description:
+            executionResult.spin.item
+              .description,
 
-        imageDataUrl:
-          executionResult.spin.item
-            .imageDataUrl ?? null,
+          rarity:
+            executionResult.spin.item
+              .rarity,
+
+          imageDataUrl:
+            executionResult.spin.item
+              .imageDataUrl ?? null,
+        },
       });
 
       setDrawCount(

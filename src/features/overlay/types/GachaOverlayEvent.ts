@@ -12,6 +12,13 @@ export type GachaOverlayRarity =
   | "ultra"
   | "secret";
 
+export type GachaOverlayPresentationPhase =
+  | "starting"
+  | "drawing"
+  | "revealing"
+  | "result"
+  | "finishing";
+
 export type GachaOverlayDrawingEvent = {
   type: "drawing";
 
@@ -20,6 +27,27 @@ export type GachaOverlayDrawingEvent = {
 
 export type GachaOverlayResultEvent = {
   type: "result";
+
+  itemId: string;
+
+  itemName: string;
+
+  description: string;
+
+  rarity: GachaOverlayRarity;
+
+  imageDataUrl?: string | null;
+};
+
+export type GachaOverlayPresentationEvent = {
+  type: "presentation";
+
+  presetId:
+    | "simple"
+    | "chest";
+
+  phase:
+    GachaOverlayPresentationPhase;
 
   itemId: string;
 
@@ -45,5 +73,6 @@ export type GachaOverlayHideEvent = {
 export type GachaOverlayEvent =
   | GachaOverlayDrawingEvent
   | GachaOverlayResultEvent
+  | GachaOverlayPresentationEvent
   | GachaOverlayErrorEvent
   | GachaOverlayHideEvent;

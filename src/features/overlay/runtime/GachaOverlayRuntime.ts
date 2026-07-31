@@ -17,6 +17,7 @@ import {
 
 import type {
     GachaOverlayEvent,
+    GachaOverlayPresentationPhase,
     GachaOverlayRarity,
 } from "../types/GachaOverlayEvent";
 
@@ -35,7 +36,27 @@ export type ShowGachaOverlayResultInput = {
 
     imageDataUrl?: string | null;
 };
+export type ShowGachaOverlayPresentationInput = {
+    presetId:
+    | "simple"
+    | "chest";
 
+    phase:
+    GachaOverlayPresentationPhase;
+
+    itemId: string;
+
+    itemName: string;
+
+    description?: string;
+
+    rarity:
+    GachaOverlayRarity;
+
+    imageDataUrl?:
+    | string
+    | null;
+};
 export class GachaOverlayRuntime {
     private readonly listeners =
         new Set<GachaOverlayListener>();
@@ -74,6 +95,38 @@ export class GachaOverlayRuntime {
 
             description:
                 input.description?.trim() ?? "",
+
+            rarity:
+                input.rarity,
+
+            imageDataUrl:
+                input.imageDataUrl ?? null,
+        });
+    }
+   
+    public showPresentation(
+        input:
+            ShowGachaOverlayPresentationInput,
+    ): void {
+        this.publish({
+            type:
+                "presentation",
+
+            presetId:
+                input.presetId,
+
+            phase:
+                input.phase,
+
+            itemId:
+                input.itemId,
+
+            itemName:
+                input.itemName,
+
+            description:
+                input.description?.trim() ??
+                "",
 
             rarity:
                 input.rarity,

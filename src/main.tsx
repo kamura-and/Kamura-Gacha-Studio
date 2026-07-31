@@ -5,6 +5,10 @@ import App from "./App";
 import "./index.css";
 
 import {
+  startPresentationOverlayBridge,
+} from "@/features/presentation/runtime/PresentationOverlayBridge";
+
+import {
   PluginHostService,
 } from "./features/runtime/plugin-host";
 
@@ -178,6 +182,8 @@ void pluginHost
       );
     },
   );
+
+startPresentationOverlayBridge();
 
 createRoot(
   document.getElementById("root")!,
