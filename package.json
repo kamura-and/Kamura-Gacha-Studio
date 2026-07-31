@@ -43,5 +43,18 @@
     "typescript": "~6.0.2",
     "vite": "^8.1.1",
     "vitest": "^4.1.10"
-  }
+  },
+  "description": "This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kamura-and/Kamura-Gacha-Studio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kamura-and/Kamura-Gacha-Studio/issues"
+  },
+  "homepage": "https://github.com/kamura-and/Kamura-Gacha-Studio#readme"
 }
