@@ -14,6 +14,10 @@ import {
   gachaExecutionRuntime,
 } from "../../gacha/runtime/GachaExecutionRuntime";
 
+import type {
+  ExecuteGachaResult,
+} from "../../gacha/runtime/GachaExecutionRuntime";
+
 import {
   triggerMatcher,
 } from "../matcher/TriggerMatcher";
@@ -26,8 +30,68 @@ import type {
   Trigger,
 } from "../types/Trigger";
 
+type ResolvedExecutionPrize = {
+  id: string;
+
+  name: string;
+
+  effectId:
+    | string
+    | null;
+};
+
+function resolveExecutionPrize(
+  result: ExecuteGachaResult,
+): ResolvedExecutionPrize {
+  if (
+    result.spin.source ===
+    "effect"
+  ) {
+    return {
+      id:
+        result.spin.effect.id,
+
+      name:
+        result.spin.effect.name,
+
+      effectId:
+        result.spin.effect.id,
+    };
+  }
+
+  return {
+    id:
+      result.spin.item.id,
+
+    name:
+      result.spin.item.name,
+
+    effectId:
+      result.spin.item.effectId ??
+      null,
+  };
+}
+
+function getCommandCount(
+  result: ExecuteGachaResult,
+): number {
+  if (
+    result.mode === "effect" ||
+    result.mode ===
+      "legacy-effect"
+  ) {
+    return (
+      result.effect?.commandCount ??
+      0
+    );
+  }
+
+  return result.legacyCommandCount;
+}
+
 export class TriggerRuntime {
-  private unsubscribe?: () => void;
+  private unsubscribe?:
+    () => void;
 
   public start(): void {
     if (this.unsubscribe) {
@@ -37,7 +101,9 @@ export class TriggerRuntime {
     this.unsubscribe =
       runtimeEventDispatcher.subscribe(
         (event) => {
-          this.handleEvent(event);
+          this.handleEvent(
+            event,
+          );
         },
       );
 
@@ -53,7 +119,9 @@ export class TriggerRuntime {
     }
 
     this.unsubscribe();
-    this.unsubscribe = undefined;
+
+    this.unsubscribe =
+      undefined;
 
     console.info(
       "[TriggerRuntime]",
@@ -62,7 +130,10 @@ export class TriggerRuntime {
   }
 
   public isRunning(): boolean {
-    return this.unsubscribe !== undefined;
+    return (
+      this.unsubscribe !==
+      undefined
+    );
   }
 
   private handleEvent(
@@ -84,7 +155,8 @@ export class TriggerRuntime {
     );
 
     for (
-      const trigger of matchedTriggers
+      const trigger of
+      matchedTriggers
     ) {
       this.executeTrigger(
         trigger,
@@ -103,8 +175,13 @@ export class TriggerRuntime {
           gachaPoolId:
             trigger.gachaPoolId,
         });
-      
-        executionHistoryRuntime.recordSuccess({
+
+      const prize =
+        resolveExecutionPrize(
+          result,
+        );
+
+      executionHistoryRuntime.recordSuccess({
         eventId:
           event.id,
 
@@ -121,24 +198,25 @@ export class TriggerRuntime {
           result.spin.poolEntry.id,
 
         gachaItemId:
-          result.spin.item.id,
+          prize.id,
 
         gachaItemName:
-          result.spin.item.name,
+          prize.name,
 
         effectId:
-          result.spin.item.effectId,
+          prize.effectId,
 
         mode:
           result.mode,
 
         commandCount:
-          result.legacyCommandCount,
+          getCommandCount(
+            result,
+          ),
 
         drawnAt:
           result.spin.drawnAt,
       });
-
 
       console.info(
         "[TriggerRuntime]",
@@ -154,13 +232,17 @@ export class TriggerRuntime {
             trigger.name,
 
           gachaPoolId:
-            result.spin.gachaPoolId,
+            result.spin
+              .gachaPoolId,
 
           gachaItemId:
-            result.spin.item.id,
+            prize.id,
 
           gachaItemName:
-            result.spin.item.name,
+            prize.name,
+
+          effectId:
+            prize.effectId,
 
           executionMode:
             result.mode,
@@ -169,7 +251,6 @@ export class TriggerRuntime {
             result.spin.drawnAt,
         },
       );
-
     } catch (error) {
       console.error(
         "[TriggerRuntime]",
@@ -177,10 +258,13 @@ export class TriggerRuntime {
         {
           eventId:
             event.id,
+
           triggerId:
             trigger.id,
+
           triggerName:
             trigger.name,
+
           gachaPoolId:
             trigger.gachaPoolId,
         },
@@ -192,10 +276,12 @@ export class TriggerRuntime {
   private logMatchResult(
     event: RuntimeEvent,
     candidateCount: number,
-    matchedTriggers: Trigger[],
+    matchedTriggers:
+      Trigger[],
   ): void {
     if (
-      matchedTriggers.length === 0
+      matchedTriggers.length ===
+      0
     ) {
       console.debug(
         "[TriggerRuntime]",
@@ -203,10 +289,13 @@ export class TriggerRuntime {
         {
           eventId:
             event.id,
+
           category:
             event.category,
+
           type:
             event.type,
+
           candidateCount,
         },
       );
@@ -220,13 +309,18 @@ export class TriggerRuntime {
       {
         eventId:
           event.id,
+
         category:
           event.category,
+
         type:
           event.type,
+
         candidateCount,
+
         matchedCount:
           matchedTriggers.length,
+
         triggerIds:
           matchedTriggers.map(
             (trigger) =>

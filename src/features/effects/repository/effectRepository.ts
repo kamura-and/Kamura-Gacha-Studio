@@ -127,16 +127,46 @@ function serializeEffect(
   effect: EffectDefinition,
 ): PersistedEffectDefinition {
   return {
-    id: effect.id,
-    name: effect.name,
-    description: effect.description,
-    actions: effect.actions.map(
-      serializeActionInstance,
-    ),
-    tags: effect.tags,
-    favorite: effect.favorite,
-    createdAt: effect.createdAt,
-    updatedAt: effect.updatedAt,
+    id:
+      effect.id,
+
+    name:
+      effect.name,
+
+    description:
+      effect.description,
+
+    actions:
+      effect.actions.map(
+        serializeActionInstance,
+      ),
+
+    rarity:
+      effect.rarity,
+
+    imageDataUrl:
+      effect.imageDataUrl ??
+      null,
+
+    soundId:
+      effect.soundId ??
+      null,
+
+    isEnabled:
+      effect.isEnabled ??
+      true,
+
+    tags:
+      effect.tags,
+
+    favorite:
+      effect.favorite,
+
+    createdAt:
+      effect.createdAt,
+
+    updatedAt:
+      effect.updatedAt,
   };
 }
 
@@ -152,52 +182,110 @@ function deserializeEffect(
   }
 
   if (
-    typeof value.id !== "string" ||
-    typeof value.name !== "string"
+    typeof value.id !==
+      "string" ||
+    typeof value.name !==
+      "string"
   ) {
     return undefined;
   }
 
-  const rawActions = Array.isArray(
-    value.actions,
-  )
-    ? value.actions
-    : [];
+  const rawActions =
+    Array.isArray(
+      value.actions,
+    )
+      ? value.actions
+      : [];
 
-  const actions = rawActions
-    .map(deserializeActionInstance)
-    .filter(
-      (
-        action,
-      ): action is ActionInstance =>
-        action !== undefined,
-    );
+  const actions =
+    rawActions
+      .map(
+        deserializeActionInstance,
+      )
+      .filter(
+        (
+          action,
+        ): action is ActionInstance =>
+          action !== undefined,
+      );
+
+  const rarity =
+    value.rarity ===
+      "common" ||
+    value.rarity ===
+      "rare" ||
+    value.rarity ===
+      "epic" ||
+    value.rarity ===
+      "legendary" ||
+    value.rarity ===
+      "ultra" ||
+    value.rarity ===
+      "secret"
+      ? value.rarity
+      : "common";
 
   return {
-    id: value.id,
-    name: value.name,
+    id:
+      value.id,
+
+    name:
+      value.name,
+
     description:
       typeof value.description ===
-        "string"
+      "string"
         ? value.description
         : "",
+
     actions,
-    tags: isStringArray(value.tags)
-      ? value.tags
-      : [],
+
+    rarity,
+
+    imageDataUrl:
+      typeof value.imageDataUrl ===
+      "string"
+        ? value.imageDataUrl
+        : null,
+
+    soundId:
+      typeof value.soundId ===
+      "string"
+        ? value.soundId
+        : null,
+
+    /**
+     * 古いEffectにはisEnabledがないので
+     * デフォルトでtrueとして読み込みます。
+     */
+    isEnabled:
+      typeof value.isEnabled ===
+      "boolean"
+        ? value.isEnabled
+        : true,
+
+    tags:
+      isStringArray(
+        value.tags,
+      )
+        ? value.tags
+        : [],
+
     favorite:
       typeof value.favorite ===
-        "boolean"
+      "boolean"
         ? value.favorite
         : false,
+
     createdAt:
       typeof value.createdAt ===
-        "number"
+      "number"
         ? value.createdAt
         : Date.now(),
+
     updatedAt:
       typeof value.updatedAt ===
-        "number"
+      "number"
         ? value.updatedAt
         : Date.now(),
   };

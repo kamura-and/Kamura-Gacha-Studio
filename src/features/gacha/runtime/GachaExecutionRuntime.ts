@@ -31,6 +31,7 @@ export type ExecuteGachaInput = {
 
 export type GachaExecutionMode =
   | "effect"
+  | "legacy-effect"
   | "legacy-commands"
   | "none";
 
@@ -54,24 +55,53 @@ export class GachaExecutionRuntime {
         input.options,
       );
 
-    const effectId =
-      spinResult.item.effectId?.trim();
+    /**
+     * 新方式
+     *
+     * PoolEntry.effectId
+     * ↓
+     * EffectDefinition
+     * ↓
+     * EffectRuntime
+     */
+    if (
+      spinResult.source ===
+      "effect"
+    ) {
+      const effect =
+        spinResult.effect;
 
-    if (effectId) {
       const effectResult =
         effectRuntime.execute({
-          effectId,
+          effectId:
+            effect.id,
 
+          /**
+           * Queue / Overlay側は
+           * まだgachaItemという名称を
+           * 使用しているため、
+           * 移行期間中はEffect情報を
+           * そのまま渡します。
+           */
           gachaItemId:
-            spinResult.item.id,
+            effect.id,
 
           gachaItemName:
-            spinResult.item.name,
+            effect.name,
+
+          gachaItemDescription:
+            effect.description,
+
+          gachaItemRarity:
+            effect.rarity,
+
+          gachaItemImageDataUrl:
+            effect.imageDataUrl,
         });
 
       console.info(
         "[GachaExecutionRuntime]",
-        "Gacha Effect Executed",
+        "Effect Prize Executed",
         {
           gachaPoolId:
             spinResult.gachaPoolId,
@@ -79,14 +109,11 @@ export class GachaExecutionRuntime {
           poolEntryId:
             spinResult.poolEntry.id,
 
-          gachaItemId:
-            spinResult.item.id,
-
-          gachaItemName:
-            spinResult.item.name,
-
           effectId:
-            effectResult.effectId,
+            effect.id,
+
+          effectName:
+            effect.name,
 
           commandCount:
             effectResult.commandCount,
@@ -103,22 +130,113 @@ export class GachaExecutionRuntime {
         effect:
           effectResult,
 
-        legacyCommandCount: 0,
+        legacyCommandCount:
+          0,
       };
     }
 
-    const legacyCommands =
-      this.convertLegacyCommands(
-        spinResult,
+    /**
+     * ここから旧GachaItem方式。
+     */
+    const item =
+      spinResult.item;
+
+    /**
+     * 旧GachaItemにeffectIdが
+     * 設定されている場合。
+     */
+    const legacyEffectId =
+      item.effectId?.trim();
+
+    if (legacyEffectId) {
+      const effectResult =
+        effectRuntime.execute({
+          effectId:
+            legacyEffectId,
+
+          gachaItemId:
+            item.id,
+
+          gachaItemName:
+            item.name,
+
+          gachaItemDescription:
+            item.description,
+
+          gachaItemRarity:
+            item.rarity,
+
+          gachaItemImageDataUrl:
+            item.imageDataUrl,
+        });
+
+      console.info(
+        "[GachaExecutionRuntime]",
+        "Legacy Gacha Effect Executed",
+        {
+          gachaPoolId:
+            spinResult.gachaPoolId,
+
+          poolEntryId:
+            spinResult.poolEntry.id,
+
+          gachaItemId:
+            item.id,
+
+          gachaItemName:
+            item.name,
+
+          effectId:
+            effectResult.effectId,
+
+          commandCount:
+            effectResult.commandCount,
+        },
       );
 
-    if (legacyCommands.length > 0) {
+      return {
+        spin:
+          spinResult,
+
+        mode:
+          "legacy-effect",
+
+        effect:
+          effectResult,
+
+        legacyCommandCount:
+          0,
+      };
+    }
+
+    /**
+     * Effectも持っていない
+     * さらに古いcommands形式。
+     */
+    const legacyCommands =
+      this.convertLegacyCommands(
+        item.commands,
+      );
+
+    if (
+      legacyCommands.length >
+      0
+    ) {
       actionRuntime.execute({
         gachaItemId:
-          spinResult.item.id,
+          item.id,
 
         gachaItemName:
-          spinResult.item.name,
+          item.name,
+
+        gachaItemDescription:
+          item.description,
+
+        gachaItemRarity:
+          item.rarity,
+
+        gachaItemImageDataUrl:
+          item.imageDataUrl,
 
         commands:
           legacyCommands,
@@ -135,10 +253,10 @@ export class GachaExecutionRuntime {
             spinResult.poolEntry.id,
 
           gachaItemId:
-            spinResult.item.id,
+            item.id,
 
           gachaItemName:
-            spinResult.item.name,
+            item.name,
 
           commandCount:
             legacyCommands.length,
@@ -165,10 +283,10 @@ export class GachaExecutionRuntime {
           spinResult.gachaPoolId,
 
         gachaItemId:
-          spinResult.item.id,
+          item.id,
 
         gachaItemName:
-          spinResult.item.name,
+          item.name,
       },
     );
 
@@ -179,14 +297,24 @@ export class GachaExecutionRuntime {
       mode:
         "none",
 
-      legacyCommandCount: 0,
+      legacyCommandCount:
+        0,
     };
   }
 
   private convertLegacyCommands(
-    spinResult: GachaSpinResult,
+    commands: {
+      type:
+        GeneratedActionCommand["type"];
+
+      value: string;
+
+      delay?: number;
+
+      enabled?: boolean;
+    }[],
   ): GeneratedActionCommand[] {
-    return spinResult.item.commands.map(
+    return commands.map(
       (command) => ({
         type:
           command.type,

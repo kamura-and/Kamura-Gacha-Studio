@@ -1,5 +1,6 @@
 export type ExecutionHistoryMode =
   | "effect"
+  | "legacy-effect"
   | "legacy-commands"
   | "none";
 
@@ -40,12 +41,16 @@ export type ExecutionHistoryEntry = {
 
   /**
    * 抽選された景品
+   *
+   * 新Effect方式でも、
+   * 移行期間中はEffectのID・名前を
+   * このフィールドへ保存します。
    */
   gachaItemId: string;
   gachaItemName: string;
 
   /**
-   * 景品に設定されていたEffect
+   * 実際に使用されたEffect
    */
   effectId?: string | null;
 
@@ -56,9 +61,6 @@ export type ExecutionHistoryEntry = {
 
   /**
    * 実行対象となったコマンド数
-   *
-   * Effect実行では、現状取得できない場合があるため
-   * 0になることを許容する。
    */
   commandCount: number;
 

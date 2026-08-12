@@ -37,6 +37,14 @@ import {
 } from "@/features/gacha/store/gachaStore";
 
 import {
+  useEffectStore,
+} from "@/features/effects/store/effectStore";
+
+import type {
+  GachaRarity,
+} from "@/features/gacha/types/gacha";
+
+import {
   executionHistoryRuntime,
 } from "@/features/history/runtime/ExecutionHistoryRuntime";
 
@@ -113,6 +121,83 @@ const rarityStyles = {
   },
 } as const;
 
+type ResolvedSpinPrize = {
+  id: string;
+
+  name: string;
+
+  description: string;
+
+  rarity: GachaRarity;
+
+  imageDataUrl:
+  | string
+  | null;
+
+  effectId:
+  | string
+  | null;
+};
+
+function getSpinPrize(
+  result: ExecuteGachaResult,
+): ResolvedSpinPrize {
+  if (
+    result.spin.source ===
+    "effect"
+  ) {
+    const effect =
+      result.spin.effect;
+
+    return {
+      id:
+        effect.id,
+
+      name:
+        effect.name,
+
+      description:
+        effect.description,
+
+      rarity:
+        effect.rarity ??
+        "common",
+
+      imageDataUrl:
+        effect.imageDataUrl ??
+        null,
+
+      effectId:
+        effect.id,
+    };
+  }
+
+  const item =
+    result.spin.item;
+
+  return {
+    id:
+      item.id,
+
+    name:
+      item.name,
+
+    description:
+      item.description,
+
+    rarity:
+      item.rarity,
+
+    imageDataUrl:
+      item.imageDataUrl ??
+      null,
+
+    effectId:
+      item.effectId ??
+      null,
+  };
+}
+
 function createDashboardEventId(): string {
   if (
     typeof crypto !== "undefined" &&
@@ -138,6 +223,9 @@ function getExecutionModeLabel(
     case "effect":
       return "エフェクト";
 
+    case "legacy-effect":
+      return "旧景品＋エフェクト";
+
     case "legacy-commands":
       return "旧形式コマンド";
 
@@ -149,9 +237,14 @@ function getExecutionModeLabel(
 function getCommandCount(
   result: ExecuteGachaResult,
 ): number {
-  if (result.mode === "effect") {
+  if (
+    result.mode === "effect" ||
+    result.mode ===
+    "legacy-effect"
+  ) {
     return (
-      result.effect?.commandCount ?? 0
+      result.effect?.commandCount ??
+      0
     );
   }
 
@@ -170,6 +263,18 @@ export function TestGachaCard() {
   const gachaItems = useGachaStore(
     (state) => state.items,
   );
+
+  const effects =
+    useEffectStore(
+      (state) =>
+        state.effects,
+    );
+
+  const loadEffects =
+    useEffectStore(
+      (state) =>
+        state.loadEffects,
+    );
 
   const enabledPools = useMemo(
     () =>
@@ -207,7 +312,11 @@ export function TestGachaCard() {
 
   useEffect(() => {
     loadPools();
-  }, [loadPools]);
+    loadEffects();
+  }, [
+    loadPools,
+    loadEffects,
+  ]);
 
   useEffect(() => {
     if (
@@ -247,14 +356,41 @@ export function TestGachaCard() {
       const enabledItemCount =
         selectedPool.entries.filter(
           (entry) => {
+            const effectId =
+              entry.effectId?.trim();
+
+            if (effectId) {
+              const effect =
+                effects.find(
+                  (candidate) =>
+                    candidate.id ===
+                    effectId,
+                );
+
+              return (
+                effect?.isEnabled !==
+                false &&
+                effect !== undefined
+              );
+            }
+
+            const gachaItemId =
+              entry.gachaItemId?.trim();
+
+            if (!gachaItemId) {
+              return false;
+            }
+
             const item =
               gachaItems.find(
                 (candidate) =>
                   candidate.id ===
-                  entry.gachaItemId,
+                  gachaItemId,
               );
 
-            return item?.isEnabled;
+            return Boolean(
+              item?.isEnabled,
+            );
           },
         ).length;
 
@@ -278,142 +414,148 @@ export function TestGachaCard() {
         totalWeight,
       };
     }, [
+      effects,
       gachaItems,
       selectedPool,
     ]);
 
-  const rarityStyle = result
-    ? rarityStyles[
-    result.spin.item.rarity
-    ]
-    : undefined;
+  const resultPrize =
+    result
+      ? getSpinPrize(result)
+      : undefined;
+
+  const rarityStyle =
+    resultPrize
+      ? rarityStyles[
+      resultPrize.rarity
+      ]
+      : undefined;
 
   const handleDraw =
-  async (): Promise<void> => {
-    if (
-      isDrawing ||
-      !selectedPool
-    ) {
-      return;
-    }
+    async (): Promise<void> => {
+      if (
+        isDrawing ||
+        !selectedPool
+      ) {
+        return;
+      }
 
-    setIsDrawing(true);
-    setErrorMessage("");
+      setIsDrawing(true);
+      setErrorMessage("");
 
-    try {
-      await new Promise<void>(
-        (resolve) => {
-          window.setTimeout(
-            resolve,
-            650,
+      try {
+        await new Promise<void>(
+          (resolve) => {
+            window.setTimeout(
+              resolve,
+              650,
+            );
+          },
+        );
+
+        const executionResult =
+          gachaExecutionRuntime.execute({
+            gachaPoolId:
+              selectedPool.id,
+          });
+
+        const prize =
+          getSpinPrize(
+            executionResult,
           );
-        },
-      );
 
-      const executionResult =
-        gachaExecutionRuntime.execute({
+        executionHistoryRuntime.recordSuccess({
+          eventId:
+            createDashboardEventId(),
+
+          triggerId:
+            DASHBOARD_TEST_TRIGGER_ID,
+
+          triggerName:
+            `${DASHBOARD_TEST_TRIGGER_NAME}：${selectedPool.name}`,
+
           gachaPoolId:
-            selectedPool.id,
+            executionResult.spin
+              .gachaPoolId,
+
+          poolEntryId:
+            executionResult.spin
+              .poolEntry.id,
+
+          gachaItemId:
+            prize.id,
+
+          gachaItemName:
+            prize.name,
+
+          effectId:
+            prize.effectId,
+
+          mode:
+            executionResult.mode,
+
+          commandCount:
+            getCommandCount(
+              executionResult,
+            ),
+
+          drawnAt:
+            executionResult.spin.drawnAt,
         });
 
-      executionHistoryRuntime.recordSuccess({
-        eventId:
-          createDashboardEventId(),
+        setResult(
+          executionResult,
+        );
 
-        triggerId:
-          DASHBOARD_TEST_TRIGGER_ID,
+        await presentationRuntime.play({
+          presetId:
+            "chest",
 
-        triggerName:
-          `${DASHBOARD_TEST_TRIGGER_NAME}：${selectedPool.name}`,
+          item: {
+            id:
+              prize.id,
 
-        gachaPoolId:
-          executionResult.spin
-            .gachaPoolId,
+            name:
+              prize.name,
 
-        poolEntryId:
-          executionResult.spin
-            .poolEntry.id,
+            description:
+              prize.description,
 
-        gachaItemId:
-          executionResult.spin.item.id,
+            rarity:
+              prize.rarity,
 
-        gachaItemName:
-          executionResult.spin.item
-            .name,
+            imageDataUrl:
+              prize.imageDataUrl,
+          },
+        });
 
-        effectId:
-          executionResult.spin.item
-            .effectId,
+        setDrawCount(
+          (currentCount) =>
+            currentCount + 1,
+        );
+      } catch (error) {
+        console.error(
+          "[TestGachaCard]",
+          "テストガチャの実行に失敗しました。",
+          error,
+        );
 
-        mode:
-          executionResult.mode,
+        const nextErrorMessage =
+          error instanceof Error
+            ? error.message
+            : "テストガチャの実行に失敗しました。";
 
-        commandCount:
-          getCommandCount(
-            executionResult,
-          ),
+        setErrorMessage(
+          nextErrorMessage,
+        );
 
-        drawnAt:
-          executionResult.spin.drawnAt,
-      });
-
-      setResult(
-        executionResult,
-      );
-
-      await presentationRuntime.play({
-        presetId:
-          "chest",
-
-        item: {
-          id:
-            executionResult.spin.item.id,
-
-          name:
-            executionResult.spin.item
-              .name,
-
-          description:
-            executionResult.spin.item
-              .description,
-
-          rarity:
-            executionResult.spin.item
-              .rarity,
-
-          imageDataUrl:
-            executionResult.spin.item
-              .imageDataUrl ?? null,
-        },
-      });
-
-      setDrawCount(
-        (currentCount) =>
-          currentCount + 1,
-      );
-    } catch (error) {
-      console.error(
-        "[TestGachaCard]",
-        "テストガチャの実行に失敗しました。",
-        error,
-      );
-
-      const nextErrorMessage =
-        error instanceof Error
-          ? error.message
-          : "テストガチャの実行に失敗しました。";
-
-      setErrorMessage(
-        nextErrorMessage,
-      );
-
-      gachaOverlayRuntime.showError(
-        nextErrorMessage,
-      );
-    } finally {
-      setIsDrawing(false);
-    }
-  };
+        gachaOverlayRuntime.showError(
+          nextErrorMessage,
+        );
+      } finally {
+        setIsDrawing(false);
+      }
+    };
 
   return (
     <section
@@ -570,7 +712,7 @@ export function TestGachaCard() {
             </motion.div>
           ) : result ? (
             <motion.div
-              key={`${result.spin.item.id}-${result.spin.drawnAt}`}
+              key={`${resultPrize?.id ?? "unknown"}-${result.spin.drawnAt}`}
               initial={{
                 opacity: 0,
                 y: 12,
@@ -599,10 +741,11 @@ export function TestGachaCard() {
                         .join(" ")}
                     >
                       {
-                        rarityLabels[
-                        result.spin.item
-                          .rarity
-                        ]
+                        resultPrize
+                          ? rarityLabels[
+                          resultPrize.rarity
+                          ]
+                          : ""
                       }
                     </span>
 
@@ -613,14 +756,13 @@ export function TestGachaCard() {
 
                   <h3 className="mt-4 text-2xl font-black tracking-tight text-slate-950">
                     {
-                      result.spin.item.name
+                      resultPrize?.name ?? ""
                     }
                   </h3>
 
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     {
-                      result.spin.item
-                        .description
+                      resultPrize?.description ?? ""
                     }
                   </p>
                 </div>

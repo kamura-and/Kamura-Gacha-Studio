@@ -50,6 +50,9 @@ function getModeLabel(
     case "effect":
       return "エフェクト";
 
+    case "legacy-effect":
+      return "旧景品＋エフェクト";
+
     case "legacy-commands":
       return "旧コマンド";
 
@@ -70,6 +73,13 @@ function getModeClassName(
         "border-violet-200",
         "bg-violet-50",
         "text-violet-700",
+      ].join(" ");
+
+    case "legacy-effect":
+      return [
+        "border-fuchsia-200",
+        "bg-fuchsia-50",
+        "text-fuchsia-700",
       ].join(" ");
 
     case "legacy-commands":
@@ -106,26 +116,26 @@ export function ExecutionHistoryPage() {
       );
     }, []);
 
-useEffect(() => {
-  loadEntries();
+  useEffect(() => {
+    loadEntries();
 
-  const handleHistoryUpdated =
-    (): void => {
-      loadEntries();
-    };
+    const handleHistoryUpdated =
+      (): void => {
+        loadEntries();
+      };
 
-  window.addEventListener(
-    EXECUTION_HISTORY_UPDATED_EVENT,
-    handleHistoryUpdated,
-  );
-
-  return () => {
-    window.removeEventListener(
+    window.addEventListener(
       EXECUTION_HISTORY_UPDATED_EVENT,
       handleHistoryUpdated,
     );
-  };
-}, [loadEntries]);
+
+    return () => {
+      window.removeEventListener(
+        EXECUTION_HISTORY_UPDATED_EVENT,
+        handleHistoryUpdated,
+      );
+    };
+  }, [loadEntries]);
 
   const handleRemove = (
     entry: ExecutionHistoryEntry,
@@ -254,24 +264,22 @@ useEffect(() => {
 
           <SummaryCard
             label="成功"
-            value={`${
-              entries.filter(
-                (entry) =>
-                  entry.status ===
-                  "success",
-              ).length
-            }件`}
+            value={`${entries.filter(
+              (entry) =>
+                entry.status ===
+                "success",
+            ).length
+              }件`}
           />
 
           <SummaryCard
             label="失敗"
-            value={`${
-              entries.filter(
-                (entry) =>
-                  entry.status ===
-                  "failed",
-              ).length
-            }件`}
+            value={`${entries.filter(
+              (entry) =>
+                entry.status ===
+                "failed",
+            ).length
+              }件`}
           />
         </section>
 

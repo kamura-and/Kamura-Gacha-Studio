@@ -55,10 +55,22 @@ const MIN_LIBRARY_WIDTH = 260;
 const MAX_LIBRARY_WIDTH = 480;
 const DEFAULT_LIBRARY_WIDTH = 330;
 
-const EMPTY_SAVE_VALUES: EffectSaveValues = {
+const EMPTY_SAVE_VALUES:
+  EffectSaveValues = {
   name: "",
+
   description: "",
+
+  rarity: "common",
+
+  imageDataUrl: null,
+
+  soundId: null,
+
+  isEnabled: true,
+
   tags: [],
+
   favorite: false,
 };
 
@@ -136,19 +148,46 @@ export function EffectBuilder({
   );
 
   const saveInitialValues =
-    useMemo<EffectSaveValues>(() => {
-      if (!currentEffect) {
-        return EMPTY_SAVE_VALUES;
-      }
+    useMemo<EffectSaveValues>(
+      () => {
+        if (!currentEffect) {
+          return EMPTY_SAVE_VALUES;
+        }
 
-      return {
-        name: currentEffect.name,
-        description:
-          currentEffect.description,
-        tags: currentEffect.tags,
-        favorite: currentEffect.favorite,
-      };
-    }, [currentEffect]);
+        return {
+          name:
+            currentEffect.name,
+
+          description:
+            currentEffect.description,
+
+          rarity:
+            currentEffect.rarity ??
+            "common",
+
+          imageDataUrl:
+            currentEffect.imageDataUrl ??
+            null,
+
+          soundId:
+            currentEffect.soundId ??
+            null,
+
+          isEnabled:
+            currentEffect.isEnabled ??
+            true,
+
+          tags:
+            currentEffect.tags,
+
+          favorite:
+            currentEffect.favorite,
+        };
+      },
+      [
+        currentEffect,
+      ],
+    );
 
   const clearResultMessages = () => {
     setExecutionMessage(null);
@@ -322,40 +361,76 @@ export function EffectBuilder({
   };
 
   const handleSave = (
-    values: EffectSaveValues,
+    values:
+      EffectSaveValues,
   ) => {
-    const now = Date.now();
+    const now =
+      Date.now();
 
-    const effect: EffectDefinition = {
+    const effect:
+      EffectDefinition = {
       id:
         currentEffect?.id ??
         crypto.randomUUID(),
 
-      name: values.name,
+      name:
+        values.name,
 
-      description: values.description,
+      description:
+        values.description,
 
-      actions: timelineItems,
+      rarity:
+        values.rarity,
 
-      tags: values.tags,
+      imageDataUrl:
+        values.imageDataUrl,
 
-      favorite: values.favorite,
+      soundId:
+        values.soundId,
+
+      isEnabled:
+        values.isEnabled,
+
+      actions:
+        timelineItems,
+
+      tags:
+        values.tags,
+
+      favorite:
+        values.favorite,
 
       createdAt:
-        currentEffect?.createdAt ?? now,
+        currentEffect?.createdAt ??
+        now,
 
-      updatedAt: now,
+      updatedAt:
+        now,
     };
 
-    onSave?.(effect);
+    onSave?.(
+      effect,
+    );
 
-    setCurrentEffect(effect);
-    setIsSaveDialogOpen(false);
+    setCurrentEffect(
+      effect,
+    );
+
+    setIsSaveDialogOpen(
+      false,
+    );
+
     setSaveMessage(
       `「${effect.name}」を保存しました。`,
     );
-    setExecutionMessage(null);
-    setExecutionError(null);
+
+    setExecutionMessage(
+      null,
+    );
+
+    setExecutionError(
+      null,
+    );
   };
 
   const handleResizeStart = (
@@ -468,26 +543,26 @@ export function EffectBuilder({
         {(saveMessage ||
           executionMessage ||
           executionError) && (
-          <div className="border-b border-slate-200 px-5 py-3 lg:px-6">
-            {saveMessage && (
-              <p className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700">
-                {saveMessage}
-              </p>
-            )}
+            <div className="border-b border-slate-200 px-5 py-3 lg:px-6">
+              {saveMessage && (
+                <p className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700">
+                  {saveMessage}
+                </p>
+              )}
 
-            {executionMessage && (
-              <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700">
-                {executionMessage}
-              </p>
-            )}
+              {executionMessage && (
+                <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700">
+                  {executionMessage}
+                </p>
+              )}
 
-            {executionError && (
-              <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700">
-                {executionError}
-              </p>
-            )}
-          </div>
-        )}
+              {executionError && (
+                <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700">
+                  {executionError}
+                </p>
+              )}
+            </div>
+          )}
 
         <div className="relative min-h-[720px] overflow-hidden bg-slate-50">
           <div
