@@ -1,17 +1,17 @@
 import type {
-  GachaItem,
+  LegacyGachaItem,
 } from "@/features/gacha/types/gacha";
 
 type CreateGachaItemInput = {
   id?: string;
   enabled?: boolean;
   effectId?: string | null;
-  commands?: GachaItem["commands"];
+  commands?: LegacyGachaItem["commands"];
 };
 
 export function createGachaItem(
   input: CreateGachaItemInput = {},
-): GachaItem {
+): LegacyGachaItem {
   return {
     id: input.id ?? "item-1",
 

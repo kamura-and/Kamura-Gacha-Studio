@@ -1,4 +1,4 @@
-import type { GachaItem } from "@/features/gacha/types/gacha";
+import type { LegacyGachaItem } from "@/features/gacha/types/gacha";
 
 import {
   effectRuntime,
@@ -13,7 +13,7 @@ import {
 } from "../store/commandQueueStore";
 
 type GachaQueueTestButtonProps = {
-  item: GachaItem;
+  item: LegacyGachaItem;
   className?: string;
 };
 

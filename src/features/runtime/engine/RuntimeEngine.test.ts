@@ -14,19 +14,72 @@ import {
 } from "@/test/fixtures/createGiftTrigger";
 
 import {
-  createGachaItem,
-} from "@/test/fixtures/createGachaItem";
-
-import {
   createGachaPool,
 } from "@/test/fixtures/createGachaPool";
+
+import type {
+  EffectDefinition,
+} from "@/features/effects/types/effectDefinition";
+
+function createEffect(
+  overrides: Partial<EffectDefinition> = {},
+): EffectDefinition {
+  const now =
+    Date.now();
+
+  return {
+    id:
+      "effect-1",
+
+    name:
+      "Test Effect",
+
+    description:
+      "Test Effect Description",
+
+    actions:
+      [],
+
+    tags:
+      [],
+
+    favorite:
+      false,
+
+    rarity:
+      "common",
+
+    imageDataUrl:
+      null,
+
+    soundId:
+      null,
+
+    isEnabled:
+      true,
+
+    createdAt:
+      now,
+
+    updatedAt:
+      now,
+
+    ...overrides,
+  };
+}
 
 describe(
   "RuntimeEngine",
   () => {
     it(
-      "queues commands for a trigger",
+      "queues commands for an effect prize",
       () => {
+        const effect =
+          createEffect({
+            id:
+              "effect-1",
+          });
+
         const pool =
           createGachaPool({
             entries: [
@@ -34,8 +87,8 @@ describe(
                 id:
                   "entry-1",
 
-                gachaItemId:
-                  "item-1",
+                effectId:
+                  effect.id,
 
                 weight:
                   100,
@@ -47,31 +100,6 @@ describe(
           createGiftTrigger({
             gachaPoolId:
               pool.id,
-          });
-
-        const item =
-          createGachaItem({
-            id:
-              "item-1",
-
-            commands: [
-              {
-                id:
-                  "command-1",
-
-                type:
-                  "minecraft",
-
-                value:
-                  "say hello",
-
-                delay:
-                  0,
-
-                enabled:
-                  true,
-              },
-            ],
           });
 
         const enqueueCommands =
@@ -87,19 +115,25 @@ describe(
                     ? pool
                     : undefined,
 
-              findGachaItemById:
+              findEffectById:
                 (id) =>
-                  id === item.id
-                    ? item
+                  id === effect.id
+                    ? effect
                     : undefined,
 
-              findEffectById:
-                () =>
-                  undefined,
-
               buildEffectCommands:
-                () =>
-                  [],
+                () => [
+                  {
+                    type:
+                      "minecraft",
+
+                    value:
+                      "say hello",
+
+                    enabled:
+                      true,
+                  },
+                ],
 
               enqueueCommands,
 
@@ -130,7 +164,7 @@ describe(
         expect(
           result.gachaItemId,
         ).toBe(
-          item.id,
+          effect.id,
         );
 
         expect(
@@ -149,10 +183,10 @@ describe(
           enqueueCommands,
         ).toHaveBeenCalledWith({
           gachaItemId:
-            "item-1",
+            effect.id,
 
           gachaItemName:
-            item.name,
+            effect.name,
 
           commands: [
             expect.objectContaining({
@@ -187,10 +221,6 @@ describe(
             trigger,
             {
               findPoolById:
-                () =>
-                  undefined,
-
-              findGachaItemById:
                 () =>
                   undefined,
 
@@ -229,7 +259,7 @@ describe(
     );
 
     it(
-      "returns item-not-selected when the pool cannot select an item",
+      "returns item-not-selected when the pool has no entries",
       () => {
         const pool =
           createGachaPool({
@@ -255,10 +285,6 @@ describe(
                   id === pool.id
                     ? pool
                     : undefined,
-
-              findGachaItemById:
-                () =>
-                  undefined,
 
               findEffectById:
                 () =>
@@ -291,7 +317,7 @@ describe(
     );
 
     it(
-      "returns execution-not-resolved when item execution cannot be resolved",
+      "returns execution-not-resolved when the effect does not exist",
       () => {
         const pool =
           createGachaPool({
@@ -300,8 +326,8 @@ describe(
                 id:
                   "entry-1",
 
-                gachaItemId:
-                  "item-1",
+                effectId:
+                  "missing-effect",
 
                 weight:
                   100,
@@ -315,15 +341,6 @@ describe(
               pool.id,
           });
 
-        const item =
-          createGachaItem({
-            id:
-              "item-1",
-
-            commands:
-              [],
-          });
-
         const enqueueCommands =
           vi.fn();
 
@@ -332,16 +349,8 @@ describe(
             trigger,
             {
               findPoolById:
-                (id) =>
-                  id === pool.id
-                    ? pool
-                    : undefined,
-
-              findGachaItemById:
-                (id) =>
-                  id === item.id
-                    ? item
-                    : undefined,
+                () =>
+                  pool,
 
               findEffectById:
                 () =>
@@ -368,7 +377,7 @@ describe(
         expect(
           result.gachaItemId,
         ).toBe(
-          item.id,
+          "missing-effect",
         );
 
         expect(
@@ -386,6 +395,9 @@ describe(
     it(
       "counts only enabled commands",
       () => {
+        const effect =
+          createEffect();
+
         const pool =
           createGachaPool({
             entries: [
@@ -393,8 +405,8 @@ describe(
                 id:
                   "entry-1",
 
-                gachaItemId:
-                  "item-1",
+                effectId:
+                  effect.id,
 
                 weight:
                   100,
@@ -408,48 +420,6 @@ describe(
               pool.id,
           });
 
-        const item =
-          createGachaItem({
-            id:
-              "item-1",
-
-            commands: [
-              {
-                id:
-                  "command-1",
-
-                type:
-                  "minecraft",
-
-                value:
-                  "say enabled",
-
-                delay:
-                  0,
-
-                enabled:
-                  true,
-              },
-
-              {
-                id:
-                  "command-2",
-
-                type:
-                  "minecraft",
-
-                value:
-                  "say disabled",
-
-                delay:
-                  0,
-
-                enabled:
-                  false,
-              },
-            ],
-          });
-
         const enqueueCommands =
           vi.fn();
 
@@ -461,17 +431,34 @@ describe(
                 () =>
                   pool,
 
-              findGachaItemById:
-                () =>
-                  item,
-
               findEffectById:
                 () =>
-                  undefined,
+                  effect,
 
               buildEffectCommands:
-                () =>
-                  [],
+                () => [
+                  {
+                    type:
+                      "minecraft",
+
+                    value:
+                      "say enabled",
+
+                    enabled:
+                      true,
+                  },
+
+                  {
+                    type:
+                      "minecraft",
+
+                    value:
+                      "say disabled",
+
+                    enabled:
+                      false,
+                  },
+                ],
 
               enqueueCommands,
 

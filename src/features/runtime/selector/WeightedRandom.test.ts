@@ -1,87 +1,145 @@
-import { describe, expect, it } from "vitest";
+import {
+  describe,
+  expect,
+  it,
+} from "vitest";
 
-import { selectWeightedEntry } from "./WeightedRandom";
+import type {
+  PoolEntry,
+} from "@/features/pools/types/pool";
 
-import type { PoolEntry } from "@/features/pools/types/pool";
+import {
+  selectWeightedEntry,
+} from "./WeightedRandom";
 
 const entries: PoolEntry[] = [
   {
     id: "entry-1",
-    gachaItemId: "common",
+    effectId: "common",
     weight: 70,
   },
   {
     id: "entry-2",
-    gachaItemId: "rare",
+    effectId: "rare",
     weight: 25,
   },
   {
     id: "entry-3",
-    gachaItemId: "legendary",
+    effectId: "legendary",
     weight: 5,
   },
 ];
 
-describe("WeightedRandom", () => {
-  it("returns null when entries are empty", () => {
-    expect(
-      selectWeightedEntry([]),
-    ).toBeNull();
-  });
-
-  it("selects the first entry", () => {
-    const result = selectWeightedEntry(
-      entries,
-      () => 0.00,
+describe(
+  "WeightedRandom",
+  () => {
+    it(
+      "returns null when entries are empty",
+      () => {
+        expect(
+          selectWeightedEntry(
+            [],
+          ),
+        ).toBeNull();
+      },
     );
 
-    expect(result?.gachaItemId).toBe("common");
-  });
+    it(
+      "selects the first entry",
+      () => {
+        const result =
+          selectWeightedEntry(
+            entries,
+            () => 0.0,
+          );
 
-  it("selects the second entry", () => {
-    const result = selectWeightedEntry(
-      entries,
-      () => 0.80,
+        expect(
+          result?.effectId,
+        ).toBe(
+          "common",
+        );
+      },
     );
 
-    expect(result?.gachaItemId).toBe("rare");
-  });
+    it(
+      "selects the second entry",
+      () => {
+        const result =
+          selectWeightedEntry(
+            entries,
+            () => 0.8,
+          );
 
-  it("selects the third entry", () => {
-    const result = selectWeightedEntry(
-      entries,
-      () => 0.99,
+        expect(
+          result?.effectId,
+        ).toBe(
+          "rare",
+        );
+      },
     );
 
-    expect(result?.gachaItemId).toBe("legendary");
-  });
+    it(
+      "selects the third entry",
+      () => {
+        const result =
+          selectWeightedEntry(
+            entries,
+            () => 0.99,
+          );
 
-  it("ignores entries whose weight is zero", () => {
-    const result = selectWeightedEntry(
-      [
-        {
-          id: "entry-1",
-          gachaItemId: "disabled",
-          weight: 0,
-        },
-        {
-          id: "entry-2",
-          gachaItemId: "enabled",
-          weight: 100,
-        },
-      ],
-      () => 0,
+        expect(
+          result?.effectId,
+        ).toBe(
+          "legendary",
+        );
+      },
     );
 
-    expect(result?.gachaItemId).toBe("enabled");
-  });
+    it(
+      "ignores entries whose weight is zero",
+      () => {
+        const result =
+          selectWeightedEntry(
+            [
+              {
+                id: "entry-1",
+                effectId:
+                  "disabled",
+                weight: 0,
+              },
+              {
+                id: "entry-2",
+                effectId:
+                  "enabled",
+                weight: 100,
+              },
+            ],
+            () => 0,
+          );
 
-  it("returns the last entry when random returns exactly 1", () => {
-    const result = selectWeightedEntry(
-      entries,
-      () => 1,
+        expect(
+          result?.effectId,
+        ).toBe(
+          "enabled",
+        );
+      },
     );
 
-    expect(result?.gachaItemId).toBe("legendary");
-  });
-});
+    it(
+      "returns the last entry when random returns exactly 1",
+      () => {
+        const result =
+          selectWeightedEntry(
+            entries,
+            () => 1,
+          );
+
+        expect(
+          result?.effectId,
+        ).toBe(
+          "legendary",
+        );
+      },
+    );
+  },
+);

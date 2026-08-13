@@ -1,5 +1,5 @@
 import type {
-  GachaItem,
+  LegacyGachaItem,
 } from "@/features/gacha/types/gacha";
 
 import {
@@ -26,9 +26,9 @@ export type DrawGachaOptions = {
  * PoolEntryのweightを使用してください。
  */
 export function drawGacha(
-  items: GachaItem[],
+  items: LegacyGachaItem[],
   options: DrawGachaOptions = {},
-): GachaItem {
+): LegacyGachaItem {
   const {
     random = defaultRandomSource,
   } = options;

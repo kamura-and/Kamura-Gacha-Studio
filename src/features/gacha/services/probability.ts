@@ -1,5 +1,5 @@
 import type {
-  GachaItem,
+  LegacyGachaItem,
 } from "@/features/gacha/types/gacha";
 
 /**
@@ -9,8 +9,8 @@ import type {
  * 実際の抽選率はPoolのweightから計算します。
  */
 export function getEnabledGachaItems(
-  items: GachaItem[],
-): GachaItem[] {
+  items: LegacyGachaItem[],
+): LegacyGachaItem[] {
   return items.filter(
     (item) => item.isEnabled,
   );

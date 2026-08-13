@@ -4,7 +4,7 @@ import type {
 
 type CreatePoolInput = {
   id?: string;
-  itemId?: string;
+  effectId?: string;
   enabled?: boolean;
   weight?: number;
   entries?: GachaPool["entries"];
@@ -13,32 +13,39 @@ type CreatePoolInput = {
 export function createGachaPool(
   input: CreatePoolInput = {},
 ): GachaPool {
-  const now = new Date().toISOString();
+  const now =
+    new Date().toISOString();
 
   return {
     id:
       input.id ??
       "pool-1",
 
-    name: "Test Pool",
+    name:
+      "Test Pool",
 
-    description: "",
+    description:
+      "",
 
     enabled:
-      input.enabled ?? true,
+      input.enabled ??
+      true,
 
-    createdAt: now,
+    createdAt:
+      now,
 
-    updatedAt: now,
+    updatedAt:
+      now,
 
     entries:
       input.entries ?? [
         {
-          id: "entry-1",
+          id:
+            "entry-1",
 
-          gachaItemId:
-            input.itemId ??
-            "item-1",
+          effectId:
+            input.effectId ??
+            "effect-1",
 
           weight:
             input.weight ??

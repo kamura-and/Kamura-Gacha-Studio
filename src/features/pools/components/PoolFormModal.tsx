@@ -77,9 +77,9 @@ const createInitialState = (
 const createId = () => {
   if (
     typeof crypto !==
-      "undefined" &&
+    "undefined" &&
     typeof crypto.randomUUID ===
-      "function"
+    "function"
   ) {
     return crypto.randomUUID();
   }
@@ -267,12 +267,12 @@ export function PoolFormModal({
 
           if (
             selectedRarity !==
-              "all" &&
+            "all" &&
             (
               effect.rarity ??
               "common"
             ) !==
-              selectedRarity
+            selectedRarity
           ) {
             return false;
           }
@@ -391,20 +391,20 @@ export function PoolFormModal({
           current.entries.map(
             (entry) =>
               entry.id ===
-              entryId
+                entryId
                 ? {
-                    ...entry,
+                  ...entry,
 
-                    weight:
-                      Number.isFinite(
+                  weight:
+                    Number.isFinite(
+                      parsedValue,
+                    )
+                      ? Math.max(
+                        0,
                         parsedValue,
                       )
-                        ? Math.max(
-                            0,
-                            parsedValue,
-                          )
-                        : 0,
-                  }
+                      : 0,
+                }
                 : entry,
           ),
       }),
@@ -741,7 +741,7 @@ export function PoolFormModal({
                   className={[
                     "rounded-full px-3 py-2 text-xs font-black transition",
                     selectedTag ===
-                    null
+                      null
                       ? "bg-violet-600 text-white"
                       : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100",
                   ].join(
@@ -766,7 +766,7 @@ export function PoolFormModal({
                       className={[
                         "rounded-full px-3 py-2 text-xs font-black transition",
                         selectedTag ===
-                        tag
+                          tag
                           ? "bg-violet-600 text-white"
                           : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100",
                       ].join(
@@ -784,7 +784,7 @@ export function PoolFormModal({
 
             <div className="mt-4">
               {availableEffects.length >
-              0 ? (
+                0 ? (
                 <div className="grid max-h-72 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
                   {availableEffects.map(
                     (
@@ -832,8 +832,8 @@ export function PoolFormModal({
                             <span className="shrink-0 rounded-full bg-violet-100 px-2 py-1 text-[10px] font-black text-violet-700">
                               {
                                 rarityLabels[
-                                  effect.rarity ??
-                                    "common"
+                                effect.rarity ??
+                                "common"
                                 ]
                               }
                             </span>
@@ -845,7 +845,7 @@ export function PoolFormModal({
                           </p>
 
                           {effect.tags.length >
-                          0 ? (
+                            0 ? (
                             <div className="mt-2 flex flex-wrap gap-1">
                               {effect.tags
                                 .slice(
@@ -905,35 +905,24 @@ export function PoolFormModal({
 
               <div className="mt-3 space-y-3">
                 {form.entries.length >
-                0 ? (
+                  0 ? (
                   form.entries.map(
                     (
                       entry,
                     ) => {
-                      /*
-                       * 新形式はeffectId。
-                       *
-                       * gachaItemIdだけの旧Entryは
-                       * 次のMigration工程まで
-                       * 「旧形式の景品」として残します。
-                       */
                       const effect =
-                        entry.effectId
-                          ? effects.find(
-                              (
-                                candidate,
-                              ) =>
-                                candidate.id ===
-                                entry.effectId,
-                            )
-                          : undefined;
+                        effects.find(
+                          (candidate) =>
+                            candidate.id ===
+                            entry.effectId,
+                        );
 
                       const probability =
                         totalWeight >
-                        0
+                          0
                           ? (entry.weight /
-                              totalWeight) *
-                            100
+                            totalWeight) *
+                          100
                           : 0;
 
                       return (
@@ -958,17 +947,15 @@ export function PoolFormModal({
                               <div className="flex items-center gap-2">
                                 <p className="truncate text-sm font-black text-slate-900">
                                   {effect?.name ??
-                                    (entry.gachaItemId
-                                      ? "旧形式の景品"
-                                      : "削除された景品")}
+                                    "削除された景品"}
                                 </p>
 
                                 {effect ? (
                                   <span className="shrink-0 rounded-full bg-violet-100 px-2 py-1 text-[10px] font-black text-violet-700">
                                     {
                                       rarityLabels[
-                                        effect.rarity ??
-                                          "common"
+                                      effect.rarity ??
+                                      "common"
                                       ]
                                     }
                                   </span>
@@ -977,9 +964,7 @@ export function PoolFormModal({
 
                               <p className="mt-1 truncate text-xs text-slate-500">
                                 {effect?.description ??
-                                  (entry.gachaItemId
-                                    ? "既存データです。次の移行処理で新形式へ変換します。"
-                                    : "景品データが見つかりません。")}
+                                  "景品データが見つかりません。"}
                               </p>
                             </div>
                           </div>

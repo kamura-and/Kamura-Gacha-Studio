@@ -30,9 +30,6 @@ describe(
             findPoolById:
               () => undefined,
 
-            findGachaItemById:
-              () => undefined,
-
             findEffectById:
               () => undefined,
 

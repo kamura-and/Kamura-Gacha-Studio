@@ -2,6 +2,11 @@ import type {
   ActionOutputTarget,
 } from "@/core/actions";
 
+/**
+ * 景品レアリティ。
+ *
+ * 現行Effect景品でも使用する共通型。
+ */
 export type GachaRarity =
   | "common"
   | "rare"
@@ -10,52 +15,74 @@ export type GachaRarity =
   | "ultra"
   | "secret";
 
+/**
+ * 旧GachaItem互換用のAction出力先。
+ */
 export type GachaActionType =
   ActionOutputTarget;
 
+/**
+ * 旧GachaItemに直接保存されていたコマンド。
+ *
+ * 現行の新規景品はEffectDefinition.actionsを使用するため、
+ * この型は旧データ互換用途として残します。
+ */
 export type GachaCommand = {
   id: string;
+
   type: GachaActionType;
+
   value: string;
+
   delay: number;
+
   enabled: boolean;
 };
 
-export type GachaItem = {
+/**
+ * 旧形式のガチャ景品。
+ *
+ * 現行の新規景品はEffectDefinitionを使用します。
+ * この型は既存のlocalStorageおよび
+ * 旧PoolEntry.gachaItemIdを読み込むための
+ * 互換用途として残します。
+ */
+export type LegacyGachaItem = {
   id: string;
+
   name: string;
+
   description: string;
 
   /**
-   * 景品画像のData URL。
-   *
-   * PNG・JPEG・WebPなどの画像を、
-   * Base64形式で保存する。
-   *
-   * 未指定の場合は、
-   * 従来どおりアイコンを表示する。
+   * 旧景品画像のData URL。
    */
-  imageDataUrl?: string | null;
+  imageDataUrl?:
+    | string
+    | null;
 
   /**
-   * 保存済みエフェクトのID。
-   *
-   * 指定されている場合は、
-   * EffectRepositoryからエフェクトを取得して実行する。
-   *
-   * 未指定の場合は、
-   * 従来どおりcommandsを実行する。
+   * 旧GachaItemから
+   * 保存済みEffectへ接続するID。
    */
-  effectId?: string | null;
+  effectId?:
+    | string
+    | null;
 
   /**
-   * 旧形式との互換用コマンド。
+   * Effect移行前の旧コマンド。
    *
-   * effectIdが未指定の場合に使用する。
+   * effectIdがない場合のみ使用します。
    */
-  commands: GachaCommand[];
+  commands:
+    GachaCommand[];
 
-  rarity: GachaRarity;
-  isEnabled: boolean;
-  createdAt: string;
+  rarity:
+    GachaRarity;
+
+  isEnabled:
+    boolean;
+
+  createdAt:
+    string;
 };

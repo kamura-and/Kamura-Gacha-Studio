@@ -12,7 +12,7 @@ import {
 
 import type {
   GachaCommand,
-  GachaItem,
+  LegacyGachaItem,
 } from "@/features/gacha/types/gacha";
 
 export type BuildGachaCommandsOptions = {
@@ -20,7 +20,7 @@ export type BuildGachaCommandsOptions = {
 };
 
 export function buildGachaCommands(
-  item: GachaItem,
+  item: LegacyGachaItem,
   options: BuildGachaCommandsOptions = {},
 ): GeneratedActionCommand[] {
   const normalizedEffectId =

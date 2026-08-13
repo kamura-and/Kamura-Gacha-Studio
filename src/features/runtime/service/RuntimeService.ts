@@ -85,9 +85,6 @@ export class RuntimeService {
       findPoolById:
         dependencies.findPoolById,
 
-      findGachaItemById:
-        dependencies.findGachaItemById,
-
       findEffectById:
         dependencies.findEffectById,
 

@@ -2,83 +2,107 @@ import {
   Blocks,
   Bug,
   CircleDotDashed,
-  Dices,
+  Gift,
   History,
   Home,
   ListTodo,
   PackageOpen,
   Settings,
-  Sparkles,
   Zap,
   type LucideIcon,
 } from "lucide-react";
 
-import { SidebarItem } from "@/app/layout/SidebarItem";
+import {
+  SidebarItem,
+} from "@/app/layout/SidebarItem";
 
 type NavigationItem = {
   to: string;
+
   label: string;
+
   icon: LucideIcon;
+
   end?: boolean;
 };
 
-const mainNavigationItems: NavigationItem[] = [
+const mainNavigationItems:
+  NavigationItem[] = [
   {
     to: "/home",
+
     label: "ホーム",
+
     icon: Home,
   },
+
   {
     to: "/effects",
-    label: "エフェクト",
-    icon: Sparkles,
-  },
-  {
-    to: "/gacha",
-    label: "ガチャ",
-    icon: Dices,
+
+    label: "景品",
+
+    icon: Gift,
   },
 
   {
     to: "/pools",
+
     label: "ガチャ箱",
+
     icon: PackageOpen,
   },
 
   {
     to: "/triggers",
+
     label: "発動条件",
+
     icon: Zap,
   },
 ];
 
-const operationNavigationItems: NavigationItem[] = [
+const operationNavigationItems:
+  NavigationItem[] = [
   {
     to: "/queue",
+
     label: "実行キュー",
+
     icon: ListTodo,
   },
+
   {
     to: "/logs",
+
     label: "実行履歴",
+
     icon: History,
   },
 ];
 
-const systemNavigationItems: NavigationItem[] = [
+const systemNavigationItems:
+  NavigationItem[] = [
   {
     to: "/plugins",
+
     label: "プラグイン",
+
     icon: Blocks,
   },
+
   {
     to: "/runtime-debug",
+
     label: "デバッグ",
+
     icon: Bug,
   },
+
   {
     to: "/settings",
+
     label: "設定",
+
     icon: Settings,
   },
 ];
@@ -114,18 +138,24 @@ export function Sidebar() {
       >
         <NavigationGroup
           label="コンテンツ"
-          items={mainNavigationItems}
+          items={
+            mainNavigationItems
+          }
         />
 
         <NavigationGroup
           label="運用"
-          items={operationNavigationItems}
+          items={
+            operationNavigationItems
+          }
           className="mt-7"
         />
 
         <NavigationGroup
           label="システム"
-          items={systemNavigationItems}
+          items={
+            systemNavigationItems
+          }
           className="mt-7"
         />
       </nav>
@@ -147,7 +177,10 @@ export function Sidebar() {
 
 type NavigationGroupProps = {
   label: string;
-  items: NavigationItem[];
+
+  items:
+    NavigationItem[];
+
   className?: string;
 };
 
@@ -157,21 +190,37 @@ function NavigationGroup({
   className = "",
 }: NavigationGroupProps) {
   return (
-    <section className={className}>
+    <section
+      className={
+        className
+      }
+    >
       <h2 className="mb-2 px-3 text-[11px] font-black tracking-[0.14em] text-slate-400">
         {label}
       </h2>
 
       <div className="space-y-1">
-        {items.map((item) => (
-          <SidebarItem
-            key={item.to}
-            to={item.to}
-            label={item.label}
-            icon={item.icon}
-            end={item.end}
-          />
-        ))}
+        {items.map(
+          (item) => (
+            <SidebarItem
+              key={
+                item.to
+              }
+              to={
+                item.to
+              }
+              label={
+                item.label
+              }
+              icon={
+                item.icon
+              }
+              end={
+                item.end
+              }
+            />
+          ),
+        )}
       </div>
     </section>
   );

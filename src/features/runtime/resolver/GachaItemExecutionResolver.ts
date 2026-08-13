@@ -7,7 +7,7 @@ import type {
 } from "@/features/effects/types/effectDefinition";
 
 import type {
-  GachaItem,
+  LegacyGachaItem,
 } from "@/features/gacha/types/gacha";
 
 type EffectFinder = (
@@ -39,7 +39,7 @@ export type ResolvedGachaItemExecution = {
  * - 実行可能なコマンドが存在しない
  */
 export function resolveGachaItemExecution(
-  item: GachaItem,
+  item: LegacyGachaItem,
   findEffectById: EffectFinder,
   buildEffectCommands: EffectCommandBuilder,
 ): ResolvedGachaItemExecution | null {

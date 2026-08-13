@@ -14,10 +14,6 @@ import {
   gachaExecutionRuntime,
 } from "../../gacha/runtime/GachaExecutionRuntime";
 
-import type {
-  ExecuteGachaResult,
-} from "../../gacha/runtime/GachaExecutionRuntime";
-
 import {
   triggerMatcher,
 } from "../matcher/TriggerMatcher";
@@ -30,68 +26,11 @@ import type {
   Trigger,
 } from "../types/Trigger";
 
-type ResolvedExecutionPrize = {
-  id: string;
-
-  name: string;
-
-  effectId:
-    | string
-    | null;
-};
-
-function resolveExecutionPrize(
-  result: ExecuteGachaResult,
-): ResolvedExecutionPrize {
-  if (
-    result.spin.source ===
-    "effect"
-  ) {
-    return {
-      id:
-        result.spin.effect.id,
-
-      name:
-        result.spin.effect.name,
-
-      effectId:
-        result.spin.effect.id,
-    };
-  }
-
-  return {
-    id:
-      result.spin.item.id,
-
-    name:
-      result.spin.item.name,
-
-    effectId:
-      result.spin.item.effectId ??
-      null,
-  };
-}
-
-function getCommandCount(
-  result: ExecuteGachaResult,
-): number {
-  if (
-    result.mode === "effect" ||
-    result.mode ===
-      "legacy-effect"
-  ) {
-    return (
-      result.effect?.commandCount ??
-      0
-    );
-  }
-
-  return result.legacyCommandCount;
-}
 
 export class TriggerRuntime {
   private unsubscribe?:
     () => void;
+
 
   public start(): void {
     if (this.unsubscribe) {
@@ -113,6 +52,7 @@ export class TriggerRuntime {
     );
   }
 
+
   public stop(): void {
     if (!this.unsubscribe) {
       return;
@@ -129,12 +69,14 @@ export class TriggerRuntime {
     );
   }
 
+
   public isRunning(): boolean {
     return (
       this.unsubscribe !==
       undefined
     );
   }
+
 
   private handleEvent(
     event: RuntimeEvent,
@@ -165,6 +107,7 @@ export class TriggerRuntime {
     }
   }
 
+
   private executeTrigger(
     trigger: Trigger,
     event: RuntimeEvent,
@@ -176,10 +119,8 @@ export class TriggerRuntime {
             trigger.gachaPoolId,
         });
 
-      const prize =
-        resolveExecutionPrize(
-          result,
-        );
+      const effect =
+        result.spin.effect;
 
       executionHistoryRuntime.recordSuccess({
         eventId:
@@ -197,22 +138,27 @@ export class TriggerRuntime {
         poolEntryId:
           result.spin.poolEntry.id,
 
+        /**
+         * ExecutionHistory側は
+         * まだgachaItem系の名称を
+         * 使用しているため、
+         * 現時点ではEffect情報を
+         * 景品情報として渡します。
+         */
         gachaItemId:
-          prize.id,
+          effect.id,
 
         gachaItemName:
-          prize.name,
+          effect.name,
 
         effectId:
-          prize.effectId,
+          effect.id,
 
         mode:
           result.mode,
 
         commandCount:
-          getCommandCount(
-            result,
-          ),
+          result.effect.commandCount,
 
         drawnAt:
           result.spin.drawnAt,
@@ -235,17 +181,18 @@ export class TriggerRuntime {
             result.spin
               .gachaPoolId,
 
-          gachaItemId:
-            prize.id,
-
-          gachaItemName:
-            prize.name,
-
           effectId:
-            prize.effectId,
+            effect.id,
+
+          effectName:
+            effect.name,
 
           executionMode:
             result.mode,
+
+          commandCount:
+            result.effect
+              .commandCount,
 
           drawnAt:
             result.spin.drawnAt,
@@ -272,6 +219,7 @@ export class TriggerRuntime {
       );
     }
   }
+
 
   private logMatchResult(
     event: RuntimeEvent,
@@ -330,6 +278,7 @@ export class TriggerRuntime {
     );
   }
 }
+
 
 export const triggerRuntime =
   new TriggerRuntime();

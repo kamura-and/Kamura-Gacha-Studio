@@ -1,50 +1,47 @@
 import {
-    actionRuntime,
+  actionRuntime,
 } from "@/features/actions/runtime/ActionRuntime";
 
 import {
-    buildEffectCommands,
+  buildEffectCommands,
 } from "@/features/effect-builder/services/effectExecutor";
 
 import {
-    effectRepository,
+  effectRepository,
 } from "@/features/effects/repository/EffectRepository";
 
 import {
-    gachaRepository,
-} from "@/features/gacha/repository/GachaRepository";
-
-import {
-    poolRepository,
+  poolRepository,
 } from "@/features/pools/repositories/poolRepository";
 
 import {
-    triggerRepository,
+  triggerRepository,
 } from "@/features/triggers/repository/TriggerRepository";
 
 import {
-    runtimeEventBus,
+  runtimeEventBus,
 } from "../eventBus/RuntimeEventBus";
 
 import {
-    PluginRuntime,
+  PluginRuntime,
 } from "../pluginRuntime/PluginRuntime";
 
 import {
-    FakePlugin,
+  FakePlugin,
 } from "../plugins/fake/FakePlugin";
 
 import {
-    RuntimeService,
+  RuntimeService,
 } from "../service/RuntimeService";
 
 import type {
-    RuntimeEventProcessingResult,
+  RuntimeEventProcessingResult,
 } from "../service/RuntimeService";
 
 import type {
-    RuntimeEvent,
+  RuntimeEvent,
 } from "../types/RuntimeEvent";
+
 
 /**
  * Debug専用Runtime。
@@ -57,198 +54,208 @@ import type {
  * RuntimeEvent履歴をメモリ上に保持する。
  */
 class DebugRuntime {
-    private static readonly MAX_EVENT_HISTORY = 100;
+  private static readonly MAX_EVENT_HISTORY =
+    100;
 
-    public readonly eventBus =
-        runtimeEventBus;
+  public readonly eventBus =
+    runtimeEventBus;
 
-    public readonly pluginRuntime:
-        PluginRuntime;
+  public readonly pluginRuntime:
+    PluginRuntime;
 
-    public readonly fakePlugin:
-        FakePlugin;
+  public readonly fakePlugin:
+    FakePlugin;
 
-    public readonly runtimeService:
-        RuntimeService;
+  public readonly runtimeService:
+    RuntimeService;
 
-    private readonly eventHistory:
-        RuntimeEvent[] = [];
+  private readonly eventHistory:
+    RuntimeEvent[] = [];
 
-    private lastProcessingResult:
-        RuntimeEventProcessingResult | null =
-        null;
+  private lastProcessingResult:
+    RuntimeEventProcessingResult | null =
+      null;
 
-    public constructor() {
-        this.runtimeService =
-            new RuntimeService({
-                findEnabledTriggers: () =>
-                    triggerRepository.findEnabled(),
 
-                findPoolById: (id) =>
-                    poolRepository.findById(id),
+  public constructor() {
+    this.runtimeService =
+      new RuntimeService({
+        findEnabledTriggers: () =>
+          triggerRepository.findEnabled(),
 
-                findGachaItemById: (id) =>
-                    gachaRepository.findById(id),
+        findPoolById: (id) =>
+          poolRepository.findById(id),
 
-                findEffectById: (id) =>
-                    effectRepository.load(id),
+        findEffectById: (id) =>
+          effectRepository.load(id),
 
-                buildEffectCommands: (
-                    actions,
-                ) =>
-                    buildEffectCommands(
-                        actions,
-                    ),
+        buildEffectCommands: (
+          actions,
+        ) =>
+          buildEffectCommands(
+            actions,
+          ),
 
-                enqueueCommands: (
-                    input,
-                ) => {
-                    actionRuntime.execute(
-                        input,
-                    );
-                },
-            });
+        enqueueCommands: (
+          input,
+        ) => {
+          actionRuntime.execute(
+            input,
+          );
+        },
+      });
 
-        this.eventBus.subscribe(
-            (event) => {
-                this.processRuntimeEvent(
-                    event,
-                );
-            },
+    this.eventBus.subscribe(
+      (event) => {
+        this.processRuntimeEvent(
+          event,
         );
+      },
+    );
 
-        this.pluginRuntime =
-            new PluginRuntime(
-                this.eventBus,
-            );
+    this.pluginRuntime =
+      new PluginRuntime(
+        this.eventBus,
+      );
 
-        this.fakePlugin =
-            new FakePlugin();
+    this.fakePlugin =
+      new FakePlugin();
 
-        this.pluginRuntime.register(
-            this.fakePlugin,
-        );
+    this.pluginRuntime.register(
+      this.fakePlugin,
+    );
 
-        this.pluginRuntime.start(
-            this.fakePlugin.id,
-        );
+    this.pluginRuntime.start(
+      this.fakePlugin.id,
+    );
+  }
+
+
+  /**
+   * 保持しているRuntimeEvent履歴を取得する。
+   *
+   * 外部から配列を書き換えられないよう、
+   * 新しい配列として返す。
+   */
+  public getEventHistory():
+    RuntimeEvent[] {
+    return [
+      ...this.eventHistory,
+    ];
+  }
+
+
+  /**
+   * 保持しているRuntimeEvent履歴を削除する。
+   */
+  public clearEventHistory(): void {
+    this.eventHistory.length =
+      0;
+  }
+
+
+  /**
+   * 最後に処理したRuntimeEventの
+   * 実行結果を取得する。
+   */
+  public getLastProcessingResult():
+    RuntimeEventProcessingResult | null {
+    return this.lastProcessingResult;
+  }
+
+
+  /**
+   * Triggerの累積状態と
+   * デバッグ用の処理結果を初期化する。
+   *
+   * イベント履歴は削除しない。
+   */
+  public resetRuntime(): void {
+    this.runtimeService.reset();
+
+    this.lastProcessingResult =
+      null;
+  }
+
+
+  /**
+   * RuntimeEventを履歴へ追加する。
+   *
+   * 最新のイベントを先頭に保存し、
+   * 最大件数を超えた古いイベントは削除する。
+   */
+  private addEventToHistory(
+    event: RuntimeEvent,
+  ): void {
+    this.eventHistory.unshift(
+      event,
+    );
+
+    if (
+      this.eventHistory.length >
+      DebugRuntime.MAX_EVENT_HISTORY
+    ) {
+      this.eventHistory.pop();
     }
+  }
 
-    /**
-     * 保持しているRuntimeEvent履歴を取得する。
-     *
-     * 外部から配列を書き換えられないよう、
-     * 新しい配列として返す。
-     */
-    public getEventHistory():
-        RuntimeEvent[] {
-        return [
-            ...this.eventHistory,
-        ];
-    }
 
-    /**
-     * 保持しているRuntimeEvent履歴を削除する。
-     */
-    public clearEventHistory(): void {
-        this.eventHistory.length = 0;
-    }
+  private processRuntimeEvent(
+    event: RuntimeEvent,
+  ): void {
+    this.addEventToHistory(
+      event,
+    );
 
-    /**
-     * 最後に処理したRuntimeEventの
-     * 実行結果を取得する。
-     */
-    public getLastProcessingResult():
-        RuntimeEventProcessingResult | null {
-        return this.lastProcessingResult;
-    }
-
-    /**
-     * Triggerの累積状態と
-     * デバッグ用の処理結果を初期化する。
-     *
-     * イベント履歴は削除しない。
-     */
-    public resetRuntime(): void {
-        this.runtimeService.reset();
-
-        this.lastProcessingResult =
-            null;
-    }
-
-    /**
-     * RuntimeEventを履歴へ追加する。
-     *
-     * 最新のイベントを先頭に保存し、
-     * 最大件数を超えた古いイベントは削除する。
-     */
-    private addEventToHistory(
-        event: RuntimeEvent,
-    ): void {
-        this.eventHistory.unshift(
+    try {
+      const result =
+        this.runtimeService
+          .processRuntimeEvent(
             event,
-        );
+          );
 
-        if (this.eventHistory.length > DebugRuntime.MAX_EVENT_HISTORY) {
-            this.eventHistory.pop();
-        }
+      this.lastProcessingResult =
+        result;
+
+      console.info(
+        "[DebugRuntime]",
+        "RuntimeEventを処理しました。",
+        {
+          eventId:
+            result.eventId,
+
+          matchedTriggerCount:
+            result
+              .matchedTriggerCount,
+
+          executions:
+            result.executions,
+        },
+      );
+    } catch (error: unknown) {
+      console.error(
+        "[DebugRuntime]",
+        "RuntimeEventの処理に失敗しました。",
+        {
+          eventId:
+            event.id,
+
+          eventCategory:
+            event.category,
+
+          eventType:
+            event.type,
+
+          error,
+        },
+      );
     }
-
-    private processRuntimeEvent(
-        event: RuntimeEvent,
-    ): void {
-        this.addEventToHistory(
-            event,
-        );
-
-        try {
-            const result =
-                this.runtimeService
-                    .processRuntimeEvent(
-                        event,
-                    );
-
-            this.lastProcessingResult =
-                result;
-
-            console.info(
-                "[DebugRuntime]",
-                "RuntimeEventを処理しました。",
-                {
-                    eventId:
-                        result.eventId,
-
-                    matchedTriggerCount:
-                        result
-                            .matchedTriggerCount,
-
-                    executions:
-                        result.executions,
-                },
-            );
-        } catch (error: unknown) {
-            console.error(
-                "[DebugRuntime]",
-                "RuntimeEventの処理に失敗しました。",
-                {
-                    eventId:
-                        event.id,
-
-                    eventCategory:
-                        event.category,
-
-                    eventType:
-                        event.type,
-
-                    error,
-                },
-            );
-        }
-    }
+  }
 }
+
 
 /**
  * Debug Runtimeのシングルトン。
  */
 export const debugRuntime =
-    new DebugRuntime();
+  new DebugRuntime();

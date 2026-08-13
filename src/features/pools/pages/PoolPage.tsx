@@ -32,14 +32,6 @@ import type {
 } from "@/features/gacha/runtime/GachaExecutionRuntime";
 
 import {
-  useGachaStore,
-} from "@/features/gacha/store/gachaStore";
-
-import type {
-  GachaItem,
-} from "@/features/gacha/types/gacha";
-
-import {
   PoolFormModal,
 } from "@/features/pools/components/PoolFormModal";
 
@@ -56,39 +48,23 @@ type PoolTestResult = {
   poolId: string;
 
   tone:
-    | "success"
-    | "error";
+  | "success"
+  | "error";
 
   message: string;
 };
 
 type ResolvedPoolPrize =
   | {
-      source:
-        "effect";
+    source: "effect";
 
-      effect:
-        EffectDefinition;
-
-      item?: never;
-    }
+    effect: EffectDefinition;
+  }
   | {
-      source:
-        "legacy-gacha-item";
+    source: "missing";
 
-      item:
-        GachaItem;
-
-      effect?: never;
-    }
-  | {
-      source:
-        "missing";
-
-      effect?: never;
-
-      item?: never;
-    };
+    effect?: never;
+  };
 
 export function PoolPage() {
   const pools =
@@ -139,18 +115,6 @@ export function PoolPage() {
         state.loadEffects,
     );
 
-  /**
-   * 旧GachaItem。
-   *
-   * 既存ガチャ箱との互換用なので、
-   * Migration完了までは残します。
-   */
-  const gachaItems =
-    useGachaStore(
-      (state) =>
-        state.items,
-    );
-
   const [
     searchQuery,
     setSearchQuery,
@@ -194,67 +158,40 @@ export function PoolPage() {
   ]);
 
   /**
-   * PoolEntryから景品データを取得。
-   *
-   * 新方式：
-   * effectId → Effect
-   *
-   * 旧方式：
-   * gachaItemId → GachaItem
-   */
+ * PoolEntryから景品データを取得。
+ *
+ * EffectDefinitionが
+ * ガチャ景品本体になります。
+ */
   const resolvePrize = (
     entry: PoolEntry,
   ): ResolvedPoolPrize => {
     const effectId =
       entry.effectId?.trim();
 
-    if (effectId) {
-      const effect =
-        effects.find(
-          (candidate) =>
-            candidate.id ===
-            effectId,
-        );
-
-      if (effect) {
-        return {
-          source:
-            "effect",
-
-          effect,
-        };
-      }
-
+    if (!effectId) {
       return {
-        source:
-          "missing",
+        source: "missing",
       };
     }
 
-    const gachaItemId =
-      entry.gachaItemId?.trim();
+    const effect =
+      effects.find(
+        (candidate) =>
+          candidate.id ===
+          effectId,
+      );
 
-    if (gachaItemId) {
-      const item =
-        gachaItems.find(
-          (candidate) =>
-            candidate.id ===
-            gachaItemId,
-        );
-
-      if (item) {
-        return {
-          source:
-            "legacy-gacha-item",
-
-          item,
-        };
-      }
+    if (!effect) {
+      return {
+        source: "missing",
+      };
     }
 
     return {
-      source:
-        "missing",
+      source: "effect",
+
+      effect,
     };
   };
 
@@ -265,9 +202,7 @@ export function PoolPage() {
           .trim()
           .toLowerCase();
 
-      if (
-        !normalizedQuery
-      ) {
+      if (!normalizedQuery) {
         return pools;
       }
 
@@ -288,73 +223,29 @@ export function PoolPage() {
           const matchesEntry =
             pool.entries.some(
               (entry) => {
-                const effectId =
-                  entry.effectId?.trim();
-
-                if (effectId) {
-                  const effect =
-                    effects.find(
-                      (
-                        candidate,
-                      ) =>
-                        candidate.id ===
-                        effectId,
-                    );
-
-                  if (
-                    !effect
-                  ) {
-                    return false;
-                  }
-
-                  const searchableText =
-                    [
-                      effect.name,
-
-                      effect.description,
-
-                      ...effect.tags,
-                    ]
-                      .join(" ")
-                      .toLowerCase();
-
-                  return searchableText.includes(
-                    normalizedQuery,
-                  );
-                }
-
-                const gachaItemId =
-                  entry.gachaItemId?.trim();
-
-                if (
-                  !gachaItemId
-                ) {
-                  return false;
-                }
-
-                const item =
-                  gachaItems.find(
-                    (
-                      candidate,
-                    ) =>
+                const effect =
+                  effects.find(
+                    (candidate) =>
                       candidate.id ===
-                      gachaItemId,
+                      entry.effectId,
                   );
 
-                if (!item) {
+                if (!effect) {
                   return false;
                 }
 
-                return [
-                  item.name,
+                const searchableText =
+                  [
+                    effect.name,
+                    effect.description,
+                    ...effect.tags,
+                  ]
+                    .join(" ")
+                    .toLowerCase();
 
-                  item.description,
-                ]
-                  .join(" ")
-                  .toLowerCase()
-                  .includes(
-                    normalizedQuery,
-                  );
+                return searchableText.includes(
+                  normalizedQuery,
+                );
               },
             );
 
@@ -366,7 +257,6 @@ export function PoolPage() {
       );
     }, [
       effects,
-      gachaItems,
       pools,
       searchQuery,
     ]);
@@ -514,7 +404,7 @@ export function PoolPage() {
           )}」を抽選し、実行しました。`,
       });
     } catch (
-      error
+    error
     ) {
       console.error(
         "[PoolPage]",
@@ -538,7 +428,7 @@ export function PoolPage() {
 
         message:
           error instanceof
-          Error
+            Error
             ? error.message
             : "ガチャ箱のテスト実行に失敗しました。",
       });
@@ -666,7 +556,7 @@ export function PoolPage() {
 
         <section>
           {filteredPools.length >
-          0 ? (
+            0 ? (
             <div className="grid gap-5 xl:grid-cols-2">
               {filteredPools.map(
                 (pool) => {
@@ -688,8 +578,7 @@ export function PoolPage() {
                     pool.entries.some(
                       (entry) => {
                         if (
-                          entry.weight <=
-                          0
+                          entry.weight <= 0
                         ) {
                           return false;
                         }
@@ -700,27 +589,17 @@ export function PoolPage() {
                           );
 
                         if (
-                          prize.source ===
+                          prize.source !==
                           "effect"
                         ) {
-                          return (
-                            prize.effect
-                              .isEnabled !==
-                            false
-                          );
+                          return false;
                         }
 
-                        if (
-                          prize.source ===
-                          "legacy-gacha-item"
-                        ) {
-                          return Boolean(
-                            prize.item
-                              .isEnabled,
-                          );
-                        }
-
-                        return false;
+                        return (
+                          prize.effect
+                            .isEnabled !==
+                          false
+                        );
                       },
                     );
 
@@ -735,7 +614,7 @@ export function PoolPage() {
 
                   const currentTestResult =
                     testResult?.poolId ===
-                    pool.id
+                      pool.id
                       ? testResult
                       : null;
 
@@ -756,11 +635,10 @@ export function PoolPage() {
                             </h2>
 
                             <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-black ${
-                                pool.enabled
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-slate-100 text-slate-500"
-                              }`}
+                              className={`rounded-full px-2.5 py-1 text-xs font-black ${pool.enabled
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-slate-100 text-slate-500"
+                                }`}
                             >
                               {pool.enabled
                                 ? "有効"
@@ -880,12 +758,11 @@ export function PoolPage() {
 
                         {currentTestResult ? (
                           <div
-                            className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-bold ${
-                              currentTestResult.tone ===
+                            className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-bold ${currentTestResult.tone ===
                               "success"
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                : "border-rose-200 bg-rose-50 text-rose-700"
-                            }`}
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-rose-200 bg-rose-50 text-rose-700"
+                              }`}
                           >
                             {
                               currentTestResult.message
@@ -905,10 +782,10 @@ export function PoolPage() {
 
                               const probability =
                                 totalWeight >
-                                0
+                                  0
                                   ? (entry.weight /
-                                      totalWeight) *
-                                    100
+                                    totalWeight) *
+                                  100
                                   : 0;
 
                               const prizeName =
@@ -937,23 +814,16 @@ export function PoolPage() {
                                       </p>
 
                                       {!isPrizeEnabled &&
-                                      prize.source !==
+                                        prize.source !==
                                         "missing" ? (
                                         <span className="shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-black text-slate-500">
                                           無効
                                         </span>
                                       ) : null}
-
-                                      {prize.source ===
-                                      "legacy-gacha-item" ? (
-                                        <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-700">
-                                          旧形式
-                                        </span>
-                                      ) : null}
                                     </div>
 
                                     {prize.source ===
-                                    "effect" ? (
+                                      "effect" ? (
                                       <p className="mt-1 truncate text-[11px] font-semibold text-slate-400">
                                         {prize.effect.tags
                                           .map(
@@ -990,10 +860,10 @@ export function PoolPage() {
                           {pool.entries
                             .length ===
                             0 && (
-                            <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm font-bold text-slate-400">
-                              景品がありません
-                            </div>
-                          )}
+                              <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm font-bold text-slate-400">
+                                景品がありません
+                              </div>
+                            )}
                         </div>
                       </div>
                     </article>
@@ -1058,24 +928,12 @@ export function PoolPage() {
 
 /**
  * 抽選結果から景品名を取得。
- *
- * 新Effect方式と旧GachaItem方式の
- * 両方に対応します。
  */
 function getSpinPrizeName(
   result:
     ExecuteGachaResult,
 ): string {
-  if (
-    result.spin.source ===
-    "effect"
-  ) {
-    return result.spin
-      .effect.name;
-  }
-
-  return result.spin
-    .item.name;
+  return result.spin.effect.name;
 }
 
 function getResolvedPrizeName(
@@ -1086,16 +944,7 @@ function getResolvedPrizeName(
     prize.source ===
     "effect"
   ) {
-    return prize.effect
-      .name;
-  }
-
-  if (
-    prize.source ===
-    "legacy-gacha-item"
-  ) {
-    return prize.item
-      .name;
+    return prize.effect.name;
   }
 
   return "削除された景品";
@@ -1110,19 +959,8 @@ function getResolvedPrizeEnabled(
     "effect"
   ) {
     return (
-      prize.effect
-        .isEnabled !==
+      prize.effect.isEnabled !==
       false
-    );
-  }
-
-  if (
-    prize.source ===
-    "legacy-gacha-item"
-  ) {
-    return Boolean(
-      prize.item
-        .isEnabled,
     );
   }
 

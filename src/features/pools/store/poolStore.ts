@@ -1,8 +1,15 @@
-import { create } from "zustand";
+import {
+  create,
+} from "zustand";
 
-import { poolRepository } from "../repositories/poolRepository";
+import {
+  poolRepository,
+} from "../repositories/poolRepository";
 
-import type { GachaPool } from "../types/pool";
+import type {
+  GachaPool,
+} from "../types/pool";
+
 
 type PoolStore = {
   pools: GachaPool[];
@@ -21,6 +28,7 @@ type PoolStore = {
     id: string,
   ) => void;
 };
+
 
 export const usePoolStore =
   create<PoolStore>(
@@ -55,7 +63,8 @@ export const usePoolStore =
         const pools =
           get().pools.map(
             (current) =>
-              current.id === pool.id
+              current.id ===
+              pool.id
                 ? pool
                 : current,
           );
