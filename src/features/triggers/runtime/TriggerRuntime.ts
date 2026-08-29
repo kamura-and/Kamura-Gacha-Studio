@@ -1,4 +1,8 @@
 import {
+  presentationRuntime,
+} from "@/features/presentation/runtime/PresentationRuntime";
+
+import {
   executionHistoryRuntime,
 } from "../../history/runtime/ExecutionHistoryRuntime";
 
@@ -100,7 +104,7 @@ export class TriggerRuntime {
       const trigger of
       matchedTriggers
     ) {
-      this.executeTrigger(
+      void this.executeTrigger(
         trigger,
         event,
       );
@@ -108,10 +112,10 @@ export class TriggerRuntime {
   }
 
 
-  private executeTrigger(
+  private async executeTrigger(
     trigger: Trigger,
     event: RuntimeEvent,
-  ): void {
+  ): Promise<void> {
     try {
       const result =
         gachaExecutionRuntime.execute({
@@ -121,6 +125,30 @@ export class TriggerRuntime {
 
       const effect =
         result.spin.effect;
+
+      await presentationRuntime.play({
+        presetId:
+          "chest",
+
+        item: {
+          id:
+            effect.id,
+
+          name:
+            effect.name,
+
+          description:
+            effect.description,
+
+          rarity:
+            effect.rarity ??
+            "common",
+
+          imageDataUrl:
+            effect.imageDataUrl ??
+            null,
+        },
+      });
 
       executionHistoryRuntime.recordSuccess({
         eventId:
@@ -138,13 +166,6 @@ export class TriggerRuntime {
         poolEntryId:
           result.spin.poolEntry.id,
 
-        /**
-         * ExecutionHistory側は
-         * まだgachaItem系の名称を
-         * 使用しているため、
-         * 現時点ではEffect情報を
-         * 景品情報として渡します。
-         */
         gachaItemId:
           effect.id,
 
@@ -178,8 +199,7 @@ export class TriggerRuntime {
             trigger.name,
 
           gachaPoolId:
-            result.spin
-              .gachaPoolId,
+            result.spin.gachaPoolId,
 
           effectId:
             effect.id,
@@ -191,8 +211,7 @@ export class TriggerRuntime {
             result.mode,
 
           commandCount:
-            result.effect
-              .commandCount,
+            result.effect.commandCount,
 
           drawnAt:
             result.spin.drawnAt,

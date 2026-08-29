@@ -23,8 +23,15 @@ export type FakeGiftInput = {
   repeatCount?: number;
 
   diamondCount?: number;
-};
 
+  /**
+   * どのPluginから届いたイベントとして
+   * シミュレートするか。
+   *
+   * 未指定時はFakePlugin自身。
+   */
+  sourcePluginId?: PluginId;
+};
 /**
  * 開発・テスト用のRuntimePlugin。
  *
@@ -97,6 +104,7 @@ export class FakePlugin
           "plugin",
 
         pluginId:
+          input.sourcePluginId ??
           this.id,
       },
 

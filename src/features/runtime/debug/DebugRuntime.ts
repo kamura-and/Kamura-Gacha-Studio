@@ -31,6 +31,10 @@ import {
 } from "../plugins/fake/FakePlugin";
 
 import {
+  TikFinityPlugin,
+} from "../plugins/tikfinity/TikFinityPlugin";
+
+import {
   RuntimeService,
 } from "../service/RuntimeService";
 
@@ -46,7 +50,7 @@ import type {
 /**
  * Debug専用Runtime。
  *
- * FakePluginが発行したRuntimeEventを、
+ * FakePlugin / TikFinityPluginが発行したRuntimeEventを、
  * Trigger判定からCommand Queueまで
  * 一連のRuntime処理へ接続する。
  *
@@ -65,6 +69,9 @@ class DebugRuntime {
 
   public readonly fakePlugin:
     FakePlugin;
+
+  public readonly tikFinityPlugin:
+    TikFinityPlugin;
 
   public readonly runtimeService:
     RuntimeService;
@@ -105,6 +112,7 @@ class DebugRuntime {
         },
       });
 
+
     this.eventBus.subscribe(
       (event) => {
         this.processRuntimeEvent(
@@ -113,20 +121,35 @@ class DebugRuntime {
       },
     );
 
+
     this.pluginRuntime =
       new PluginRuntime(
         this.eventBus,
       );
 
+
     this.fakePlugin =
       new FakePlugin();
+
+    this.tikFinityPlugin =
+      new TikFinityPlugin();
+
 
     this.pluginRuntime.register(
       this.fakePlugin,
     );
 
+    this.pluginRuntime.register(
+      this.tikFinityPlugin,
+    );
+
+
     this.pluginRuntime.start(
       this.fakePlugin.id,
+    );
+
+    this.pluginRuntime.start(
+      this.tikFinityPlugin.id,
     );
   }
 

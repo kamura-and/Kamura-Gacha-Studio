@@ -44,191 +44,194 @@ export function RuntimeDebugPanel() {
         string | undefined
     >();
 
-    const handleEmitGift =
-        () => {
-            try {
-                const event =
-                    emitGift({
-                        giftId:
-                            "rose",
+const handleEmitGift =
+  () => {
+    try {
+      const event =
+        emitGift({
+          giftId:
+            "rose",
 
-                        giftName:
-                            "バラ",
+          giftName:
+            "バラ",
 
-                        userId:
-                            "debug-user",
+          userId:
+            "debug-user",
 
-                        userName:
-                            "デバッグユーザー",
+          userName:
+            "デバッグユーザー",
 
-                        repeatCount:
-                            1,
+          repeatCount:
+            1,
 
-                        diamondCount:
-                            1,
-                    });
+          diamondCount:
+            1,
 
-                setLastEvent(
-                    event,
-                );
+          sourcePluginId:
+            "tiktok-live",
+        });
 
-                setErrorMessage(
-                    undefined,
-                );
-            } catch (
-            error
-            ) {
-                const message =
-                    error instanceof Error
-                        ? error.message
-                        : "不明なエラーが発生しました。";
+      setLastEvent(
+        event,
+      );
 
-                setErrorMessage(
-                    message,
-                );
-            }
-        };
+      setErrorMessage(
+        undefined,
+      );
+    } catch (
+      error
+    ) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "不明なエラーが発生しました。";
 
-    return (
-        <section className="space-y-6">
-            <header>
-                <h1 className="text-2xl font-black text-slate-950">
-                    ランタイムデバッグ
-                </h1>
+      setErrorMessage(
+        message,
+      );
+    }
+  };
 
-                <p className="mt-1 text-sm font-medium text-slate-500">
-                    Fake Pluginからイベントを送信し、
-                    イベントバスの受信状況を確認します。
-                </p>
-            </header>
+return (
+    <section className="space-y-6">
+        <header>
+            <h1 className="text-2xl font-black text-slate-950">
+                ランタイムデバッグ
+            </h1>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <h2 className="text-sm font-black text-slate-900">
-                            Fake Plugin
-                        </h2>
+            <p className="mt-1 text-sm font-medium text-slate-500">
+                Fake Pluginからイベントを送信し、
+                イベントバスの受信状況を確認します。
+            </p>
+        </header>
 
-                        <p className="mt-1 text-sm font-medium text-slate-500">
-                            状態：
-                            <span className="ml-1 font-bold text-slate-900">
-                                {isStarted()
-                                    ? "起動中"
-                                    : "停止中"}
-                            </span>
-                        </p>
-                    </div>
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-sm font-black text-slate-900">
+                        Fake Plugin
+                    </h2>
 
-                    <button
-                        type="button"
-                        onClick={
-                            handleEmitGift
-                        }
-                        className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-black text-white transition hover:bg-violet-700"
-                    >
-                        バラを送信
-                    </button>
+                    <p className="mt-1 text-sm font-medium text-slate-500">
+                        状態：
+                        <span className="ml-1 font-bold text-slate-900">
+                            {isStarted()
+                                ? "起動中"
+                                : "停止中"}
+                        </span>
+                    </p>
                 </div>
 
-                {errorMessage !==
-                    undefined && (
-                        <p
-                            role="alert"
-                            className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700"
-                        >
-                            {errorMessage}
-                        </p>
-                    )}
+                <button
+                    type="button"
+                    onClick={
+                        handleEmitGift
+                    }
+                    className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-black text-white transition hover:bg-violet-700"
+                >
+                    バラを送信
+                </button>
+            </div>
 
-                {lastEvent !==
-                    undefined && (
-                        <div className="mt-5 rounded-xl bg-slate-50 p-4">
-                            <h3 className="text-xs font-black tracking-wide text-slate-500">
-                                最後に送信したイベント
-                            </h3>
-
-                            <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
-                                <EventDetail
-                                    label="Event ID"
-                                    value={
-                                        lastEvent.id
-                                    }
-                                />
-
-                                <EventDetail
-                                    label="Category"
-                                    value={
-                                        lastEvent.category
-                                    }
-                                />
-
-                                <EventDetail
-                                    label="Type"
-                                    value={
-                                        lastEvent.type
-                                    }
-                                />
-                            </dl>
-                        </div>
-                    )}
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white">
-                <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
-                    <div>
-                        <h2 className="text-sm font-black text-slate-900">
-                            イベント受信履歴
-                        </h2>
-
-                        <p className="mt-1 text-xs font-medium text-slate-500">
-                            受信件数：
-                            {events.length}
-                        </p>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={
-                            clearEvents
-                        }
-                        disabled={
-                            events.length ===
-                            0
-                        }
-                        className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            {errorMessage !==
+                undefined && (
+                    <p
+                        role="alert"
+                        className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700"
                     >
-                        履歴をクリア
-                    </button>
-                </header>
-
-                {events.length ===
-                    0 ? (
-                    <div className="px-5 py-10 text-center">
-                        <p className="text-sm font-bold text-slate-500">
-                            まだイベントを受信していません。
-                        </p>
-                    </div>
-                ) : (
-                    <ul className="divide-y divide-slate-100">
-                        {events.map(
-                            (
-                                event,
-                            ) => (
-                                <RuntimeEventItem
-                                    key={
-                                        event.id
-                                    }
-                                    event={
-                                        event
-                                    }
-                                />
-                            ),
-                        )}
-                    </ul>
+                        {errorMessage}
+                    </p>
                 )}
-            </section>
+
+            {lastEvent !==
+                undefined && (
+                    <div className="mt-5 rounded-xl bg-slate-50 p-4">
+                        <h3 className="text-xs font-black tracking-wide text-slate-500">
+                            最後に送信したイベント
+                        </h3>
+
+                        <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+                            <EventDetail
+                                label="Event ID"
+                                value={
+                                    lastEvent.id
+                                }
+                            />
+
+                            <EventDetail
+                                label="Category"
+                                value={
+                                    lastEvent.category
+                                }
+                            />
+
+                            <EventDetail
+                                label="Type"
+                                value={
+                                    lastEvent.type
+                                }
+                            />
+                        </dl>
+                    </div>
+                )}
         </section>
-    );
+
+        <section className="rounded-2xl border border-slate-200 bg-white">
+            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+                <div>
+                    <h2 className="text-sm font-black text-slate-900">
+                        イベント受信履歴
+                    </h2>
+
+                    <p className="mt-1 text-xs font-medium text-slate-500">
+                        受信件数：
+                        {events.length}
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={
+                        clearEvents
+                    }
+                    disabled={
+                        events.length ===
+                        0
+                    }
+                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    履歴をクリア
+                </button>
+            </header>
+
+            {events.length ===
+                0 ? (
+                <div className="px-5 py-10 text-center">
+                    <p className="text-sm font-bold text-slate-500">
+                        まだイベントを受信していません。
+                    </p>
+                </div>
+            ) : (
+                <ul className="divide-y divide-slate-100">
+                    {events.map(
+                        (
+                            event,
+                        ) => (
+                            <RuntimeEventItem
+                                key={
+                                    event.id
+                                }
+                                event={
+                                    event
+                                }
+                            />
+                        ),
+                    )}
+                </ul>
+            )}
+        </section>
+    </section>
+);
 }
 
 type EventDetailProps = {
