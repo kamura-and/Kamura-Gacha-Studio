@@ -168,7 +168,7 @@ export class TriggerMatcher {
   ): boolean {
     const actual =
       getValueByPath(
-        event,
+        event.payload,
         condition.field,
       );
 
