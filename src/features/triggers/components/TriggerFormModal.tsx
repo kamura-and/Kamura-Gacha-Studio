@@ -3,19 +3,25 @@ import {
   useMemo,
   useState,
 } from "react";
+
 import {
   Check,
   Gift,
   X,
 } from "lucide-react";
 
-import { GiftTriggerEditor } from "@/features/triggers/components/GiftTriggerEditor";
 import {
-  findGiftDefinition,
-  giftDefinitions,
-} from "@/features/triggers/gifts/giftDefinitions";
+  GiftTriggerEditor,
+} from "@/features/triggers/components/GiftTriggerEditor";
 
-import type { GachaPool } from "@/features/pools/types/pool";
+import {
+  useGiftCatalogStore,
+} from "@/features/triggers/gifts/giftCatalogStore";
+
+import type {
+  GachaPool,
+} from "@/features/pools/types/pool";
+
 import type {
   CreateTriggerInput,
   Trigger,
@@ -45,9 +51,6 @@ type TriggerFormState = {
   gachaPoolId: string;
 };
 
-const DEFAULT_GIFT_ID =
-  giftDefinitions[0]?.id ?? "";
-
 function createInitialState(
   trigger: Trigger | null,
   pools: GachaPool[],
@@ -57,8 +60,7 @@ function createInitialState(
       name: "",
       description: "",
       enabled: true,
-      selectedGiftId:
-        DEFAULT_GIFT_ID,
+      selectedGiftId: "",
       minimumCount: 1,
       gachaPoolId:
         pools.find(
@@ -94,7 +96,7 @@ function createInitialState(
       typeof giftIdCondition?.value ===
         "string"
         ? giftIdCondition.value
-        : DEFAULT_GIFT_ID,
+        : "",
     minimumCount:
       typeof countCondition?.value ===
         "number"
@@ -118,6 +120,13 @@ export function TriggerFormModal({
   onCreate,
   onUpdate,
 }: TriggerFormModalProps) {
+
+  const gifts =
+    useGiftCatalogStore(
+      (state) =>
+        state.gifts,
+    );
+
   const [form, setForm] =
     useState<TriggerFormState>(
       createInitialState(
@@ -154,10 +163,10 @@ export function TriggerFormModal({
         .toLowerCase();
 
     if (!normalizedQuery) {
-      return giftDefinitions;
+      return gifts;
     }
 
-    return giftDefinitions.filter(
+    return gifts.filter(
       (gift) =>
         [
           gift.name,
@@ -168,11 +177,16 @@ export function TriggerFormModal({
           .toLowerCase()
           .includes(normalizedQuery),
     );
-  }, [giftSearchQuery]);
+  }, [
+    giftSearchQuery,
+    gifts,
+  ]);
 
   const selectedGift =
-    findGiftDefinition(
-      form.selectedGiftId,
+    gifts.find(
+      (gift) =>
+        gift.id ===
+        form.selectedGiftId,
     );
 
   if (!isOpen) {

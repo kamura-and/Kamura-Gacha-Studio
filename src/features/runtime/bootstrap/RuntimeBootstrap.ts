@@ -8,6 +8,14 @@ import { usePluginRuntimeStore } from "@/features/plugins/store/pluginRuntimeSto
 
 import { triggerRuntime } from "@/features/triggers/runtime/TriggerRuntime";
 
+import {
+  giftDefinitions,
+} from "@/features/triggers/gifts/giftDefinitions";
+
+import {
+  useGiftCatalogStore,
+} from "@/features/triggers/gifts/giftCatalogStore";
+
 import type {
   ConnectorEvent,
   ConnectorStatus,
@@ -52,8 +60,22 @@ export class RuntimeBootstrap {
       new AbortController();
 
     registerDefaultConnectors();
+    registerDefaultConnectors();
+
+    /*
+     * Trigger設定で使用するGift Catalogへ、
+     * アプリ同梱の初期ギフトを登録する。
+     *
+     * 既存Catalogの内容は上書きしない。
+     */
+    useGiftCatalogStore
+      .getState()
+      .initializeDefaults(
+        giftDefinitions,
+      );
 
     this.unsubscribeConnectorEvents =
+      this.unsubscribeConnectorEvents =
       connectorManager.subscribe(
         (event) => {
           applyConnectorEventToRuntime(
