@@ -2,96 +2,20 @@ import { useMemo } from "react";
 
 import {
   Gift,
-  Radio,
-  Sparkles,
-  Tv,
 } from "lucide-react";
-import { useRuntimeStatsStore } from "@/features/runtime/stats/runtimeStatsStore";
+
 import { ConnectionStatusSection } from "@/features/dashboard/components/ConnectionStatusSection";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { RecentLogCard } from "@/features/dashboard/components/RecentLogCard";
 import { StatCard } from "@/features/dashboard/components/StatCard";
 import { TestGachaCard } from "@/features/dashboard/components/TestGachaCard";
-import { pluginDefinitions } from "@/features/plugins/definitions/pluginDefinitions";
-import { usePluginConfigStore } from "@/features/plugins/store/pluginConfigStore";
-import { usePluginRuntimeStore } from "@/features/plugins/store/pluginRuntimeStore";
-import { useCommandQueueStore } from "@/features/queue/store/commandQueueStore";
-
-import type {
-  PluginConnectionStatus,
-  PluginId,
-  PluginType,
-} from "@/features/plugins";
+import { useRuntimeStatsStore } from "@/features/runtime/stats/runtimeStatsStore";
 
 export function DashboardPage() {
-  const configs = usePluginConfigStore(
-    (state) => state.configs,
-  );
-
-  const runtimes = usePluginRuntimeStore(
-    (state) => state.runtimes,
-  );
-
-  const queueItems = useCommandQueueStore(
-    (state) => state.items,
-  );
-
   const giftEvents =
     useRuntimeStatsStore(
       (state) =>
         state.giftEvents,
-    );
-
-  const plugins = useMemo<DashboardPlugin[]>(
-    () =>
-      pluginDefinitions.map(
-        (definition) => {
-          const config =
-            configs[definition.id];
-
-          const runtime =
-            runtimes[definition.id];
-
-          return {
-            id: definition.id,
-            name: definition.name,
-            type: definition.type,
-
-            enabled:
-              config.enabled,
-
-            connectionStatus:
-              runtime.connectionStatus,
-
-            connectionDetail:
-              runtime.connectionDetail,
-
-            errorMessage:
-              runtime.errorMessage,
-
-            lastHeartbeatAt:
-              runtime.lastHeartbeatAt,
-
-            lastConnectedAt:
-              runtime.lastConnectedAt,
-          };
-        },
-      ),
-    [configs, runtimes],
-  );
-
-  const tiktokPlugin =
-    plugins.find(
-      (plugin) =>
-        plugin.id ===
-        "tiktok-live",
-    );
-
-  const overlayPlugin =
-    plugins.find(
-      (plugin) =>
-        plugin.id ===
-        "overlay",
     );
 
   const todayGiftCount =
@@ -106,97 +30,141 @@ export function DashboardPage() {
       [giftEvents],
     );
 
-  const todayCommandCount =
-    useMemo(
-      () =>
-        queueItems.filter(
-          (item) =>
-            isToday(
-              item.createdAt,
-            ),
-        ).length,
-      [queueItems],
-    );
-
-  const tiktokDisplay =
-    getPluginDisplay(
-      tiktokPlugin,
-      {
-        connectedValue:
-          "接続中",
-        disconnectedValue:
-          "未接続",
-        connectedTrend:
-          "受信可能",
-        disconnectedTrend:
-          "待機中",
-      },
-    );
-
-  const overlayDisplay =
-    getPluginDisplay(
-      overlayPlugin,
-      {
-        connectedValue:
-          "稼働中",
-        disconnectedValue:
-          "停止中",
-        connectedTrend:
-          "配信可能",
-        disconnectedTrend:
-          "待機中",
-      },
-    );
-
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <DashboardHeader />
 
-      <ConnectionStatusSection />
+      {/* ページ内ナビゲーション */}
+      <nav
+        aria-label="ダッシュボード内ナビゲーション"
+        className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
+      >
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-500">
+              Dashboard Index
+            </p>
 
+            <h2 className="mt-1 text-sm font-black tracking-tight text-slate-900">
+              ダッシュボード目次
+            </h2>
+          </div>
+
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-500">
+            3 sections
+          </span>
+        </div>
+
+        <div className="grid gap-2 md:grid-cols-3">
+          <a
+            href="#connection-status"
+            className="group flex items-center gap-3 rounded-2xl border border-transparent bg-slate-50 px-4 py-3 transition hover:border-violet-200 hover:bg-violet-50 focus:outline-none focus:ring-2 focus:ring-violet-200"
+          >
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-xs font-black text-violet-600 shadow-sm ring-1 ring-slate-200 transition group-hover:ring-violet-200">
+              01
+            </span>
+
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-slate-900">
+                接続状況
+              </p>
+
+              <p className="mt-0.5 truncate text-xs text-slate-500">
+                TikTok・Minecraft・Overlay
+              </p>
+            </div>
+
+            <span className="ml-auto text-sm font-bold text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-violet-500">
+              ↓
+            </span>
+          </a>
+
+          <a
+            href="#dashboard-runtime"
+            className="group flex items-center gap-3 rounded-2xl border border-transparent bg-slate-50 px-4 py-3 transition hover:border-violet-200 hover:bg-violet-50 focus:outline-none focus:ring-2 focus:ring-violet-200"
+          >
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-xs font-black text-violet-600 shadow-sm ring-1 ring-slate-200 transition group-hover:ring-violet-200">
+              02
+            </span>
+
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-slate-900">
+                テスト・ログ
+              </p>
+
+              <p className="mt-0.5 truncate text-xs text-slate-500">
+                ガチャテストと実行履歴
+              </p>
+            </div>
+
+            <span className="ml-auto text-sm font-bold text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-violet-500">
+              ↓
+            </span>
+          </a>
+
+          <a
+            href="#dashboard-gift"
+            className="group flex items-center gap-3 rounded-2xl border border-transparent bg-slate-50 px-4 py-3 transition hover:border-violet-200 hover:bg-violet-50 focus:outline-none focus:ring-2 focus:ring-violet-200"
+          >
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-xs font-black text-violet-600 shadow-sm ring-1 ring-slate-200 transition group-hover:ring-violet-200">
+              03
+            </span>
+
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-slate-900">
+                本日のギフト
+              </p>
+
+              <p className="mt-0.5 truncate text-xs text-slate-500">
+                今日受信したギフト数
+              </p>
+            </div>
+
+            <span className="ml-auto text-sm font-bold text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-violet-500">
+              ↓
+            </span>
+          </a>
+        </div>
+      </nav>
+
+      {/* 接続状況 */}
+      <div
+        id="connection-status"
+        className="scroll-mt-6"
+      >
+        <ConnectionStatusSection />
+      </div>
+
+      {/* テストガチャ / 最近のログ */}
       <section
+        id="dashboard-runtime"
         aria-label="テストガチャ箱と最近のログ"
-        className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]"
+        className="scroll-mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]"
       >
         <TestGachaCard />
         <RecentLogCard />
       </section>
 
-      <section aria-labelledby="dashboard-statistics-title">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <div>
-            <h2
-              id="dashboard-statistics-title"
-              className="text-lg font-bold tracking-tight text-slate-900"
-            >
-              本日の状況
-            </h2>
+      {/* 本日のギフト */}
+      <section
+        id="dashboard-gift"
+        aria-labelledby="dashboard-gift-title"
+        className="scroll-mt-6"
+      >
+        <div className="mb-5">
+          <h2
+            id="dashboard-gift-title"
+            className="text-lg font-bold tracking-tight text-slate-900"
+          >
+            本日のギフト
+          </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
-              PluginとRuntimeの現在の稼働状況を確認できます。
-            </p>
-          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            今日受信したTikTok LIVEギフトを確認できます。
+          </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            title="TikTok接続状況"
-            value={
-              tiktokDisplay.value
-            }
-            description="TikTok LIVEとの接続状態"
-            icon={Radio}
-            status={
-              tiktokDisplay.status
-            }
-            statusTone={
-              tiktokDisplay.statusTone
-            }
-            trend={
-              tiktokDisplay.trend
-            }
-          />
-
+        <div className="max-w-2xl">
           <StatCard
             title="本日のギフト数"
             value={
@@ -216,165 +184,10 @@ export function DashboardPage() {
             }
             trend="今日"
           />
-
-          <StatCard
-            title="本日のコマンド数"
-            value={
-              todayCommandCount
-            }
-            description="本日Queueへ追加されたコマンド"
-            icon={Sparkles}
-            status={
-              todayCommandCount >
-                0
-                ? "履歴あり"
-                : "履歴なし"
-            }
-            statusTone={
-              todayCommandCount >
-                0
-                ? "success"
-                : "neutral"
-            }
-            trend="今日"
-          />
-
-          <StatCard
-            title="オーバーレイ状態"
-            value={
-              overlayDisplay.value
-            }
-            description="配信用オーバーレイ"
-            icon={Tv}
-            status={
-              overlayDisplay.status
-            }
-            statusTone={
-              overlayDisplay.statusTone
-            }
-            trend={
-              overlayDisplay.trend
-            }
-          />
         </div>
       </section>
     </div>
   );
-}
-
-type DashboardPlugin = {
-  id: PluginId;
-  name: string;
-  type: PluginType;
-
-  enabled: boolean;
-
-  connectionStatus:
-  PluginConnectionStatus;
-
-  connectionDetail?: string;
-  errorMessage?: string;
-
-  lastHeartbeatAt?: number;
-  lastConnectedAt?: number;
-};
-
-type PluginDisplayOptions = {
-  connectedValue: string;
-  disconnectedValue: string;
-  connectedTrend: string;
-  disconnectedTrend: string;
-};
-
-type PluginDisplay = {
-  value: string;
-  status: string;
-
-  statusTone:
-  | "success"
-  | "warning"
-  | "error"
-  | "neutral";
-
-  trend: string;
-};
-
-function getPluginDisplay(
-  plugin:
-    | DashboardPlugin
-    | undefined,
-  options: PluginDisplayOptions,
-): PluginDisplay {
-  if (!plugin) {
-    return {
-      value: "未登録",
-      status: "未登録",
-      statusTone: "neutral",
-      trend:
-        "Plugin情報なし",
-    };
-  }
-
-  if (!plugin.enabled) {
-    return {
-      value: "無効",
-      status: "無効",
-      statusTone: "neutral",
-      trend:
-        "Plugin設定を確認",
-    };
-  }
-
-  return getConnectionDisplay(
-    plugin.connectionStatus,
-    options,
-  );
-}
-
-function getConnectionDisplay(
-  connectionStatus:
-    PluginConnectionStatus,
-  options: PluginDisplayOptions,
-): PluginDisplay {
-  switch (connectionStatus) {
-    case "connected":
-      return {
-        value:
-          options.connectedValue,
-        status: "正常",
-        statusTone: "success",
-        trend:
-          options.connectedTrend,
-      };
-
-    case "connecting":
-      return {
-        value: "接続中",
-        status: "処理中",
-        statusTone: "warning",
-        trend:
-          "接続結果を待機",
-      };
-
-    case "error":
-      return {
-        value: "エラー",
-        status: "要確認",
-        statusTone: "error",
-        trend:
-          "接続設定を確認",
-      };
-
-    case "disconnected":
-      return {
-        value:
-          options.disconnectedValue,
-        status: "未接続",
-        statusTone: "neutral",
-        trend:
-          options.disconnectedTrend,
-      };
-  }
 }
 
 function isToday(
@@ -387,10 +200,10 @@ function isToday(
 
   return (
     today.getFullYear() ===
-    target.getFullYear() &&
-    today.getMonth() ===
-    target.getMonth() &&
-    today.getDate() ===
+    target.getFullYear()
+    && today.getMonth() ===
+    target.getMonth()
+    && today.getDate() ===
     target.getDate()
   );
 }

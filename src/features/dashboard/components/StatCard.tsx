@@ -69,7 +69,7 @@ export function StatCard({
     ];
 
   return (
-    <article className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-violet-200 hover:shadow-xl hover:shadow-violet-100/70">
+    <article className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-violet-200 hover:shadow-xl hover:shadow-violet-100/70">
       <div className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-violet-100/70 blur-2xl transition duration-300 group-hover:bg-violet-200/80" />
 
       <div className="relative">
@@ -106,7 +106,7 @@ export function StatCard({
           ) : null}
         </div>
 
-        <div className="mt-6 flex items-end justify-between gap-4">
+        <div className="mt-8 flex items-end justify-between gap-4">
           <p className="min-w-0 truncate text-4xl font-black tracking-tight text-slate-950">
             {value}
           </p>
@@ -118,7 +118,7 @@ export function StatCard({
           ) : null}
         </div>
 
-        <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+        <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-slate-100">
           <div className="h-full w-full origin-left rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 opacity-70 transition duration-300 group-hover:opacity-100" />
         </div>
       </div>
