@@ -159,6 +159,22 @@ pub fn run() {
             test_minecraft_connection,
             send_minecraft_command,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            if let tauri::RunEvent::WindowEvent {
+                label,
+                event: tauri::WindowEvent::CloseRequested { .. },
+                ..
+            } = event
+            {
+                if label == "main" {
+                    log::info!(
+                        "メインウィンドウが閉じられたため、アプリケーションを終了します。"
+                    );
+
+                    app_handle.exit(0);
+                }
+            }
+        });
 }

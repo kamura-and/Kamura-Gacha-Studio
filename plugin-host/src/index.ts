@@ -43,7 +43,7 @@ type PluginHostCommand = {
   requestId: string;
 
   type:
-    PluginHostCommandType;
+  PluginHostCommandType;
 
   payload: Record<
     string,
@@ -71,11 +71,11 @@ function writeMessage(
 ): void {
   const message:
     PluginHostMessage = {
-      type,
-      payload,
-      occurredAt:
-        Date.now(),
-    };
+    type,
+    payload,
+    occurredAt:
+      Date.now(),
+  };
 
   process.stdout.write(
     `${JSON.stringify(message)}\n`,
@@ -213,12 +213,12 @@ const tikTokPlugin =
 
 const pluginContext:
   PluginContext = {
-    emit:
-      writeMessage,
+  emit:
+    writeMessage,
 
-    log:
-      writeLog,
-  };
+  log:
+    writeLog,
+};
 
 let heartbeatTimer:
   NodeJS.Timeout | undefined;
@@ -457,10 +457,9 @@ function startCommandReader(): void {
           .catch(
             (error: unknown) => {
               writeLog(
-                `Command chain failed: ${
-                  error instanceof Error
-                    ? error.message
-                    : String(error)
+                `Command chain failed: ${error instanceof Error
+                  ? error.message
+                  : String(error)
                 }`,
               );
             },
@@ -474,12 +473,16 @@ function startCommandReader(): void {
       writeLog(
         "Command input was closed.",
       );
+
+      void stopPluginHost(
+        "stdin-close",
+      );
     },
   );
 }
 
 async function startPluginHost():
-Promise<void> {
+  Promise<void> {
   writeLog(
     "Plugin Host started.",
   );
@@ -616,9 +619,8 @@ process.on(
   "uncaughtException",
   (error: Error) => {
     writeLog(
-      `Uncaught exception: ${
-        error.stack
-        ?? error.message
+      `Uncaught exception: ${error.stack
+      ?? error.message
       }`,
     );
 
@@ -631,8 +633,7 @@ process.on(
   "unhandledRejection",
   (reason: unknown) => {
     writeLog(
-      `Unhandled rejection: ${
-        String(reason)
+      `Unhandled rejection: ${String(reason)
       }`,
     );
 
@@ -644,11 +645,10 @@ process.on(
 void startPluginHost().catch(
   (error: unknown) => {
     writeLog(
-      `Failed to start Plugin Host: ${
-        error instanceof Error
-          ? error.stack
-            ?? error.message
-          : String(error)
+      `Failed to start Plugin Host: ${error instanceof Error
+        ? error.stack
+        ?? error.message
+        : String(error)
       }`,
     );
 
