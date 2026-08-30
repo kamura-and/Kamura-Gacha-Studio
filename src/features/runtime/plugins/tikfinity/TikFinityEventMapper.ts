@@ -24,9 +24,24 @@ export type TikFinityGiftData = {
   giftName?: string;
 
   repeatCount?: number;
-  repeatEnd?: boolean;
+
+  /**
+   * TikFinity側でbooleanの可能性があるほか、
+   * TikTok LIVE由来では0 / 1で届くケースもあるため
+   * 両方を許容する。
+   */
+  repeatEnd?:
+    | boolean
+    | number;
 
   diamondCount?: number;
+
+  /**
+   * TikFinity payloadに存在する場合のみ利用する。
+   *
+   * 未確認のためoptional。
+   */
+  combo?: boolean;
 
   userId?: string;
   uniqueId?: string;
@@ -89,6 +104,27 @@ function mapGiftEvent(
       rawData,
     );
 
+    return null;
+  }
+
+
+  const repeatEnd =
+    normalizeRepeatEnd(
+      data.repeatEnd,
+    );
+
+
+  /**
+   * コンボ可能ギフトで、
+   * まだ連打途中の場合はRuntimeEventへ流さない。
+   *
+   * TikFinity payloadにcomboが存在しない場合は
+   * 従来どおり処理する。
+   */
+  if (
+    data.combo === true &&
+    repeatEnd === false
+  ) {
     return null;
   }
 
@@ -161,9 +197,7 @@ function mapGiftEvent(
           0,
         ),
 
-      repeatEnd:
-        data.repeatEnd ??
-        true,
+      repeatEnd,
     },
 
     occurredAt:
@@ -313,6 +347,45 @@ function toNonNegativeNumber(
     0,
     value,
   );
+}
+
+
+/**
+ * repeatEndをbooleanへ正規化する。
+ *
+ * true / 1
+ *   → true
+ *
+ * false / 0
+ *   → false
+ *
+ * undefinedや想定外の値
+ *   → true
+ *
+ * 従来のTikFinityイベントとの互換性を優先し、
+ * 値が無い場合は「確定済み」として扱う。
+ */
+function normalizeRepeatEnd(
+  value:
+    | boolean
+    | number
+    | undefined,
+): boolean {
+  if (
+    value === true ||
+    value === 1
+  ) {
+    return true;
+  }
+
+  if (
+    value === false ||
+    value === 0
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 
