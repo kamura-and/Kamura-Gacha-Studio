@@ -6,7 +6,7 @@ import {
   Sparkles,
   Tv,
 } from "lucide-react";
-
+import { useRuntimeStatsStore } from "@/features/runtime/stats/runtimeStatsStore";
 import { ConnectionStatusSection } from "@/features/dashboard/components/ConnectionStatusSection";
 import { DashboardHeader } from "@/features/dashboard/components/DashboardHeader";
 import { RecentLogCard } from "@/features/dashboard/components/RecentLogCard";
@@ -35,6 +35,12 @@ export function DashboardPage() {
   const queueItems = useCommandQueueStore(
     (state) => state.items,
   );
+
+  const giftEvents =
+    useRuntimeStatsStore(
+      (state) =>
+        state.giftEvents,
+    );
 
   const plugins = useMemo<DashboardPlugin[]>(
     () =>
@@ -86,6 +92,18 @@ export function DashboardPage() {
       (plugin) =>
         plugin.id ===
         "overlay",
+    );
+
+  const todayGiftCount =
+    useMemo(
+      () =>
+        giftEvents.filter(
+          (occurredAt) =>
+            isToday(
+              occurredAt,
+            ),
+        ).length,
+      [giftEvents],
     );
 
   const todayCommandCount =
@@ -181,12 +199,22 @@ export function DashboardPage() {
 
           <StatCard
             title="本日のギフト数"
-            value="—"
+            value={
+              todayGiftCount
+            }
             description="本日受信したギフト"
             icon={Gift}
-            status="未実装"
-            statusTone="neutral"
-            trend="Trigger実装後に連携"
+            status={
+              todayGiftCount > 0
+                ? "受信あり"
+                : "受信なし"
+            }
+            statusTone={
+              todayGiftCount > 0
+                ? "success"
+                : "neutral"
+            }
+            trend="今日"
           />
 
           <StatCard
@@ -198,13 +226,13 @@ export function DashboardPage() {
             icon={Sparkles}
             status={
               todayCommandCount >
-              0
+                0
                 ? "履歴あり"
                 : "履歴なし"
             }
             statusTone={
               todayCommandCount >
-              0
+                0
                 ? "success"
                 : "neutral"
             }
@@ -242,7 +270,7 @@ type DashboardPlugin = {
   enabled: boolean;
 
   connectionStatus:
-    PluginConnectionStatus;
+  PluginConnectionStatus;
 
   connectionDetail?: string;
   errorMessage?: string;
@@ -263,10 +291,10 @@ type PluginDisplay = {
   status: string;
 
   statusTone:
-    | "success"
-    | "warning"
-    | "error"
-    | "neutral";
+  | "success"
+  | "warning"
+  | "error"
+  | "neutral";
 
   trend: string;
 };
@@ -359,10 +387,10 @@ function isToday(
 
   return (
     today.getFullYear() ===
-      target.getFullYear() &&
+    target.getFullYear() &&
     today.getMonth() ===
-      target.getMonth() &&
+    target.getMonth() &&
     today.getDate() ===
-      target.getDate()
+    target.getDate()
   );
 }
