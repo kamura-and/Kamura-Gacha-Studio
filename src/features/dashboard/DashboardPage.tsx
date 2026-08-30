@@ -18,17 +18,18 @@ export function DashboardPage() {
         state.giftEvents,
     );
 
-  const todayGiftCount =
-    useMemo(
-      () =>
-        giftEvents.filter(
-          (occurredAt) =>
-            isToday(
-              occurredAt,
-            ),
-        ).length,
-      [giftEvents],
-    );
+ const todayGiftCount =
+  useMemo(
+    () =>
+      giftEvents.filter(
+        (giftEvent) =>
+          isToday(
+            giftEvent
+              .occurredAt,
+          ),
+      ).length,
+    [giftEvents],
+  );
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
