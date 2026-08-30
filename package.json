@@ -10,6 +10,8 @@
     "test": "vitest",
     "test:run": "vitest run",
     "preview": "vite preview",
+    "plugin-host:build": "npm --prefix plugin-host run build",
+    "tauri:dev": "npm run plugin-host:build && tauri dev",
     "tauri": "tauri"
   },
   "dependencies": {
