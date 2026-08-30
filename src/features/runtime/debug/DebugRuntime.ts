@@ -1,4 +1,8 @@
 import {
+  presentationRuntime,
+} from "@/features/presentation/runtime/PresentationRuntime";
+
+import {
   actionRuntime,
 } from "@/features/actions/runtime/ActionRuntime";
 
@@ -81,7 +85,7 @@ class DebugRuntime {
 
   private lastProcessingResult:
     RuntimeEventProcessingResult | null =
-      null;
+    null;
 
 
   public constructor() {
@@ -248,14 +252,73 @@ class DebugRuntime {
             result.eventId,
 
           matchedTriggerCount:
-            result
-              .matchedTriggerCount,
+            result.matchedTriggerCount,
 
           executions:
             result.executions,
         },
       );
-    } catch (error: unknown) {
+
+      for (
+        const execution of
+        result.executions
+      ) {
+        const effect =
+          execution.effect;
+
+        if (
+          execution.status !==
+          "queued" ||
+          !effect
+        ) {
+          continue;
+        }
+
+        void presentationRuntime
+          .play({
+            presetId:
+              "chest",
+
+            item: {
+              id:
+                effect.id,
+
+              name:
+                effect.name,
+
+              description:
+                effect.description,
+
+              rarity:
+                effect.rarity ??
+                "common",
+
+              imageDataUrl:
+                effect.imageDataUrl ??
+                null,
+            },
+          })
+          .catch(
+            (error: unknown) => {
+              console.error(
+                "[DebugRuntime]",
+                "Presentationの再生に失敗しました。",
+                {
+                  eventId:
+                    event.id,
+
+                  effectId:
+                    effect.id,
+
+                  error,
+                },
+              );
+            },
+          );
+      }
+    } catch (
+    error: unknown
+    ) {
       console.error(
         "[DebugRuntime]",
         "RuntimeEventの処理に失敗しました。",

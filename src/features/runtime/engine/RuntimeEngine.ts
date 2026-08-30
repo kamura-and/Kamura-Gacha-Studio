@@ -57,7 +57,7 @@ export type RuntimeQueueInput = {
   gachaItemName: string;
 
   commands:
-    GeneratedActionCommand[];
+  GeneratedActionCommand[];
 };
 
 
@@ -68,19 +68,19 @@ type EnqueueCommands = (
 
 export type RuntimeEngineDependencies = {
   findPoolById:
-    FindPoolById;
+  FindPoolById;
 
   findEffectById:
-    FindEffectById;
+  FindEffectById;
 
   buildEffectCommands:
-    BuildEffectCommands;
+  BuildEffectCommands;
 
   enqueueCommands:
-    EnqueueCommands;
+  EnqueueCommands;
 
   random?:
-    RandomSource;
+  RandomSource;
 };
 
 
@@ -102,10 +102,19 @@ export type RuntimeExecutionResult = {
    */
   gachaItemId?: string;
 
+  /**
+   * 今回抽選されたEffect。
+   *
+   * Presentationなど、
+   * 実行後の処理から抽選結果を
+   * 利用できるように保持する。
+   */
+  effect?: EffectDefinition;
+
   commandCount: number;
 
   status:
-    RuntimeExecutionStatus;
+  RuntimeExecutionStatus;
 };
 
 
@@ -200,7 +209,7 @@ export function executeTrigger(
         return Boolean(
           effect &&
           effect.isEnabled !==
-            false,
+          false,
         );
       },
     );
@@ -321,6 +330,8 @@ export function executeTrigger(
 
     gachaItemId:
       effect.id,
+
+    effect,
 
     commandCount:
       enabledCommandCount,
