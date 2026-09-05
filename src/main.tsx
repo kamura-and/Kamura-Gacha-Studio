@@ -22,11 +22,12 @@ import {
 } from "@/features/presentation/runtime/PresentationOverlayBridge";
 
 import {
-  PluginHostService,
-} from "./features/runtime/plugin-host";
+  pluginHostService,
+} from "./features/runtime/plugin-host/PluginHostService";
+
 
 function getCurrentWindowLabel():
-  string {
+string {
   if (!isTauri()) {
     return "main";
   }
@@ -34,24 +35,27 @@ function getCurrentWindowLabel():
   return getCurrentWindow().label;
 }
 
+
 const currentWindowLabel =
   getCurrentWindowLabel();
 
 const isMainWindow =
-  currentWindowLabel === "main";
+  currentWindowLabel ===
+  "main";
+
 
 if (isMainWindow) {
-  const pluginHost =
-    new PluginHostService();
-
   let pluginListRequested =
     false;
 
-  pluginHost.onMessage(
-    (message) => {
+
+  pluginHostService.onMessage(
+    (
+      message,
+    ) => {
       if (
         message.type ===
-        "plugin-host.ready" &&
+          "plugin-host.ready" &&
         !pluginListRequested
       ) {
         pluginListRequested =
@@ -59,25 +63,26 @@ if (isMainWindow) {
 
         void (async () => {
           try {
-            await pluginHost.sendCommand({
-              requestId:
-                `plugin-list-${Date.now()}`,
+            await pluginHostService
+              .sendCommand({
+                requestId:
+                  `plugin-list-${Date.now()}`,
 
-              type:
-                "plugin.list",
+                type:
+                  "plugin.list",
 
-              payload: {},
-            });
+                payload: {},
+              });
 
             /*
-             * TikTok接続は現在凍結中なので、
-             * 自動接続処理は実行しません。
+             * TikTokへの接続は
+             * LIVE開始時に必要な場合だけ行う。
              *
-             * 再開する場合はここへ
-             * tiktok.connectを戻します。
+             * アプリ起動時には
+             * 自動接続しない。
              */
           } catch (
-          error: unknown
+            error: unknown
           ) {
             console.error(
               "[PluginHostService] Failed to initialize Plugin Host.",
@@ -86,6 +91,7 @@ if (isMainWindow) {
           }
         })();
       }
+
 
       if (
         message.type ===
@@ -96,6 +102,7 @@ if (isMainWindow) {
           message.payload,
         );
       }
+
 
       if (
         message.type ===
@@ -111,6 +118,7 @@ if (isMainWindow) {
         );
       }
 
+
       if (
         message.type ===
         "tiktok.connecting"
@@ -120,6 +128,7 @@ if (isMainWindow) {
           message.payload,
         );
       }
+
 
       if (
         message.type ===
@@ -131,6 +140,7 @@ if (isMainWindow) {
         );
       }
 
+
       if (
         message.type ===
         "tiktok.disconnected"
@@ -140,6 +150,7 @@ if (isMainWindow) {
           message.payload,
         );
       }
+
 
       if (
         message.type ===
@@ -151,6 +162,7 @@ if (isMainWindow) {
         );
       }
 
+
       if (
         message.type ===
         "tiktok.gift"
@@ -160,6 +172,7 @@ if (isMainWindow) {
           message.payload,
         );
       }
+
 
       if (
         message.type ===
@@ -171,6 +184,7 @@ if (isMainWindow) {
         );
       }
 
+
       if (
         message.type ===
         "tiktok.follow"
@@ -180,6 +194,7 @@ if (isMainWindow) {
           message.payload,
         );
       }
+
 
       if (
         message.type ===
@@ -193,10 +208,13 @@ if (isMainWindow) {
     },
   );
 
-  void pluginHost
+
+  void pluginHostService
     .start()
     .catch(
-      (error: unknown) => {
+      (
+        error: unknown,
+      ) => {
         console.error(
           "[PluginHostService] Failed to start Plugin Host.",
           error,
@@ -204,29 +222,14 @@ if (isMainWindow) {
       },
     );
 
- void pluginHost
-  .start()
-  .catch(
-    (error: unknown) => {
-      console.error(
-        "[PluginHostService] Failed to start Plugin Host.",
-        error,
-      );
-    },
-  );
-
-/*
- * PresentationからOverlayへの送信処理は
- * メインウィンドウだけで起動します。
- */
-startPresentationOverlayBridge();
 
   /*
    * PresentationからOverlayへの送信処理は
-   * メインウィンドウだけで起動します。
+   * メインウィンドウだけで起動する。
    */
   startPresentationOverlayBridge();
 }
+
 
 createRoot(
   document.getElementById(

@@ -191,6 +191,30 @@ export class TikFinityPlugin
         );
 
 
+        logMessageShape(
+            message,
+        );
+
+
+        const roomId =
+            findRoomIdCandidate(
+                message.data,
+            );
+
+        if (roomId) {
+            console.info(
+                "[TikFinityPlugin]",
+                "Room ID candidate detected",
+                {
+                    event:
+                        message.event,
+
+                    roomId,
+                },
+            );
+        }
+
+
         const runtimeEvent =
             mapTikFinityMessage(
                 message,
@@ -257,7 +281,7 @@ function parseTikFinityMessage(
                 rawData,
             );
     } catch (
-    error
+        error
     ) {
         console.warn(
             "[TikFinityPlugin]",
@@ -322,6 +346,182 @@ function isTikFinityMessage(
         typeof record.event ===
         "string" &&
         "data" in record
+    );
+}
+
+
+/**
+ * TikFinityから届いたイベントの
+ * data直下に存在するキーをログへ出す。
+ *
+ * Room IDの実payload確認用。
+ */
+function logMessageShape(
+    message: TikFinityMessage,
+): void {
+    if (
+        !isRecord(
+            message.data,
+        )
+    ) {
+        return;
+    }
+
+    console.info(
+        "[TikFinityPlugin]",
+        "Message shape",
+        {
+            event:
+                message.event,
+
+            dataKeys:
+                Object.keys(
+                    message.data,
+                ),
+        },
+    );
+}
+
+
+/**
+ * TikFinity payload内から
+ * Room IDらしい値を探す。
+ *
+ * 現段階では調査用。
+ * ここで見つかった値を正式なRoom IDとして
+ * 保存・利用する処理はまだ行わない。
+ */
+function findRoomIdCandidate(
+    value: unknown,
+): string | undefined {
+    if (
+        !isRecord(
+            value,
+        )
+    ) {
+        return undefined;
+    }
+
+
+    const directRoomId =
+        firstIdValue(
+            value.roomId,
+            value.roomID,
+            value.room_id,
+            value.roomid,
+        );
+
+    if (directRoomId) {
+        return directRoomId;
+    }
+
+
+    const roomInfo =
+        value.roomInfo;
+
+    if (
+        isRecord(
+            roomInfo,
+        )
+    ) {
+        const roomInfoId =
+            firstIdValue(
+                roomInfo.roomId,
+                roomInfo.roomID,
+                roomInfo.room_id,
+                roomInfo.roomid,
+                roomInfo.id,
+            );
+
+        if (roomInfoId) {
+            return roomInfoId;
+        }
+    }
+
+
+    const room =
+        value.room;
+
+    if (
+        isRecord(
+            room,
+        )
+    ) {
+        const roomId =
+            firstIdValue(
+                room.roomId,
+                room.roomID,
+                room.room_id,
+                room.roomid,
+                room.id,
+            );
+
+        if (roomId) {
+            return roomId;
+        }
+    }
+
+
+    return undefined;
+}
+
+
+/**
+ * string / numberの候補から
+ * 最初の有効なIDを文字列として返す。
+ */
+function firstIdValue(
+    ...values: unknown[]
+): string | undefined {
+    for (
+        const value of values
+    ) {
+        if (
+            typeof value ===
+            "string"
+        ) {
+            const trimmed =
+                value.trim();
+
+            if (trimmed) {
+                return trimmed;
+            }
+        }
+
+        if (
+            typeof value ===
+            "number" &&
+            Number.isFinite(
+                value,
+            )
+        ) {
+            return String(
+                value,
+            );
+        }
+    }
+
+    return undefined;
+}
+
+
+/**
+ * unknownが通常のobjectか確認する。
+ */
+function isRecord(
+    value: unknown,
+): value is Record<
+    string,
+    unknown
+> {
+    return (
+        typeof value ===
+            "object" &&
+        value !==
+            null &&
+        !Array.isArray(
+            value,
+        )
     );
 }
 

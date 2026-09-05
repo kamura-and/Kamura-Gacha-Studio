@@ -3,10 +3,17 @@ import {
   registerDefaultConnectors,
 } from "@/features/plugins/connectors";
 
-import { usePluginConfigStore } from "@/features/plugins/store/pluginConfigStore";
-import { usePluginRuntimeStore } from "@/features/plugins/store/pluginRuntimeStore";
+import {
+  usePluginConfigStore,
+} from "@/features/plugins/store/pluginConfigStore";
 
-import { triggerRuntime } from "@/features/triggers/runtime/TriggerRuntime";
+import {
+  usePluginRuntimeStore,
+} from "@/features/plugins/store/pluginRuntimeStore";
+
+import {
+  triggerRuntime,
+} from "@/features/triggers/runtime/TriggerRuntime";
 
 import {
   giftDefinitions,
@@ -27,9 +34,11 @@ import type {
   PluginSettings,
 } from "@/features/plugins";
 
+
 type UpdateRuntime = ReturnType<
   typeof usePluginRuntimeStore.getState
 >["update"];
+
 
 export class RuntimeBootstrap {
   private unsubscribeConnectorEvents:
@@ -40,7 +49,9 @@ export class RuntimeBootstrap {
     | AbortController
     | undefined;
 
-  private started = false;
+  private started =
+    false;
+
 
   public start(): void {
     if (this.started) {
@@ -54,13 +65,15 @@ export class RuntimeBootstrap {
      * mount → cleanup → mountでも、
      * 各起動処理の状態を正しく判定できます。
      */
-    this.started = true;
+    this.started =
+      true;
 
     this.startupAbortController =
       new AbortController();
 
+
     registerDefaultConnectors();
-    registerDefaultConnectors();
+
 
     /*
      * Trigger設定で使用するGift Catalogへ、
@@ -74,8 +87,8 @@ export class RuntimeBootstrap {
         giftDefinitions,
       );
 
+
     this.unsubscribeConnectorEvents =
-      this.unsubscribeConnectorEvents =
       connectorManager.subscribe(
         (event) => {
           applyConnectorEventToRuntime(
@@ -87,18 +100,23 @@ export class RuntimeBootstrap {
         },
       );
 
+
     triggerRuntime.start();
+
 
     void this.connectAutoConnectPlugins(
       this.startupAbortController.signal,
     );
+
 
     console.info(
       "[RuntimeBootstrap] Runtimeを開始しました。",
     );
   }
 
-  public async stop(): Promise<void> {
+
+  public async stop():
+  Promise<void> {
     if (!this.started) {
       return;
     }
@@ -110,7 +128,9 @@ export class RuntimeBootstrap {
      * mount → cleanup → mount が短時間で実行されます。
      * 先にfalseへ戻すことで、次のstart()を妨げません。
      */
-    this.started = false;
+    this.started =
+      false;
+
 
     /*
      * 設定復元待ち、または自動接続中の処理を中断します。
@@ -120,25 +140,32 @@ export class RuntimeBootstrap {
     this.startupAbortController =
       undefined;
 
+
     triggerRuntime.stop();
+
 
     this.unsubscribeConnectorEvents?.();
 
     this.unsubscribeConnectorEvents =
       undefined;
 
+
     await connectorManager.disconnectAll(
       "Runtimeを終了しました",
     );
+
 
     console.info(
       "[RuntimeBootstrap] Runtimeを終了しました。",
     );
   }
 
-  public isStarted(): boolean {
+
+  public isStarted():
+  boolean {
     return this.started;
   }
+
 
   private async connectAutoConnectPlugins(
     signal: AbortSignal,
@@ -148,6 +175,7 @@ export class RuntimeBootstrap {
         signal,
       );
 
+
       if (
         signal.aborted ||
         !this.started
@@ -155,18 +183,24 @@ export class RuntimeBootstrap {
         return;
       }
 
+
       const configs =
         usePluginConfigStore
           .getState()
           .configs;
 
+
       const autoConnectConfigs =
-        Object.values(configs).filter(
+        Object.values(
+          configs,
+        ).filter(
           shouldAutoConnect,
         );
 
+
       if (
-        autoConnectConfigs.length === 0
+        autoConnectConfigs.length ===
+        0
       ) {
         console.info(
           "[RuntimeBootstrap] 自動接続対象のPluginはありません。",
@@ -175,9 +209,12 @@ export class RuntimeBootstrap {
         return;
       }
 
+
       const connectionTasks =
         autoConnectConfigs.map(
-          async (config) => {
+          async (
+            config,
+          ) => {
             if (
               signal.aborted ||
               !this.started
@@ -185,10 +222,12 @@ export class RuntimeBootstrap {
               return;
             }
 
+
             const connector =
               connectorManager.get(
                 config.id,
               );
+
 
             if (!connector) {
               console.warn(
@@ -198,15 +237,20 @@ export class RuntimeBootstrap {
               return;
             }
 
+
             const status =
               connector.getStatus();
 
+
             if (
-              status === "connected" ||
-              status === "connecting"
+              status ===
+                "connected" ||
+              status ===
+                "connecting"
             ) {
               return;
             }
+
 
             try {
               await connectorManager.connect(
@@ -215,16 +259,22 @@ export class RuntimeBootstrap {
                 signal,
               );
 
+
               console.info(
                 `[RuntimeBootstrap] Pluginを自動接続しました: ${config.id}`,
               );
-            } catch (error) {
+            } catch (
+              error
+            ) {
               if (
                 signal.aborted ||
-                isAbortError(error)
+                isAbortError(
+                  error,
+                )
               ) {
                 return;
               }
+
 
               console.error(
                 `[RuntimeBootstrap] Pluginの自動接続に失敗しました: ${config.id}`,
@@ -234,16 +284,22 @@ export class RuntimeBootstrap {
           },
         );
 
+
       await Promise.all(
         connectionTasks,
       );
-    } catch (error) {
+    } catch (
+      error
+    ) {
       if (
         signal.aborted ||
-        isAbortError(error)
+        isAbortError(
+          error,
+        )
       ) {
         return;
       }
+
 
       console.error(
         "[RuntimeBootstrap] 自動接続処理に失敗しました。",
@@ -253,6 +309,7 @@ export class RuntimeBootstrap {
   }
 }
 
+
 function shouldAutoConnect(
   config: PluginConfig,
 ): boolean {
@@ -260,11 +317,13 @@ function shouldAutoConnect(
     return false;
   }
 
+
   return getBooleanSetting(
     config.settings,
     "autoConnect",
   );
 }
+
 
 function getBooleanSetting(
   settings: PluginSettings,
@@ -273,11 +332,14 @@ function getBooleanSetting(
   const value =
     settings[key];
 
+
   return (
-    typeof value === "boolean" &&
+    typeof value ===
+      "boolean" &&
     value
   );
 }
+
 
 async function waitForPluginConfigHydration(
   signal: AbortSignal,
@@ -288,18 +350,24 @@ async function waitForPluginConfigHydration(
     return;
   }
 
-  await new Promise<void>(
-    (resolve, reject) => {
-      const handleAbort = () => {
-        unsubscribe();
 
-        reject(
-          new DOMException(
-            "Plugin設定の復元待機が中断されました。",
-            "AbortError",
-          ),
-        );
-      };
+  await new Promise<void>(
+    (
+      resolve,
+      reject,
+    ) => {
+      const handleAbort =
+        () => {
+          unsubscribe();
+
+          reject(
+            new DOMException(
+              "Plugin設定の復元待機が中断されました。",
+              "AbortError",
+            ),
+          );
+        };
+
 
       const unsubscribe =
         usePluginConfigStore.persist
@@ -311,17 +379,21 @@ async function waitForPluginConfigHydration(
               );
 
               unsubscribe();
+
               resolve();
             },
           );
+
 
       signal.addEventListener(
         "abort",
         handleAbort,
         {
-          once: true,
+          once:
+            true,
         },
       );
+
 
       /*
        * Listener登録直前にhydrationが完了した場合の
@@ -337,26 +409,32 @@ async function waitForPluginConfigHydration(
         );
 
         unsubscribe();
+
         resolve();
       }
     },
   );
 }
 
+
 function isAbortError(
   error: unknown,
 ): boolean {
   return (
     error instanceof DOMException &&
-    error.name === "AbortError"
+    error.name ===
+      "AbortError"
   );
 }
+
 
 function applyConnectorEventToRuntime(
   event: ConnectorEvent,
   updateRuntime: UpdateRuntime,
 ): void {
-  switch (event.type) {
+  switch (
+    event.type
+  ) {
     case "status-changed":
       applyConnectorStatus(
         event.pluginId,
@@ -366,6 +444,7 @@ function applyConnectorEventToRuntime(
       );
 
       return;
+
 
     case "connected":
       updateRuntime(
@@ -384,11 +463,13 @@ function applyConnectorEventToRuntime(
           lastHeartbeatAt:
             event.occurredAt,
 
-          errorMessage: undefined,
+          errorMessage:
+            undefined,
         },
       );
 
       return;
+
 
     case "disconnected":
       updateRuntime(
@@ -401,11 +482,13 @@ function applyConnectorEventToRuntime(
             event.detail ??
             "サービスから切断しました",
 
-          errorMessage: undefined,
+          errorMessage:
+            undefined,
         },
       );
 
       return;
+
 
     case "error":
       updateRuntime(
@@ -423,6 +506,7 @@ function applyConnectorEventToRuntime(
       );
 
       return;
+
 
     case "message":
       updateRuntime(
@@ -435,13 +519,16 @@ function applyConnectorEventToRuntime(
   }
 }
 
+
 function applyConnectorStatus(
   pluginId: PluginId,
   status: ConnectorStatus,
   detail: string | undefined,
   updateRuntime: UpdateRuntime,
 ): void {
-  switch (status) {
+  switch (
+    status
+  ) {
     case "connecting":
       updateRuntime(
         pluginId,
@@ -453,11 +540,13 @@ function applyConnectorStatus(
             detail ??
             "接続処理を実行しています",
 
-          errorMessage: undefined,
+          errorMessage:
+            undefined,
         },
       );
 
       return;
+
 
     case "connected":
       updateRuntime(
@@ -470,11 +559,13 @@ function applyConnectorStatus(
             detail ??
             "サービスへ接続しました",
 
-          errorMessage: undefined,
+          errorMessage:
+            undefined,
         },
       );
 
       return;
+
 
     case "disconnecting":
       updateRuntime(
@@ -487,11 +578,13 @@ function applyConnectorStatus(
             detail ??
             "切断処理を実行しています",
 
-          errorMessage: undefined,
+          errorMessage:
+            undefined,
         },
       );
 
       return;
+
 
     case "disconnected":
       updateRuntime(
@@ -504,11 +597,13 @@ function applyConnectorStatus(
             detail ??
             "サービスへ接続されていません",
 
-          errorMessage: undefined,
+          errorMessage:
+            undefined,
         },
       );
 
       return;
+
 
     case "error":
       updateRuntime(
@@ -528,6 +623,7 @@ function applyConnectorStatus(
       );
   }
 }
+
 
 export const runtimeBootstrap =
   new RuntimeBootstrap();

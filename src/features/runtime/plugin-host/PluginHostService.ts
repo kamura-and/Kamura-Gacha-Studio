@@ -15,32 +15,47 @@ import type {
   PluginHostUnsubscribe,
 } from "./types";
 
+
 const NODE_COMMAND_NAME =
   "node-plugin-host";
 
 const PLUGIN_HOST_SCRIPT_PATH =
   "../plugin-host/dist/index.js";
 
+
 export class PluginHostService {
-  private state: PluginHostState =
+  private state:
+    PluginHostState =
     "stopped";
 
-  private child: Child | null =
+  private child:
+    Child | null =
     null;
 
   private readonly messageListeners =
-    new Set<PluginHostMessageListener>();
+    new Set<
+      PluginHostMessageListener
+    >();
 
-  getState(): PluginHostState {
+
+  public getState():
+  PluginHostState {
     return this.state;
   }
 
-  isRunning(): boolean {
-    return this.state === "running";
+
+  public isRunning():
+  boolean {
+    return (
+      this.state ===
+      "running"
+    );
   }
 
-  onMessage(
-    listener: PluginHostMessageListener,
+
+  public onMessage(
+    listener:
+      PluginHostMessageListener,
   ): PluginHostUnsubscribe {
     this.messageListeners.add(
       listener,
@@ -53,8 +68,13 @@ export class PluginHostService {
     };
   }
 
-  async start(): Promise<void> {
-    if (this.state !== "stopped") {
+
+  public async start():
+  Promise<void> {
+    if (
+      this.state !==
+      "stopped"
+    ) {
       return;
     }
 
@@ -70,18 +90,24 @@ export class PluginHostService {
           ],
         );
 
+
       command.stdout.on(
         "data",
-        (line: string) => {
+        (
+          line: string,
+        ) => {
           this.handleStdoutLine(
             line,
           );
         },
       );
 
+
       command.stderr.on(
         "data",
-        (line: string) => {
+        (
+          line: string,
+        ) => {
           console.info(
             "[PluginHost:stderr]",
             line,
@@ -89,9 +115,12 @@ export class PluginHostService {
         },
       );
 
+
       command.on(
         "error",
-        (error: string) => {
+        (
+          error: string,
+        ) => {
           console.error(
             "[PluginHost:error]",
             error,
@@ -99,9 +128,12 @@ export class PluginHostService {
         },
       );
 
+
       command.on(
         "close",
-        (data) => {
+        (
+          data,
+        ) => {
           console.log(
             "[PluginHost:close]",
             data,
@@ -115,11 +147,13 @@ export class PluginHostService {
         },
       );
 
+
       this.child =
         await command.spawn();
 
       this.state =
         "running";
+
 
       console.log(
         "[PluginHostService] Plugin Host spawned with Node.js.",
@@ -131,7 +165,9 @@ export class PluginHostService {
             PLUGIN_HOST_SCRIPT_PATH,
         },
       );
-    } catch (error: unknown) {
+    } catch (
+      error: unknown
+    ) {
       this.child =
         null;
 
@@ -147,10 +183,14 @@ export class PluginHostService {
     }
   }
 
-  async stop(): Promise<void> {
+
+  public async stop():
+  Promise<void> {
     if (
-      this.state !== "running"
-      || this.child === null
+      this.state !==
+        "running" ||
+      this.child ===
+        null
     ) {
       return;
     }
@@ -173,7 +213,9 @@ export class PluginHostService {
       console.log(
         "[PluginHostService] Plugin Host stopped.",
       );
-    } catch (error: unknown) {
+    } catch (
+      error: unknown
+    ) {
       this.state =
         "running";
 
@@ -186,12 +228,15 @@ export class PluginHostService {
     }
   }
 
-  async sendCommand(
-    command: PluginHostCommand,
+
+  public async sendCommand(
+    command:
+      PluginHostCommand,
   ): Promise<void> {
     if (
-      !this.isRunning()
-      || this.child === null
+      !this.isRunning() ||
+      this.child ===
+        null
     ) {
       throw new Error(
         "Plugin Host is not running.",
@@ -199,7 +244,9 @@ export class PluginHostService {
     }
 
     const serializedCommand =
-      `${JSON.stringify(command)}\n`;
+      `${JSON.stringify(
+        command,
+      )}\n`;
 
     await this.child.write(
       serializedCommand,
@@ -211,6 +258,7 @@ export class PluginHostService {
     );
   }
 
+
   private handleStdoutLine(
     line: string,
   ): void {
@@ -218,7 +266,8 @@ export class PluginHostService {
       line.trim();
 
     if (
-      trimmedLine.length === 0
+      trimmedLine.length ===
+      0
     ) {
       return;
     }
@@ -237,7 +286,9 @@ export class PluginHostService {
       this.emitMessage(
         message,
       );
-    } catch (error: unknown) {
+    } catch (
+      error: unknown
+    ) {
       console.warn(
         "[PluginHostService] Invalid stdout message.",
         {
@@ -247,14 +298,18 @@ export class PluginHostService {
           error:
             error instanceof Error
               ? error.message
-              : String(error),
+              : String(
+                  error,
+                ),
         },
       );
     }
   }
 
+
   private emitMessage(
-    message: PluginHostMessage,
+    message:
+      PluginHostMessage,
   ): void {
     for (
       const listener
@@ -264,7 +319,9 @@ export class PluginHostService {
         listener(
           message,
         );
-      } catch (error: unknown) {
+      } catch (
+        error: unknown
+      ) {
         console.error(
           "[PluginHostService] Message listener failed.",
           error,
@@ -273,3 +330,14 @@ export class PluginHostService {
     }
   }
 }
+
+
+/**
+ * Kamura Gacha Studio内で共有する
+ * Plugin Hostの唯一のインスタンス。
+ *
+ * main.tsx、Runtime、各Serviceから
+ * 同じPlugin Hostへアクセスする。
+ */
+export const pluginHostService =
+  new PluginHostService();

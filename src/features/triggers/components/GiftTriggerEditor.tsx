@@ -1,4 +1,5 @@
 import {
+  RefreshCw,
   Search,
 } from "lucide-react";
 
@@ -6,30 +7,43 @@ import type {
   GiftDefinition,
 } from "@/features/triggers/gifts/giftDefinitions";
 
+
 type GiftTriggerEditorProps = {
   gifts: GiftDefinition[];
   selectedGiftId: string;
   minimumCount: number;
   searchQuery: string;
+
+  isGiftCatalogSyncing?: boolean;
+  giftCatalogSyncMessage?: string;
+
   onSearchQueryChange: (
     value: string,
   ) => void;
+
   onGiftChange: (
     giftId: string,
   ) => void;
+
   onMinimumCountChange: (
     value: number,
   ) => void;
+
+  onGiftCatalogSync?: () => void;
 };
+
 
 export function GiftTriggerEditor({
   gifts,
   selectedGiftId,
   minimumCount,
   searchQuery,
+  isGiftCatalogSyncing = false,
+  giftCatalogSyncMessage,
   onSearchQueryChange,
   onGiftChange,
   onMinimumCountChange,
+  onGiftCatalogSync,
 }: GiftTriggerEditorProps) {
   return (
     <section className="space-y-5">
@@ -43,10 +57,47 @@ export function GiftTriggerEditor({
         </p>
       </div>
 
+
       <div>
-        <label className="text-sm font-black text-slate-700">
-          ギフト
-        </label>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label className="text-sm font-black text-slate-700">
+            ギフト
+          </label>
+
+          {onGiftCatalogSync ? (
+            <button
+              type="button"
+              onClick={
+                onGiftCatalogSync
+              }
+              disabled={
+                isGiftCatalogSyncing
+              }
+              className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-black text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RefreshCw
+                size={15}
+                className={
+                  isGiftCatalogSyncing
+                    ? "animate-spin"
+                    : undefined
+                }
+              />
+
+              {isGiftCatalogSyncing
+                ? "更新中..."
+                : "ギフト一覧更新"}
+            </button>
+          ) : null}
+        </div>
+
+
+        {giftCatalogSyncMessage ? (
+          <p className="mt-2 text-xs font-bold text-slate-500">
+            {giftCatalogSyncMessage}
+          </p>
+        ) : null}
+
 
         <div className="relative mt-2">
           <Search
@@ -56,8 +107,12 @@ export function GiftTriggerEditor({
 
           <input
             type="search"
-            value={searchQuery}
-            onChange={(event) =>
+            value={
+              searchQuery
+            }
+            onChange={(
+              event,
+            ) =>
               onSearchQueryChange(
                 event.target.value,
               )
@@ -67,54 +122,69 @@ export function GiftTriggerEditor({
           />
         </div>
 
+
         <div className="mt-3 grid max-h-72 gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
-          {gifts.map((gift) => {
-            const isSelected =
-              gift.id === selectedGiftId;
+          {gifts.map(
+            (
+              gift,
+            ) => {
+              const isSelected =
+                gift.id ===
+                selectedGiftId;
 
-            return (
-              <button
-                key={gift.id}
-                type="button"
-                onClick={() =>
-                  onGiftChange(gift.id)
-                }
-                className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition ${
-                  isSelected
-                    ? "border-violet-400 bg-violet-50 ring-4 ring-violet-100"
-                    : "border-slate-200 bg-white hover:border-violet-200 hover:bg-violet-50/40"
-                }`}
-              >
-                <GiftArtwork
-                  gift={gift}
-                />
-
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-black text-slate-900">
-                    {gift.name}
-                  </p>
-
-                  <p className="mt-1 text-xs font-bold text-slate-400">
-                    {gift.coinValue !==
-                    undefined
-                      ? `${gift.coinValue}コイン`
-                      : "コイン数未取得"}
-                  </p>
-                </div>
-
-                <span
-                  className={`size-4 shrink-0 rounded-full border-4 ${
+              return (
+                <button
+                  key={
+                    gift.id
+                  }
+                  type="button"
+                  onClick={
+                    () =>
+                      onGiftChange(
+                        gift.id,
+                      )
+                  }
+                  className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition ${
                     isSelected
-                      ? "border-violet-600 bg-white"
-                      : "border-slate-300 bg-white"
+                      ? "border-violet-400 bg-violet-50 ring-4 ring-violet-100"
+                      : "border-slate-200 bg-white hover:border-violet-200 hover:bg-violet-50/40"
                   }`}
-                />
-              </button>
-            );
-          })}
+                >
+                  <GiftArtwork
+                    gift={
+                      gift
+                    }
+                  />
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-black text-slate-900">
+                      {gift.name}
+                    </p>
+
+                    <p className="mt-1 text-xs font-bold text-slate-400">
+                      {gift.coinValue !==
+                      undefined
+                        ? `${gift.coinValue}コイン`
+                        : "コイン数未取得"}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`size-4 shrink-0 rounded-full border-4 ${
+                      isSelected
+                        ? "border-violet-600 bg-white"
+                        : "border-slate-300 bg-white"
+                    }`}
+                  />
+                </button>
+              );
+            },
+          )}
         </div>
 
-        {gifts.length === 0 ? (
+
+        {gifts.length ===
+        0 ? (
           <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
             <p className="text-sm font-black text-slate-600">
               該当するギフトがありません
@@ -127,6 +197,7 @@ export function GiftTriggerEditor({
         ) : null}
       </div>
 
+
       <label className="grid gap-2">
         <span className="text-sm font-black text-slate-700">
           個数
@@ -137,17 +208,26 @@ export function GiftTriggerEditor({
             type="number"
             min={1}
             step={1}
-            value={minimumCount}
-            onChange={(event) => {
-              const parsedValue = Number(
-                event.target.value,
-              );
+            value={
+              minimumCount
+            }
+            onChange={(
+              event,
+            ) => {
+              const parsedValue =
+                Number(
+                  event.target.value,
+                );
 
               onMinimumCountChange(
-                Number.isFinite(parsedValue)
+                Number.isFinite(
+                  parsedValue,
+                )
                   ? Math.max(
                       1,
-                      Math.floor(parsedValue),
+                      Math.floor(
+                        parsedValue,
+                      ),
                     )
                   : 1,
               );
@@ -164,20 +244,28 @@ export function GiftTriggerEditor({
   );
 }
 
+
 type GiftArtworkProps = {
   gift: GiftDefinition;
 };
 
+
 function GiftArtwork({
   gift,
 }: GiftArtworkProps) {
-  if (gift.imageUrl) {
+  if (
+    gift.imageUrl
+  ) {
     return (
       <img
-        src={gift.imageUrl}
+        src={
+          gift.imageUrl
+        }
         alt=""
         className="size-14 shrink-0 rounded-2xl border border-slate-100 bg-white object-contain p-1"
-        onError={(event) => {
+        onError={(
+          event,
+        ) => {
           event.currentTarget.style.display =
             "none";
         }}

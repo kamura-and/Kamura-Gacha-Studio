@@ -3,14 +3,6 @@ import {
 } from "react";
 
 import {
-    fetchTikFinityGiftCatalog,
-} from "@/features/triggers/gifts/TikFinityGiftCatalogClient";
-
-import {
-    applyGiftCatalogSync,
-} from "@/features/triggers/gifts/GiftCatalogSyncService";
-
-import {
     mapTikFinityMessage,
 } from "../plugins/tikfinity/TikFinityEventMapper";
 
@@ -57,18 +49,6 @@ export function RuntimeDebugPanel() {
     const [
         errorMessage,
         setErrorMessage,
-    ] = useState<
-        string | undefined
-    >();
-
-    const [
-        giftCatalogRoomId,
-        setGiftCatalogRoomId,
-    ] = useState("");
-
-    const [
-        giftCatalogSyncMessage,
-        setGiftCatalogSyncMessage,
     ] = useState<
         string | undefined
     >();
@@ -201,144 +181,6 @@ export function RuntimeDebugPanel() {
         };
 
 
-    /**
-     * Gift Catalog同期処理を
-     * LIVEなしで確認する。
-     */
-    const handleGiftCatalogSyncTest =
-        () => {
-            try {
-                applyGiftCatalogSync([
-                    {
-                        id:
-                            "5655",
-
-                        name:
-                            "バラ",
-
-                        coinValue:
-                            1,
-
-                        source:
-                            "tikfinity",
-
-                        status:
-                            "active",
-                    },
-                ]);
-
-                console.log(
-                    "[RuntimeDebugPanel] Gift Catalog sync test completed.",
-                    {
-                        giftId:
-                            "5655",
-
-                        giftName:
-                            "バラ",
-                    },
-                );
-
-                setGiftCatalogSyncMessage(
-                    "テスト用Gift Catalogを同期しました。",
-                );
-
-                setErrorMessage(
-                    undefined,
-                );
-            } catch (
-                error
-            ) {
-                const message =
-                    error instanceof Error
-                        ? error.message
-                        : "Gift Catalog同期テストに失敗しました。";
-
-                setGiftCatalogSyncMessage(
-                    undefined,
-                );
-
-                setErrorMessage(
-                    message,
-                );
-            }
-        };
-
-
-    /**
-     * 指定したRoom IDを使って
-     * TikFinity Gift Catalog APIから
-     * 実際のGift Catalogを取得する。
-     */
-    const handleFetchGiftCatalog =
-        async () => {
-            const roomId =
-                giftCatalogRoomId.trim();
-
-            if (
-                roomId.length ===
-                0
-            ) {
-                setErrorMessage(
-                    "TikFinity Room IDを入力してください。",
-                );
-
-                return;
-            }
-
-            try {
-                setGiftCatalogSyncMessage(
-                    "TikFinity Gift Catalogを取得しています...",
-                );
-
-                setErrorMessage(
-                    undefined,
-                );
-
-                const gifts =
-                    await fetchTikFinityGiftCatalog({
-                        roomId,
-                    });
-
-                applyGiftCatalogSync(
-                    gifts,
-                );
-
-                console.log(
-                    "[RuntimeDebugPanel] TikFinity Gift Catalog synced.",
-                    {
-                        roomId,
-
-                        giftCount:
-                            gifts.length,
-                    },
-                );
-
-                setGiftCatalogSyncMessage(
-                    `${gifts.length}件のGift Catalogを同期しました。`,
-                );
-
-                setErrorMessage(
-                    undefined,
-                );
-            } catch (
-                error
-            ) {
-                const message =
-                    error instanceof Error
-                        ? error.message
-                        : "TikFinity Gift Catalogの取得に失敗しました。";
-
-                setGiftCatalogSyncMessage(
-                    undefined,
-                );
-
-                setErrorMessage(
-                    message,
-                );
-            }
-        };
-
-
     return (
         <section className="space-y-6">
             <header>
@@ -391,80 +233,7 @@ export function RuntimeDebugPanel() {
                         >
                             TikFinity バラ
                         </button>
-
-                        <button
-                            type="button"
-                            onClick={
-                                handleGiftCatalogSyncTest
-                            }
-                            className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700 transition hover:bg-emerald-100"
-                        >
-                            Gift Catalog同期テスト
-                        </button>
                     </div>
-                </div>
-
-
-                <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div>
-                        <h3 className="text-sm font-black text-slate-900">
-                            TikFinity Gift Catalog
-                        </h3>
-
-                        <p className="mt-1 text-xs font-medium text-slate-500">
-                            Room IDを指定して、
-                            TikFinityから実際のギフト一覧を取得します。
-                        </p>
-                    </div>
-
-
-                    <div className="mt-4 flex flex-wrap items-end gap-2">
-                        <label className="min-w-64 flex-1">
-                            <span className="mb-1 block text-xs font-black text-slate-500">
-                                TikFinity Room ID
-                            </span>
-
-                            <input
-                                type="text"
-                                value={
-                                    giftCatalogRoomId
-                                }
-                                onChange={
-                                    (
-                                        event,
-                                    ) => {
-                                        setGiftCatalogRoomId(
-                                            event.target.value,
-                                        );
-                                    }
-                                }
-                                placeholder="例: 7680129533424503553"
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-900 outline-none transition focus:border-violet-400"
-                            />
-                        </label>
-
-                        <button
-                            type="button"
-                            onClick={
-                                handleFetchGiftCatalog
-                            }
-                            disabled={
-                                giftCatalogRoomId.trim().length ===
-                                0
-                            }
-                            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            TikFinity Gift Catalog取得
-                        </button>
-                    </div>
-
-
-                    {giftCatalogSyncMessage !==
-                        undefined && (
-                        <p className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
-                            {giftCatalogSyncMessage}
-                        </p>
-                    )}
                 </div>
 
 

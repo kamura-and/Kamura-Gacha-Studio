@@ -9,6 +9,22 @@ import type {
     GiftCatalogItem,
 } from "@/features/triggers/gifts/GiftCatalog";
 
+
+const LEGACY_MANUAL_GIFT_IDS =
+    new Set([
+        "rose",
+        "finger-heart",
+        "doughnut",
+        "corgi",
+        "swan",
+        "galaxy",
+        "money-gun",
+        "whale",
+        "yellow-car",
+        "hat-and-mustache",
+    ]);
+
+
 type GiftCatalogState = {
     gifts: GiftCatalogItem[];
 
@@ -28,25 +44,22 @@ type GiftCatalogState = {
         giftId: string,
         status: GiftCatalogItem["status"],
     ) => void;
+
+    removeLegacyManualGifts: () => void;
 };
+
 
 export const useGiftCatalogStore =
     create<GiftCatalogState>()(
         persist(
             (set) => ({
                 gifts: [],
+
                 initializeDefaults: (
                     gifts,
                 ) => {
                     set(
                         (state) => ({
-                            /*
-                             * 既存Catalogを維持しながら、
-                             * 未登録の初期ギフトだけ追加する。
-                             *
-                             * すでに同期・更新されたギフトを
-                             * manual定義で上書きしない。
-                             */
                             gifts:
                                 gifts.reduce(
                                     (
@@ -55,12 +68,16 @@ export const useGiftCatalogStore =
                                     ) => {
                                         const exists =
                                             currentGifts.some(
-                                                (currentGift) =>
+                                                (
+                                                    currentGift,
+                                                ) =>
                                                     currentGift.id ===
                                                     gift.id,
                                             );
 
-                                        if (exists) {
+                                        if (
+                                            exists
+                                        ) {
                                             return currentGifts;
                                         }
 
@@ -74,6 +91,7 @@ export const useGiftCatalogStore =
                         }),
                     );
                 },
+
                 upsertGift: (
                     gift,
                 ) => {
@@ -117,7 +135,9 @@ export const useGiftCatalogStore =
                         (state) => ({
                             gifts:
                                 state.gifts.map(
-                                    (gift) =>
+                                    (
+                                        gift,
+                                    ) =>
                                         gift.id ===
                                             giftId
                                             ? {
@@ -125,6 +145,26 @@ export const useGiftCatalogStore =
                                                 status,
                                             }
                                             : gift,
+                                ),
+                        }),
+                    );
+                },
+
+                removeLegacyManualGifts: () => {
+                    set(
+                        (state) => ({
+                            gifts:
+                                state.gifts.filter(
+                                    (
+                                        gift,
+                                    ) =>
+                                        !(
+                                            gift.source ===
+                                                "manual" &&
+                                            LEGACY_MANUAL_GIFT_IDS.has(
+                                                gift.id,
+                                            )
+                                        ),
                                 ),
                         }),
                     );
@@ -150,13 +190,16 @@ export const useGiftCatalogStore =
         ),
     );
 
+
 function upsertGiftIntoList(
     gifts: GiftCatalogItem[],
     incomingGift: GiftCatalogItem,
 ): GiftCatalogItem[] {
     const existingIndex =
         gifts.findIndex(
-            (gift) =>
+            (
+                gift,
+            ) =>
                 gift.id ===
                 incomingGift.id,
         );
@@ -191,6 +234,7 @@ function upsertGiftIntoList(
     );
 }
 
+
 function mergeGift(
     existingGift: GiftCatalogItem,
     incomingGift: GiftCatalogItem,
@@ -199,18 +243,10 @@ function mergeGift(
         ...existingGift,
         ...incomingGift,
 
-        /*
-         * 初回発見日時は、
-         * 後から同期しても上書きしない。
-         */
         firstSeenAt:
             existingGift.firstSeenAt ??
             incomingGift.firstSeenAt,
 
-        /*
-         * aliasesは双方を維持しつつ
-         * 重複を取り除く。
-         */
         aliases:
             mergeAliases(
                 existingGift.aliases,
@@ -218,6 +254,7 @@ function mergeGift(
             ),
     };
 }
+
 
 function mergeAliases(
     current:
