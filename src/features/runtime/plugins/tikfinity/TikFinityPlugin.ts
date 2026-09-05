@@ -168,6 +168,12 @@ export class TikFinityPlugin
         rawData: unknown,
         publish: PublishRuntimeEvent,
     ): void {
+        console.info(
+            "[TikFinityPlugin]",
+            "Raw WebSocket message",
+            rawData,
+        );
+
         const message =
             parseTikFinityMessage(
                 rawData,
@@ -178,7 +184,7 @@ export class TikFinityPlugin
         }
 
 
-        console.debug(
+        console.info(
             "[TikFinityPlugin]",
             "Message received",
             message,
@@ -251,7 +257,7 @@ function parseTikFinityMessage(
                 rawData,
             );
     } catch (
-        error
+    error
     ) {
         console.warn(
             "[TikFinityPlugin]",

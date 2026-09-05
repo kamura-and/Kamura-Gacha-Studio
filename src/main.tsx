@@ -51,7 +51,7 @@ if (isMainWindow) {
     (message) => {
       if (
         message.type ===
-          "plugin-host.ready" &&
+        "plugin-host.ready" &&
         !pluginListRequested
       ) {
         pluginListRequested =
@@ -77,7 +77,7 @@ if (isMainWindow) {
              * tiktok.connectを戻します。
              */
           } catch (
-            error: unknown
+          error: unknown
           ) {
             console.error(
               "[PluginHostService] Failed to initialize Plugin Host.",
@@ -203,6 +203,23 @@ if (isMainWindow) {
         );
       },
     );
+
+ void pluginHost
+  .start()
+  .catch(
+    (error: unknown) => {
+      console.error(
+        "[PluginHostService] Failed to start Plugin Host.",
+        error,
+      );
+    },
+  );
+
+/*
+ * PresentationからOverlayへの送信処理は
+ * メインウィンドウだけで起動します。
+ */
+startPresentationOverlayBridge();
 
   /*
    * PresentationからOverlayへの送信処理は
