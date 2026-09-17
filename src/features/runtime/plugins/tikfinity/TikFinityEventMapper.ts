@@ -88,7 +88,6 @@ export function mapTikFinityMessage(
         return null;
     }
 
-
     return mapGiftEvent(
         message.data,
     );
@@ -103,6 +102,11 @@ function mapGiftEvent(
     rawData: unknown,
 ): RuntimeEvent | null {
     if (!isRecord(rawData)) {
+        console.warn(
+            "[GIFT]",
+            "Invalid payload",
+        );
+
         return null;
     }
 
@@ -119,13 +123,19 @@ function mapGiftEvent(
 
     if (!giftId) {
         console.warn(
-            "[TikFinityEventMapper]",
+            "[GIFT]",
             "giftIdが存在しないgiftイベントを無視しました。",
-            rawData,
         );
 
         return null;
     }
+
+
+    const giftName =
+        firstNonEmptyString(
+            data.giftName,
+            giftId,
+        );
 
 
     const repeatCount =
@@ -166,6 +176,12 @@ function mapGiftEvent(
         );
 
 
+    const groupId =
+        toOptionalString(
+            data.groupId,
+        );
+
+
     const comboKey =
         createComboKey(
             data,
@@ -200,37 +216,57 @@ function mapGiftEvent(
      * repeatEnd:trueの終了通知など、
      * 新しいギフトが増えていないイベントは
      * RuntimeEventを発行しない。
+     *
+     * 正常なコンボ終了通知なので、
+     * 通常Consoleには出さない。
      */
     if (
         triggerCount <=
         0
     ) {
-        console.info(
-            "[TikFinityEventMapper]",
-            "追加ギフト数が0のためイベントを無視しました。",
-            {
-                giftId,
-                userId,
-                comboKey,
-                repeatCount,
-                repeatEnd,
-            },
-        );
-
         return null;
     }
 
 
+    const diamondCount =
+        toNonNegativeNumber(
+            data.diamondCount,
+            0,
+        );
+
+
+    /*
+     * 配信中の主要診断ログ。
+     *
+     * raw payload全体ではなく、
+     * Gift → Runtimeの確認に必要な情報だけを
+     * 1つのobjectへまとめる。
+     */
     console.info(
-        "[TikFinityEventMapper]",
-        "ギフト発動数を計算しました。",
+        "[GIFT]",
         {
+            giftName,
             giftId,
+
+            count:
+                triggerCount,
+
+            total:
+                repeatCount,
+
+            user:
+                userName,
+
             userId,
-            comboKey,
-            repeatCount,
+
+            coins:
+                diamondCount,
+
             repeatEnd,
-            triggerCount,
+
+            groupId:
+                groupId ??
+                null,
         },
     );
 
@@ -258,11 +294,7 @@ function mapGiftEvent(
         payload: {
             giftId,
 
-            giftName:
-                firstNonEmptyString(
-                    data.giftName,
-                    giftId,
-                ),
+            giftName,
 
             userId,
 
@@ -276,11 +308,7 @@ function mapGiftEvent(
             repeatCount:
                 triggerCount,
 
-            diamondCount:
-                toNonNegativeNumber(
-                    data.diamondCount,
-                    0,
-                ),
+            diamondCount,
 
             repeatEnd,
         },

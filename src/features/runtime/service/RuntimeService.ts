@@ -1,51 +1,55 @@
 import type {
-  Trigger,
+    Trigger,
 } from "@/features/triggers/types/Trigger";
 
 import {
-  TriggerAccumulator,
+    TriggerAccumulator,
 } from "../accumulator/TriggerAccumulator";
 
 import {
-  executeTrigger,
+    executeTrigger,
 } from "../engine/RuntimeEngine";
 
 import type {
-  RuntimeEngineDependencies,
-  RuntimeExecutionResult,
+    RuntimeEngineDependencies,
+    RuntimeExecutionResult,
 } from "../engine/RuntimeEngine";
 
 import type {
-  RuntimeEvent,
+    RuntimeEvent,
 } from "../types/RuntimeEvent";
 
+
 type FindEnabledTriggers =
-  () => Trigger[];
+    () => Trigger[];
+
 
 export type RuntimeServiceDependencies =
-  RuntimeEngineDependencies & {
-    findEnabledTriggers:
-      FindEnabledTriggers;
+    RuntimeEngineDependencies & {
+        findEnabledTriggers:
+            FindEnabledTriggers;
 
-    triggerAccumulator?:
-      TriggerAccumulator;
-  };
+        triggerAccumulator?:
+            TriggerAccumulator;
+    };
+
 
 export type RuntimeEventProcessingResult = {
-  eventId: string;
+    eventId: string;
 
-  /**
-   * 今回実際に発動したTriggerの数。
-   *
-   * every-thresholdで同じTriggerが
-   * 複数回発動した場合は、
-   * その発動回数も含む。
-   */
-  matchedTriggerCount: number;
+    /**
+     * 今回実際に発動したTriggerの数。
+     *
+     * every-thresholdで同じTriggerが
+     * 複数回発動した場合は、
+     * その発動回数も含む。
+     */
+    matchedTriggerCount: number;
 
-  executions:
-    RuntimeExecutionResult[];
+    executions:
+        RuntimeExecutionResult[];
 };
+
 
 /**
  * RuntimeEventの処理全体を統括する。
@@ -61,95 +65,165 @@ export type RuntimeEventProcessingResult = {
  * TriggerAccumulatorが保持する。
  */
 export class RuntimeService {
-  private readonly findEnabledTriggers:
-    FindEnabledTriggers;
+    private readonly findEnabledTriggers:
+        FindEnabledTriggers;
 
-  private readonly triggerAccumulator:
-    TriggerAccumulator;
+    private readonly triggerAccumulator:
+        TriggerAccumulator;
 
-  private readonly engineDependencies:
-    RuntimeEngineDependencies;
+    private readonly engineDependencies:
+        RuntimeEngineDependencies;
 
-  public constructor(
-    dependencies:
-      RuntimeServiceDependencies,
-  ) {
-    this.findEnabledTriggers =
-      dependencies.findEnabledTriggers;
 
-    this.triggerAccumulator =
-      dependencies.triggerAccumulator ??
-      new TriggerAccumulator();
+    public constructor(
+        dependencies:
+            RuntimeServiceDependencies,
+    ) {
+        this.findEnabledTriggers =
+            dependencies.findEnabledTriggers;
 
-    this.engineDependencies = {
-      findPoolById:
-        dependencies.findPoolById,
 
-      findEffectById:
-        dependencies.findEffectById,
+        this.triggerAccumulator =
+            dependencies.triggerAccumulator ??
+            new TriggerAccumulator();
 
-      buildEffectCommands:
-        dependencies.buildEffectCommands,
 
-      enqueueCommands:
-        dependencies.enqueueCommands,
+        this.engineDependencies = {
+            findPoolById:
+                dependencies.findPoolById,
 
-      random:
-        dependencies.random,
-    };
-  }
+            findEffectById:
+                dependencies.findEffectById,
 
-  /**
-   * RuntimeEventを1件処理する。
-   */
-  public processRuntimeEvent(
-    event: RuntimeEvent,
-  ): RuntimeEventProcessingResult {
-    const enabledTriggers =
-      this.findEnabledTriggers();
+            buildEffectCommands:
+                dependencies.buildEffectCommands,
 
-    const activatedTriggers =
-      this.triggerAccumulator.evaluate(
-        event,
-        enabledTriggers,
-      );
+            enqueueCommands:
+                dependencies.enqueueCommands,
 
-    const executions =
-      activatedTriggers.map(
-        (trigger) =>
-          executeTrigger(
-            trigger,
-            this.engineDependencies,
-          ),
-      );
+            random:
+                dependencies.random,
+        };
+    }
 
-    return {
-      eventId:
-        event.id,
 
-      matchedTriggerCount:
-        activatedTriggers.length,
+    /**
+     * RuntimeEventを1件処理する。
+     */
+    public processRuntimeEvent(
+        event: RuntimeEvent,
+    ): RuntimeEventProcessingResult {
+        const enabledTriggers =
+            this.findEnabledTriggers();
 
-      executions,
-    };
-  }
 
-  /**
-   * すべてのTrigger累積状態を初期化する。
-   */
-  public reset(): void {
-    this.triggerAccumulator.reset();
-  }
+        const activatedTriggers =
+            this.triggerAccumulator.evaluate(
+                event,
+                enabledTriggers,
+            );
 
-  /**
-   * 指定したTriggerの累積状態だけを
-   * 初期化する。
-   */
-  public resetTrigger(
-    triggerId: string,
-  ): void {
-    this.triggerAccumulator.resetTrigger(
-      triggerId,
-    );
-  }
+
+        /*
+         * Trigger判定の主要診断ログ。
+         *
+         * Gift受信後に
+         * 「Triggerまで到達したか」
+         * 「何件発動したか」
+         * を配信中でも追跡しやすくする。
+         */
+        if (
+            activatedTriggers.length >
+            0
+        ) {
+            console.info(
+                "[TRIGGER]",
+                "matched",
+                {
+                    eventId:
+                        event.id,
+
+                    category:
+                        event.category,
+
+                    type:
+                        event.type,
+
+                    matchedTriggerCount:
+                        activatedTriggers.length,
+
+                    triggers:
+                        activatedTriggers.map(
+                            (trigger) => ({
+                                id:
+                                    trigger.id,
+
+                                name:
+                                    trigger.name,
+                            }),
+                        ),
+                },
+            );
+        } else {
+            console.info(
+                "[TRIGGER]",
+                "unmatched",
+                {
+                    eventId:
+                        event.id,
+
+                    category:
+                        event.category,
+
+                    type:
+                        event.type,
+
+                    matchedTriggerCount:
+                        0,
+                },
+            );
+        }
+
+
+        const executions =
+            activatedTriggers.map(
+                (trigger) =>
+                    executeTrigger(
+                        trigger,
+                        this.engineDependencies,
+                    ),
+            );
+
+
+        return {
+            eventId:
+                event.id,
+
+            matchedTriggerCount:
+                activatedTriggers.length,
+
+            executions,
+        };
+    }
+
+
+    /**
+     * すべてのTrigger累積状態を初期化する。
+     */
+    public reset(): void {
+        this.triggerAccumulator.reset();
+    }
+
+
+    /**
+     * 指定したTriggerの累積状態だけを
+     * 初期化する。
+     */
+    public resetTrigger(
+        triggerId: string,
+    ): void {
+        this.triggerAccumulator.resetTrigger(
+            triggerId,
+        );
+    }
 }

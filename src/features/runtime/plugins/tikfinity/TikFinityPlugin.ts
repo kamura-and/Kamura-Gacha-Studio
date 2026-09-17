@@ -68,7 +68,7 @@ export class TikFinityPlugin
             "open",
             () => {
                 console.info(
-                    "[TikFinityPlugin]",
+                    "[TikFinity]",
                     "Connected",
                     TIKFINITY_WEBSOCKET_URL,
                 );
@@ -95,7 +95,7 @@ export class TikFinityPlugin
                 event,
             ) => {
                 console.error(
-                    "[TikFinityPlugin]",
+                    "[TikFinity]",
                     "WebSocket error",
                     event,
                 );
@@ -107,7 +107,7 @@ export class TikFinityPlugin
             "close",
             () => {
                 console.info(
-                    "[TikFinityPlugin]",
+                    "[TikFinity]",
                     "Disconnected",
                 );
 
@@ -173,18 +173,17 @@ export class TikFinityPlugin
     /**
      * TikFinity WebSocketから受信した
      * メッセージを処理する。
+     *
+     * 通常イベントでは巨大なraw payloadを
+     * Consoleへ出さない。
+     *
+     * 必要な情報だけをイベント種別ごとに
+     * 短い診断ログとして残す。
      */
     private handleMessage(
         rawData: unknown,
         publish: PublishRuntimeEvent,
     ): void {
-        console.info(
-            "[TikFinityPlugin]",
-            "Raw WebSocket message",
-            rawData,
-        );
-
-
         const message =
             parseTikFinityMessage(
                 rawData,
@@ -194,18 +193,6 @@ export class TikFinityPlugin
         if (!message) {
             return;
         }
-
-
-        console.info(
-            "[TikFinityPlugin]",
-            "Message received",
-            message,
-        );
-
-
-        logMessageShape(
-            message,
-        );
 
 
         /*
@@ -229,6 +216,14 @@ export class TikFinityPlugin
                 isLive !==
                 undefined
             ) {
+                console.info(
+                    "[LIVE]",
+                    isLive
+                        ? "Started"
+                        : "Ended",
+                );
+
+
                 tikFinityLiveSessionService
                     .handleLiveStatusChange(
                         isLive,
@@ -238,11 +233,10 @@ export class TikFinityPlugin
 
 
         /*
-         * Room ID調査用ログ。
+         * TikFinity payload内にRoom ID候補が
+         * 含まれていた場合のみ記録する。
          *
-         * TikFinity payloadから直接Room IDを
-         *取得できる可能性の確認用として、
-         * 現時点では残しておく。
+         * 通常イベントでは何も出さない。
          */
         const roomId =
             findRoomIdCandidate(
@@ -252,8 +246,8 @@ export class TikFinityPlugin
 
         if (roomId) {
             console.info(
-                "[TikFinityPlugin]",
-                "Room ID candidate detected",
+                "[TikFinity]",
+                "Room ID candidate",
                 {
                     event:
                         message.event,
@@ -266,10 +260,10 @@ export class TikFinityPlugin
 
         /*
          * gift等のRuntimeEvent変換は
-         * これまでどおりMapperへ任せる。
+         * Mapperへ任せる。
          *
-         * liveStatusChangeがRuntimeEventへ
-         * 変換されない場合も問題ない。
+         * Giftの詳細診断ログも
+         * Mapper側で出す。
          */
         const runtimeEvent =
             mapTikFinityMessage(
@@ -282,20 +276,32 @@ export class TikFinityPlugin
         }
 
 
-        console.info(
-            "[TikFinityPlugin]",
-            "RuntimeEvent published",
-            {
-                eventId:
-                    runtimeEvent.id,
+        /*
+         * GiftについてはMapper側で
+         * 詳細な[GIFT]ログを出すため、
+         * ここでは重複ログを出さない。
+         *
+         * 将来gift以外のRuntimeEventが
+         * 追加された場合のみpublishを記録する。
+         */
+        if (
+            runtimeEvent.category !==
+            "gift"
+        ) {
+            console.info(
+                "[EVENT]",
+                {
+                    eventId:
+                        runtimeEvent.id,
 
-                category:
-                    runtimeEvent.category,
+                    category:
+                        runtimeEvent.category,
 
-                type:
-                    runtimeEvent.type,
-            },
-        );
+                    type:
+                        runtimeEvent.type,
+                },
+            );
+        }
 
 
         publish(
@@ -320,7 +326,7 @@ function parseTikFinityMessage(
         "string"
     ) {
         console.warn(
-            "[TikFinityPlugin]",
+            "[TikFinity]",
             "文字列ではないWebSocketメッセージを無視しました。",
             rawData,
         );
@@ -342,7 +348,7 @@ function parseTikFinityMessage(
         error
     ) {
         console.warn(
-            "[TikFinityPlugin]",
+            "[TikFinity]",
             "WebSocketメッセージのJSON解析に失敗しました。",
             {
                 rawData,
@@ -360,7 +366,7 @@ function parseTikFinityMessage(
         )
     ) {
         console.warn(
-            "[TikFinityPlugin]",
+            "[TikFinity]",
             "TikFinityメッセージ形式ではないデータを無視しました。",
             parsed,
         );
@@ -421,7 +427,7 @@ function readLiveStatus(
         )
     ) {
         console.warn(
-            "[TikFinityPlugin]",
+            "[TikFinity]",
             "liveStatusChangeのdataがobjectではありません。",
             value,
         );
@@ -435,7 +441,7 @@ function readLiveStatus(
         "boolean"
     ) {
         console.warn(
-            "[TikFinityPlugin]",
+            "[TikFinity]",
             "liveStatusChangeにisLiveがありません。",
             value,
         );
@@ -449,46 +455,12 @@ function readLiveStatus(
 
 
 /**
- * TikFinityから届いたイベントの
- * data直下に存在するキーをログへ出す。
- *
- * Room IDの実payload確認用。
- */
-function logMessageShape(
-    message: TikFinityMessage,
-): void {
-    if (
-        !isRecord(
-            message.data,
-        )
-    ) {
-        return;
-    }
-
-
-    console.info(
-        "[TikFinityPlugin]",
-        "Message shape",
-        {
-            event:
-                message.event,
-
-            dataKeys:
-                Object.keys(
-                    message.data,
-                ),
-        },
-    );
-}
-
-
-/**
  * TikFinity payload内から
  * Room IDらしい値を探す。
  *
  * 現段階では調査用。
  * ここで見つかった値を正式なRoom IDとして
- * 保存・利用する処理はまだ行わない。
+ * 保存・利用する処理は行わない。
  */
 function findRoomIdCandidate(
     value: unknown,
