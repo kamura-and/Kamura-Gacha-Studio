@@ -53,7 +53,7 @@ export function GiftTriggerEditor({
         </h3>
 
         <p className="mt-1 text-sm leading-6 text-slate-500">
-          画像と名前を確認して、発動対象のギフトを選択します。
+          画像・名前・コイン数・IDを確認して、発動対象のギフトを選択します。
         </p>
       </div>
 
@@ -161,12 +161,25 @@ export function GiftTriggerEditor({
                       {gift.name}
                     </p>
 
-                    <p className="mt-1 text-xs font-bold text-slate-400">
-                      {gift.coinValue !==
-                      undefined
-                        ? `${gift.coinValue}コイン`
-                        : "コイン数未取得"}
-                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="text-xs font-bold text-slate-500">
+                        {gift.coinValue !==
+                        undefined
+                          ? `${gift.coinValue}コイン`
+                          : "コイン数未取得"}
+                      </span>
+
+                      <span
+                        aria-hidden="true"
+                        className="text-xs font-bold text-slate-300"
+                      >
+                        ・
+                      </span>
+
+                      <span className="font-mono text-[11px] font-bold text-slate-400">
+                        ID: {gift.id}
+                      </span>
+                    </div>
                   </div>
 
                   <span

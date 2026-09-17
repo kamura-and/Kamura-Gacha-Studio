@@ -15,6 +15,10 @@ import type {
     TikFinityMessage,
 } from "./TikFinityEventMapper";
 
+import {
+    tikFinityLiveSessionService,
+} from "./TikFinityLiveSessionService";
+
 
 const TIKFINITY_WEBSOCKET_URL =
     "ws://localhost:21213/";
@@ -49,10 +53,12 @@ export class TikFinityPlugin
             return;
         }
 
+
         const socket =
             new WebSocket(
                 TIKFINITY_WEBSOCKET_URL,
             );
+
 
         this.socket =
             socket;
@@ -105,6 +111,7 @@ export class TikFinityPlugin
                     "Disconnected",
                 );
 
+
                 if (
                     this.socket ===
                     socket
@@ -124,12 +131,15 @@ export class TikFinityPlugin
         const socket =
             this.socket;
 
+
         this.socket =
             undefined;
+
 
         if (!socket) {
             return;
         }
+
 
         socket.close();
     }
@@ -139,7 +149,7 @@ export class TikFinityPlugin
      * WebSocket接続済みか返す。
      */
     public isConnected():
-        boolean {
+    boolean {
         return (
             this.socket?.readyState ===
             WebSocket.OPEN
@@ -152,7 +162,7 @@ export class TikFinityPlugin
      * または接続済みか返す。
      */
     public isStarted():
-        boolean {
+    boolean {
         return (
             this.socket !==
             undefined
@@ -174,10 +184,12 @@ export class TikFinityPlugin
             rawData,
         );
 
+
         const message =
             parseTikFinityMessage(
                 rawData,
             );
+
 
         if (!message) {
             return;
@@ -196,10 +208,47 @@ export class TikFinityPlugin
         );
 
 
+        /*
+         * LIVE開始 / 終了イベントだけを
+         * LiveSessionServiceへ通知する。
+         *
+         * Room ID取得やGift Catalog同期は
+         * TikFinityPlugin自身では行わない。
+         */
+        if (
+            message.event ===
+            "liveStatusChange"
+        ) {
+            const isLive =
+                readLiveStatus(
+                    message.data,
+                );
+
+
+            if (
+                isLive !==
+                undefined
+            ) {
+                tikFinityLiveSessionService
+                    .handleLiveStatusChange(
+                        isLive,
+                    );
+            }
+        }
+
+
+        /*
+         * Room ID調査用ログ。
+         *
+         * TikFinity payloadから直接Room IDを
+         *取得できる可能性の確認用として、
+         * 現時点では残しておく。
+         */
         const roomId =
             findRoomIdCandidate(
                 message.data,
             );
+
 
         if (roomId) {
             console.info(
@@ -215,10 +264,18 @@ export class TikFinityPlugin
         }
 
 
+        /*
+         * gift等のRuntimeEvent変換は
+         * これまでどおりMapperへ任せる。
+         *
+         * liveStatusChangeがRuntimeEventへ
+         * 変換されない場合も問題ない。
+         */
         const runtimeEvent =
             mapTikFinityMessage(
                 message,
             );
+
 
         if (!runtimeEvent) {
             return;
@@ -275,6 +332,7 @@ function parseTikFinityMessage(
     let parsed:
         unknown;
 
+
     try {
         parsed =
             JSON.parse(
@@ -324,9 +382,9 @@ function isTikFinityMessage(
 ): value is TikFinityMessage {
     if (
         typeof value !==
-        "object" ||
+            "object" ||
         value ===
-        null ||
+            null ||
         Array.isArray(
             value,
         )
@@ -344,9 +402,49 @@ function isTikFinityMessage(
 
     return (
         typeof record.event ===
-        "string" &&
+            "string" &&
         "data" in record
     );
+}
+
+
+/**
+ * liveStatusChange.dataから
+ * LIVE状態を安全に取得する。
+ */
+function readLiveStatus(
+    value: unknown,
+): boolean | undefined {
+    if (
+        !isRecord(
+            value,
+        )
+    ) {
+        console.warn(
+            "[TikFinityPlugin]",
+            "liveStatusChangeのdataがobjectではありません。",
+            value,
+        );
+
+        return undefined;
+    }
+
+
+    if (
+        typeof value.isLive !==
+        "boolean"
+    ) {
+        console.warn(
+            "[TikFinityPlugin]",
+            "liveStatusChangeにisLiveがありません。",
+            value,
+        );
+
+        return undefined;
+    }
+
+
+    return value.isLive;
 }
 
 
@@ -366,6 +464,7 @@ function logMessageShape(
     ) {
         return;
     }
+
 
     console.info(
         "[TikFinityPlugin]",
@@ -411,6 +510,7 @@ function findRoomIdCandidate(
             value.roomid,
         );
 
+
     if (directRoomId) {
         return directRoomId;
     }
@@ -418,6 +518,7 @@ function findRoomIdCandidate(
 
     const roomInfo =
         value.roomInfo;
+
 
     if (
         isRecord(
@@ -433,6 +534,7 @@ function findRoomIdCandidate(
                 roomInfo.id,
             );
 
+
         if (roomInfoId) {
             return roomInfoId;
         }
@@ -441,6 +543,7 @@ function findRoomIdCandidate(
 
     const room =
         value.room;
+
 
     if (
         isRecord(
@@ -455,6 +558,7 @@ function findRoomIdCandidate(
                 room.roomid,
                 room.id,
             );
+
 
         if (roomId) {
             return roomId;
@@ -483,14 +587,16 @@ function firstIdValue(
             const trimmed =
                 value.trim();
 
+
             if (trimmed) {
                 return trimmed;
             }
         }
 
+
         if (
             typeof value ===
-            "number" &&
+                "number" &&
             Number.isFinite(
                 value,
             )
@@ -500,6 +606,7 @@ function firstIdValue(
             );
         }
     }
+
 
     return undefined;
 }

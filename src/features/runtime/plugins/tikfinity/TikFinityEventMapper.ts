@@ -1,6 +1,10 @@
 import type {
-  RuntimeEvent,
+    RuntimeEvent,
 } from "../../types/RuntimeEvent";
+
+import {
+    tikFinityGiftComboTracker,
+} from "./TikFinityGiftComboTracker";
 
 
 /**
@@ -8,51 +12,63 @@ import type {
  * WebSocketメッセージの基本形式。
  */
 export type TikFinityMessage = {
-  event: string;
-  data: unknown;
+    event: string;
+    data: unknown;
 };
 
 
 /**
- * giftイベントで利用する最低限のデータ。
+ * giftイベントで利用するデータ。
  *
  * 実際のTikFinity payloadには
- * これ以外のフィールドが含まれる可能性がある。
+ * これ以外のフィールドも含まれる。
  */
 export type TikFinityGiftData = {
-  giftId?: string | number;
-  giftName?: string;
+    giftId?: string | number;
+    giftName?: string;
 
-  repeatCount?: number;
+    repeatCount?: number;
 
-  /**
-   * TikFinity側でbooleanの可能性があるほか、
-   * TikTok LIVE由来では0 / 1で届くケースもあるため
-   * 両方を許容する。
-   */
-  repeatEnd?:
-    | boolean
-    | number;
+    /**
+     * TikFinity側でbooleanの可能性があるほか、
+     * TikTok LIVE由来では0 / 1で届くケースもあるため
+     * 両方を許容する。
+     */
+    repeatEnd?:
+        | boolean
+        | number;
 
-  diamondCount?: number;
+    diamondCount?: number;
 
-  /**
-   * TikFinity payloadに存在する場合のみ利用する。
-   *
-   * 未確認のためoptional。
-   */
-  combo?: boolean;
+    /**
+     * payloadに存在する場合のみ利用する。
+     *
+     * 実payloadではcomboが存在しない場合でも
+     * repeatCount / repeatEndによって
+     * コンボ状態を判定できる。
+     */
+    combo?: boolean;
 
-  userId?: string;
-  uniqueId?: string;
-  nickname?: string;
+    /**
+     * 同一コンボを識別するために利用する。
+     *
+     * 実payloadではコンボ中、
+     * 同じgroupIdが維持される。
+     */
+    groupId?:
+        | string
+        | number;
 
-  user?: {
     userId?: string;
-    id?: string;
     uniqueId?: string;
     nickname?: string;
-  };
+
+    user?: {
+        userId?: string;
+        id?: string;
+        uniqueId?: string;
+        nickname?: string;
+    };
 };
 
 
@@ -63,18 +79,19 @@ export type TikFinityGiftData = {
  * 現段階ではgiftイベントのみ対応する。
  */
 export function mapTikFinityMessage(
-  message: TikFinityMessage,
+    message: TikFinityMessage,
 ): RuntimeEvent | null {
-  if (
-    message.event !==
-    "gift"
-  ) {
-    return null;
-  }
+    if (
+        message.event !==
+        "gift"
+    ) {
+        return null;
+    }
 
-  return mapGiftEvent(
-    message.data,
-  );
+
+    return mapGiftEvent(
+        message.data,
+    );
 }
 
 
@@ -83,133 +100,241 @@ export function mapTikFinityMessage(
  * RuntimeEventへ変換する。
  */
 function mapGiftEvent(
-  rawData: unknown,
+    rawData: unknown,
 ): RuntimeEvent | null {
-  if (!isRecord(rawData)) {
-    return null;
-  }
-
-  const data =
-    rawData as TikFinityGiftData;
-
-  const giftId =
-    toOptionalString(
-      data.giftId,
-    );
-
-  if (!giftId) {
-    console.warn(
-      "[TikFinityEventMapper]",
-      "giftIdが存在しないgiftイベントを無視しました。",
-      rawData,
-    );
-
-    return null;
-  }
+    if (!isRecord(rawData)) {
+        return null;
+    }
 
 
-  const repeatEnd =
-    normalizeRepeatEnd(
-      data.repeatEnd,
-    );
+    const data =
+        rawData as TikFinityGiftData;
 
 
-  /**
-   * コンボ可能ギフトで、
-   * まだ連打途中の場合はRuntimeEventへ流さない。
-   *
-   * TikFinity payloadにcomboが存在しない場合は
-   * 従来どおり処理する。
-   */
-  if (
-    data.combo === true &&
-    repeatEnd === false
-  ) {
-    return null;
-  }
+    const giftId =
+        toOptionalString(
+            data.giftId,
+        );
 
 
-  const user =
-    data.user;
+    if (!giftId) {
+        console.warn(
+            "[TikFinityEventMapper]",
+            "giftIdが存在しないgiftイベントを無視しました。",
+            rawData,
+        );
 
-  const userId =
-    firstNonEmptyString(
-      data.userId,
-      user?.userId,
-      user?.id,
-      data.uniqueId,
-      user?.uniqueId,
-      "unknown",
-    );
-
-  const userName =
-    firstNonEmptyString(
-      data.nickname,
-      user?.nickname,
-      data.uniqueId,
-      user?.uniqueId,
-      userId,
-    );
+        return null;
+    }
 
 
-  return {
-    id:
-      createEventId(
-        giftId,
-      ),
-
-    category:
-      "gift",
-
-    type:
-      "gift",
-
-    source: {
-      kind:
-        "plugin",
-
-      pluginId:
-        "tiktok-live",
-    },
-
-    payload: {
-      giftId,
-
-      giftName:
-        firstNonEmptyString(
-          data.giftName,
-          giftId,
-        ),
-
-      userId,
-
-      userName,
-
-      repeatCount:
+    const repeatCount =
         toPositiveInteger(
-          data.repeatCount,
-          1,
-        ),
+            data.repeatCount,
+            1,
+        );
 
-      diamondCount:
-        toNonNegativeNumber(
-          data.diamondCount,
-          0,
-        ),
 
-      repeatEnd,
-    },
+    const repeatEnd =
+        normalizeRepeatEnd(
+            data.repeatEnd,
+        );
 
-    occurredAt:
-      Date.now(),
 
-    metadata: {
-      tags: [
-        "tikfinity",
-        "tiktok-live",
-      ],
-    },
-  };
+    const user =
+        data.user;
+
+
+    const userId =
+        firstNonEmptyString(
+            data.userId,
+            user?.userId,
+            user?.id,
+            data.uniqueId,
+            user?.uniqueId,
+            "unknown",
+        );
+
+
+    const userName =
+        firstNonEmptyString(
+            data.nickname,
+            user?.nickname,
+            data.uniqueId,
+            user?.uniqueId,
+            userId,
+        );
+
+
+    const comboKey =
+        createComboKey(
+            data,
+            giftId,
+            userId,
+        );
+
+
+    /*
+     * TikFinityのrepeatCountは
+     * コンボ中の累積値。
+     *
+     * 例:
+     *
+     * 1 → 2 → 3 → 3(repeatEnd:true)
+     *
+     * この場合、
+     *
+     * 1回 → 1回 → 1回 → 0回
+     *
+     * としてRuntimeへ流す。
+     */
+    const triggerCount =
+        tikFinityGiftComboTracker.consume(
+            comboKey,
+            repeatCount,
+            repeatEnd,
+        );
+
+
+    /*
+     * repeatEnd:trueの終了通知など、
+     * 新しいギフトが増えていないイベントは
+     * RuntimeEventを発行しない。
+     */
+    if (
+        triggerCount <=
+        0
+    ) {
+        console.info(
+            "[TikFinityEventMapper]",
+            "追加ギフト数が0のためイベントを無視しました。",
+            {
+                giftId,
+                userId,
+                comboKey,
+                repeatCount,
+                repeatEnd,
+            },
+        );
+
+        return null;
+    }
+
+
+    console.info(
+        "[TikFinityEventMapper]",
+        "ギフト発動数を計算しました。",
+        {
+            giftId,
+            userId,
+            comboKey,
+            repeatCount,
+            repeatEnd,
+            triggerCount,
+        },
+    );
+
+
+    return {
+        id:
+            createEventId(
+                giftId,
+            ),
+
+        category:
+            "gift",
+
+        type:
+            "gift",
+
+        source: {
+            kind:
+                "plugin",
+
+            pluginId:
+                "tiktok-live",
+        },
+
+        payload: {
+            giftId,
+
+            giftName:
+                firstNonEmptyString(
+                    data.giftName,
+                    giftId,
+                ),
+
+            userId,
+
+            userName,
+
+            /*
+             * Runtimeへ渡すrepeatCountは
+             * TikFinityの累積値ではなく、
+             * 今回新しく追加されたギフト数。
+             */
+            repeatCount:
+                triggerCount,
+
+            diamondCount:
+                toNonNegativeNumber(
+                    data.diamondCount,
+                    0,
+                ),
+
+            repeatEnd,
+        },
+
+        occurredAt:
+            Date.now(),
+
+        metadata: {
+            tags: [
+                "tikfinity",
+                "tiktok-live",
+            ],
+        },
+    };
+}
+
+
+/**
+ * 同一コンボを識別するキーを作る。
+ *
+ * groupIdが存在する場合は最優先で利用する。
+ *
+ * groupIdが無いpayloadとの互換性のため、
+ * userId + giftIdへフォールバックする。
+ */
+function createComboKey(
+    data: TikFinityGiftData,
+    giftId: string,
+    userId: string,
+): string {
+    const groupId =
+        toOptionalString(
+            data.groupId,
+        );
+
+
+    if (groupId) {
+        return [
+            "group",
+            groupId,
+        ].join(
+            ":",
+        );
+    }
+
+
+    return [
+        "user",
+        userId,
+        "gift",
+        giftId,
+    ].join(
+        ":",
+    );
 }
 
 
@@ -217,17 +342,20 @@ function mapGiftEvent(
  * unknownが通常のobjectか確認する。
  */
 function isRecord(
-  value: unknown,
-): value is Record<string, unknown> {
-  return (
-    typeof value ===
-      "object" &&
-    value !==
-      null &&
-    !Array.isArray(
-      value,
-    )
-  );
+    value: unknown,
+): value is Record<
+    string,
+    unknown
+> {
+    return (
+        typeof value ===
+            "object" &&
+        value !==
+            null &&
+        !Array.isArray(
+            value,
+        )
+    );
 }
 
 
@@ -235,37 +363,40 @@ function isRecord(
  * string / numberを文字列へ変換する。
  */
 function toOptionalString(
-  value:
-    | string
-    | number
-    | undefined,
+    value:
+        | string
+        | number
+        | undefined,
 ): string | undefined {
-  if (
-    typeof value ===
-    "string"
-  ) {
-    const trimmed =
-      value.trim();
+    if (
+        typeof value ===
+        "string"
+    ) {
+        const trimmed =
+            value.trim();
 
-    return (
-      trimmed ||
-      undefined
-    );
-  }
 
-  if (
-    typeof value ===
-    "number" &&
-    Number.isFinite(
-      value,
-    )
-  ) {
-    return String(
-      value,
-    );
-  }
+        return (
+            trimmed ||
+            undefined
+        );
+    }
 
-  return undefined;
+
+    if (
+        typeof value ===
+            "number" &&
+        Number.isFinite(
+            value,
+        )
+    ) {
+        return String(
+            value,
+        );
+    }
+
+
+    return undefined;
 }
 
 
@@ -273,30 +404,33 @@ function toOptionalString(
  * 最初に見つかった空でない文字列を返す。
  */
 function firstNonEmptyString(
-  ...values:
-    Array<
-      string | undefined
-    >
+    ...values:
+        Array<
+            string | undefined
+        >
 ): string {
-  for (
-    const value of values
-  ) {
-    if (
-      typeof value !==
-      "string"
+    for (
+        const value of values
     ) {
-      continue;
+        if (
+            typeof value !==
+            "string"
+        ) {
+            continue;
+        }
+
+
+        const trimmed =
+            value.trim();
+
+
+        if (trimmed) {
+            return trimmed;
+        }
     }
 
-    const trimmed =
-      value.trim();
 
-    if (trimmed) {
-      return trimmed;
-    }
-  }
-
-  return "unknown";
+    return "unknown";
 }
 
 
@@ -304,25 +438,26 @@ function firstNonEmptyString(
  * 1以上の整数へ正規化する。
  */
 function toPositiveInteger(
-  value: unknown,
-  fallback: number,
+    value: unknown,
+    fallback: number,
 ): number {
-  if (
-    typeof value !==
-      "number" ||
-    !Number.isFinite(
-      value,
-    )
-  ) {
-    return fallback;
-  }
+    if (
+        typeof value !==
+            "number" ||
+        !Number.isFinite(
+            value,
+        )
+    ) {
+        return fallback;
+    }
 
-  return Math.max(
-    1,
-    Math.floor(
-      value,
-    ),
-  );
+
+    return Math.max(
+        1,
+        Math.floor(
+            value,
+        ),
+    );
 }
 
 
@@ -330,23 +465,24 @@ function toPositiveInteger(
  * 0以上の数値へ正規化する。
  */
 function toNonNegativeNumber(
-  value: unknown,
-  fallback: number,
+    value: unknown,
+    fallback: number,
 ): number {
-  if (
-    typeof value !==
-      "number" ||
-    !Number.isFinite(
-      value,
-    )
-  ) {
-    return fallback;
-  }
+    if (
+        typeof value !==
+            "number" ||
+        !Number.isFinite(
+            value,
+        )
+    ) {
+        return fallback;
+    }
 
-  return Math.max(
-    0,
-    value,
-  );
+
+    return Math.max(
+        0,
+        value,
+    );
 }
 
 
@@ -354,53 +490,58 @@ function toNonNegativeNumber(
  * repeatEndをbooleanへ正規化する。
  *
  * true / 1
- *   → true
+ * → true
  *
  * false / 0
- *   → false
+ * → false
  *
  * undefinedや想定外の値
- *   → true
+ * → true
  *
- * 従来のTikFinityイベントとの互換性を優先し、
- * 値が無い場合は「確定済み」として扱う。
+ * repeatEndが存在しない通常ギフトは
+ * 1イベントで完結したものとして扱う。
  */
 function normalizeRepeatEnd(
-  value:
-    | boolean
-    | number
-    | undefined,
+    value:
+        | boolean
+        | number
+        | undefined,
 ): boolean {
-  if (
-    value === true ||
-    value === 1
-  ) {
+    if (
+        value === true ||
+        value === 1
+    ) {
+        return true;
+    }
+
+
+    if (
+        value === false ||
+        value === 0
+    ) {
+        return false;
+    }
+
+
     return true;
-  }
-
-  if (
-    value === false ||
-    value === 0
-  ) {
-    return false;
-  }
-
-  return true;
 }
 
 
 function createEventId(
-  giftId: string,
+    giftId: string,
 ): string {
-  return [
-    "tiktok-live",
-    "gift",
-    giftId,
-    Date.now(),
-    Math.random()
-      .toString(36)
-      .slice(2, 8),
-  ].join(
-    "-",
-  );
+    return [
+        "tiktok-live",
+        "gift",
+        giftId,
+        Date.now(),
+        Math.random()
+            .toString(36)
+            .slice(
+                2,
+                8,
+            ),
+    ].join(
+        "-",
+    );
 }

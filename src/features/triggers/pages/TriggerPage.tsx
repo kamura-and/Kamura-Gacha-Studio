@@ -12,10 +12,12 @@ import {
 } from "lucide-react";
 
 import { usePoolStore } from "@/features/pools/store/poolStore";
-import { useTriggerStore } from "@/features/triggers/store/triggerStore";
 import { TriggerFormModal } from "@/features/triggers/components/TriggerFormModal";
+import { useGiftCatalogStore } from "@/features/triggers/gifts/giftCatalogStore";
+import { useTriggerStore } from "@/features/triggers/store/triggerStore";
 import type { Trigger } from "@/features/triggers/types/Trigger";
 import type { TriggerCondition } from "@/features/triggers/types/TriggerCondition";
+
 
 export function TriggerPage() {
   const triggers = useTriggerStore(
@@ -46,6 +48,10 @@ export function TriggerPage() {
     (state) => state.pools,
   );
 
+  const gifts = useGiftCatalogStore(
+    (state) => state.gifts,
+  );
+
   const loadPools = usePoolStore(
     (state) => state.loadPools,
   );
@@ -59,6 +65,7 @@ export function TriggerPage() {
   const [editingTrigger, setEditingTrigger] =
     useState<Trigger | null>(null);
 
+
   useEffect(() => {
     loadTriggers();
     loadPools();
@@ -66,6 +73,7 @@ export function TriggerPage() {
     loadPools,
     loadTriggers,
   ]);
+
 
   const filteredTriggers = useMemo(() => {
     const normalizedQuery = searchQuery
@@ -98,6 +106,10 @@ export function TriggerPage() {
             formatConditionValue(
               condition.value,
             ),
+            formatConditionLabel(
+              condition,
+              gifts,
+            ),
           ],
         ),
       ]
@@ -109,10 +121,12 @@ export function TriggerPage() {
       );
     });
   }, [
+    gifts,
     pools,
     searchQuery,
     triggers,
   ]);
+
 
   const enabledCount = useMemo(
     () =>
@@ -122,6 +136,7 @@ export function TriggerPage() {
       ).length,
     [triggers],
   );
+
 
   const handleDelete = (
     trigger: Trigger,
@@ -137,6 +152,7 @@ export function TriggerPage() {
     deleteTrigger(trigger.id);
   };
 
+
   const handleToggleEnabled = (
     trigger: Trigger,
   ) => {
@@ -146,10 +162,12 @@ export function TriggerPage() {
     );
   };
 
+
   const handleOpenCreate = () => {
     setEditingTrigger(null);
     setIsFormOpen(true);
   };
+
 
   const handleOpenEdit = (
     trigger: Trigger,
@@ -158,10 +176,12 @@ export function TriggerPage() {
     setIsFormOpen(true);
   };
 
+
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setEditingTrigger(null);
   };
+
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -197,6 +217,7 @@ export function TriggerPage() {
         </div>
       </section>
 
+
       <section className="grid gap-4 sm:grid-cols-3">
         <SummaryCard
           label="登録条件"
@@ -224,6 +245,7 @@ export function TriggerPage() {
         />
       </section>
 
+
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="relative max-w-lg">
           <Search
@@ -239,11 +261,12 @@ export function TriggerPage() {
                 event.target.value,
               )
             }
-            placeholder="条件名・イベント・ガチャ箱を検索"
+            placeholder="条件名・イベント・ガチャ箱・ギフトを検索"
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-100"
           />
         </div>
       </section>
+
 
       <section>
         {filteredTriggers.length > 0 ? (
@@ -270,10 +293,11 @@ export function TriggerPage() {
                           </h2>
 
                           <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-black ${trigger.enabled
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-slate-100 text-slate-500"
-                              }`}
+                            className={`rounded-full px-2.5 py-1 text-xs font-black ${
+                              trigger.enabled
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-slate-100 text-slate-500"
+                            }`}
                           >
                             {trigger.enabled
                               ? "有効"
@@ -290,7 +314,11 @@ export function TriggerPage() {
                       <div className="flex shrink-0 items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => handleOpenEdit(trigger)}
+                          onClick={() =>
+                            handleOpenEdit(
+                              trigger,
+                            )
+                          }
                           aria-label={`${trigger.name}を編集`}
                           className="flex size-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-violet-600"
                         >
@@ -311,6 +339,7 @@ export function TriggerPage() {
                         </button>
                       </div>
                     </header>
+
 
                     <div className="space-y-4 p-5">
                       <div className="grid gap-3 sm:grid-cols-2">
@@ -335,13 +364,14 @@ export function TriggerPage() {
                         />
                       </div>
 
+
                       <div>
                         <p className="mb-2 text-xs font-black text-slate-400">
                           条件
                         </p>
 
                         {trigger.conditions.length >
-                          0 ? (
+                        0 ? (
                           <div className="space-y-2">
                             {trigger.conditions.map(
                               (
@@ -356,6 +386,7 @@ export function TriggerPage() {
                                   <p className="break-words text-sm font-bold text-slate-700">
                                     {formatConditionLabel(
                                       condition,
+                                      gifts,
                                     )}
                                   </p>
                                 </div>
@@ -368,6 +399,7 @@ export function TriggerPage() {
                           </div>
                         )}
                       </div>
+
 
                       <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-4">
                         <div>
@@ -391,16 +423,18 @@ export function TriggerPage() {
                               trigger,
                             )
                           }
-                          className={`relative h-7 w-12 shrink-0 rounded-full transition ${trigger.enabled
-                            ? "bg-violet-600"
-                            : "bg-slate-300"
-                            }`}
+                          className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+                            trigger.enabled
+                              ? "bg-violet-600"
+                              : "bg-slate-300"
+                          }`}
                         >
                           <span
-                            className={`absolute top-1 size-5 rounded-full bg-white shadow-sm transition ${trigger.enabled
-                              ? "left-6"
-                              : "left-1"
-                              }`}
+                            className={`absolute top-1 size-5 rounded-full bg-white shadow-sm transition ${
+                              trigger.enabled
+                                ? "left-6"
+                                : "left-1"
+                            }`}
                           />
                         </button>
                       </div>
@@ -430,6 +464,8 @@ export function TriggerPage() {
           </div>
         )}
       </section>
+
+
       <TriggerFormModal
         isOpen={isFormOpen}
         trigger={editingTrigger}
@@ -448,11 +484,13 @@ export function TriggerPage() {
   );
 }
 
+
 type SummaryCardProps = {
   label: string;
   value: number;
   valueClassName: string;
 };
+
 
 function SummaryCard({
   label,
@@ -474,11 +512,16 @@ function SummaryCard({
   );
 }
 
+
 type InfoBlockProps = {
   label: string;
   value: string;
-  tone?: "default" | "violet" | "warning";
+  tone?:
+    | "default"
+    | "violet"
+    | "warning";
 };
+
 
 function InfoBlock({
   label,
@@ -507,12 +550,18 @@ function InfoBlock({
   );
 }
 
+
+type GiftCatalogGifts = ReturnType<
+  typeof useGiftCatalogStore.getState
+>["gifts"];
+
+
 function formatEventLabel(
   trigger: Trigger,
 ): string {
   if (
     trigger.pluginId ===
-    "tiktok-live" &&
+      "tiktok-live" &&
     trigger.eventCategory === "gift"
   ) {
     return "TikTok LIVE・ギフト";
@@ -537,15 +586,18 @@ function formatEventLabel(
     "すべてのイベント";
 }
 
+
 function formatConditionLabel(
   condition: TriggerCondition,
+  gifts: GiftCatalogGifts,
 ): string {
   if (
     condition.field === "giftId" &&
     condition.operator === "equals"
   ) {
-    return `ギフト：${formatGiftName(
+    return `ギフト：${formatGiftLabel(
       condition.value,
+      gifts,
     )}`;
   }
 
@@ -584,34 +636,35 @@ function formatConditionLabel(
     .join(" ");
 }
 
-function formatGiftName(
+
+function formatGiftLabel(
   value: unknown,
+  gifts: GiftCatalogGifts,
 ): string {
-  if (typeof value !== "string") {
-    return formatConditionValue(
+  const giftId =
+    formatConditionValue(
       value,
     );
+
+  const gift =
+    gifts.find(
+      (candidate) =>
+        candidate.id ===
+        giftId,
+    );
+
+  if (!gift) {
+    return `不明なギフト（ID: ${giftId}）`;
   }
 
-  const giftNames: Record<
-    string,
-    string
-  > = {
-    rose: "バラ",
-    donut: "ドーナッツ",
-    galaxy: "銀河",
-    corgi: "コーギー",
-    swan: "白鳥",
-    fingerHeart:
-      "フィンガーハート",
-    heartPose:
-      "ハートポーズ",
-    moneyGun:
-      "マネーガン",
-  };
+  const coinLabel =
+    gift.coinValue !== undefined
+      ? `${gift.coinValue}コイン`
+      : "コイン数未取得";
 
-  return giftNames[value] ?? value;
+  return `${gift.name}（${coinLabel} / ID: ${gift.id}）`;
 }
+
 
 function formatPluginLabel(
   pluginId:
@@ -632,6 +685,7 @@ function formatPluginLabel(
       return pluginId ?? "";
   }
 }
+
 
 function formatEventCategoryLabel(
   category:
@@ -662,6 +716,7 @@ function formatEventCategoryLabel(
   }
 }
 
+
 function formatConditionFieldLabel(
   field: string,
 ): string {
@@ -682,6 +737,7 @@ function formatConditionFieldLabel(
       return field;
   }
 }
+
 
 function formatConditionOperatorLabel(
   operator:
@@ -734,6 +790,7 @@ function formatConditionOperatorLabel(
       return operator;
   }
 }
+
 
 function formatConditionValue(
   value: unknown,

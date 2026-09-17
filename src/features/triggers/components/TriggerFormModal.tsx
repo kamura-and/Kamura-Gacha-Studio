@@ -15,12 +15,8 @@ import {
 } from "@/features/triggers/components/GiftTriggerEditor";
 
 import {
-  fetchTikFinityGiftCatalog,
-} from "@/features/triggers/gifts/TikFinityGiftCatalogClient";
-
-import {
-  applyGiftCatalogSync,
-} from "@/features/triggers/gifts/GiftCatalogSyncService";
+  tikFinityLiveSessionService,
+} from "@/features/runtime/plugins/tikfinity/TikFinityLiveSessionService";
 
 import {
   useGiftCatalogStore,
@@ -83,6 +79,7 @@ function createInitialState(
     };
   }
 
+
   const giftIdCondition =
     trigger.conditions.find(
       (condition) =>
@@ -92,6 +89,7 @@ function createInitialState(
           "equals",
     );
 
+
   const countCondition =
     trigger.conditions.find(
       (condition) =>
@@ -100,6 +98,7 @@ function createInitialState(
         condition.operator ===
           "greaterThanOrEqual",
     );
+
 
   return {
     name:
@@ -149,6 +148,7 @@ export function TriggerFormModal({
         state.gifts,
     );
 
+
   const [
     form,
     setForm,
@@ -160,23 +160,20 @@ export function TriggerFormModal({
       ),
     );
 
+
   const [
     giftSearchQuery,
     setGiftSearchQuery,
   ] =
     useState("");
 
-  const [
-    giftCatalogRoomId,
-    setGiftCatalogRoomId,
-  ] =
-    useState("");
 
   const [
     isGiftCatalogSyncing,
     setIsGiftCatalogSyncing,
   ] =
     useState(false);
+
 
   const [
     giftCatalogSyncMessage,
@@ -192,6 +189,7 @@ export function TriggerFormModal({
       return;
     }
 
+
     setForm(
       createInitialState(
         trigger,
@@ -199,7 +197,9 @@ export function TriggerFormModal({
       ),
     );
 
+
     setGiftSearchQuery("");
+
     setGiftCatalogSyncMessage(
       undefined,
     );
@@ -217,9 +217,11 @@ export function TriggerFormModal({
           .trim()
           .toLowerCase();
 
+
       if (!normalizedQuery) {
         return gifts;
       }
+
 
       return gifts.filter(
         (gift) =>
@@ -255,45 +257,35 @@ export function TriggerFormModal({
 
   const handleGiftCatalogSync =
     async () => {
-      const roomId =
-        giftCatalogRoomId.trim();
-
-      if (!roomId) {
-        setGiftCatalogSyncMessage(
-          "Room IDを入力してください。",
-        );
-
-        return;
-      }
-
       try {
         setIsGiftCatalogSyncing(
           true,
         );
 
-        setGiftCatalogSyncMessage(
-          "TikFinityからギフト一覧を取得しています...",
-        );
-
-        const syncedGifts =
-          await fetchTikFinityGiftCatalog({
-            roomId,
-          });
-
-        applyGiftCatalogSync(
-          syncedGifts,
-        );
 
         setGiftCatalogSyncMessage(
-          `${syncedGifts.length}件のギフトを更新しました。`,
+          "現在のLIVEを確認してギフト一覧を取得しています...",
         );
+
+
+        const giftCount =
+          await tikFinityLiveSessionService
+            .syncGiftCatalog();
+
+
+        setGiftCatalogSyncMessage(
+          `${giftCount}件のギフトを更新しました。`,
+        );
+
 
         console.log(
           "[TriggerFormModal] TikFinity Gift Catalog synced.",
           {
-            roomId,
-            giftCount:
-              syncedGifts.length,
+            roomId:
+              tikFinityLiveSessionService
+                .getCurrentRoomId(),
+
+            giftCount,
           },
         );
       } catch (error) {
@@ -302,10 +294,12 @@ export function TriggerFormModal({
             ? error.message
             : "TikFinity Gift Catalogの取得に失敗しました。";
 
+
         console.error(
           "[TriggerFormModal] TikFinity Gift Catalog sync failed.",
           error,
         );
+
 
         setGiftCatalogSyncMessage(
           `更新に失敗しました: ${message}`,
@@ -323,6 +317,7 @@ export function TriggerFormModal({
       const trimmedName =
         form.name.trim();
 
+
       if (!trimmedName) {
         window.alert(
           "発動条件の名前を入力してください。",
@@ -330,6 +325,7 @@ export function TriggerFormModal({
 
         return;
       }
+
 
       if (!form.selectedGiftId) {
         window.alert(
@@ -339,6 +335,7 @@ export function TriggerFormModal({
         return;
       }
 
+
       if (!form.gachaPoolId) {
         window.alert(
           "実行するガチャ箱を選択してください。",
@@ -346,6 +343,7 @@ export function TriggerFormModal({
 
         return;
       }
+
 
       const conditions = [
         {
@@ -369,6 +367,7 @@ export function TriggerFormModal({
             form.minimumCount,
         },
       ];
+
 
       const commonInput = {
         name:
@@ -399,6 +398,7 @@ export function TriggerFormModal({
           form.gachaPoolId,
       } satisfies CreateTriggerInput;
 
+
       if (trigger) {
         onUpdate(
           trigger.id,
@@ -409,6 +409,7 @@ export function TriggerFormModal({
           commonInput,
         );
       }
+
 
       onClose();
     };
@@ -439,6 +440,7 @@ export function TriggerFormModal({
                 : "新しい発動条件を作成"}
             </h2>
           </div>
+
 
           <button
             type="button"
@@ -474,6 +476,7 @@ export function TriggerFormModal({
                       current,
                     ) => ({
                       ...current,
+
                       name:
                         event.target.value,
                     }),
@@ -502,6 +505,7 @@ export function TriggerFormModal({
                       current,
                     ) => ({
                       ...current,
+
                       description:
                         event.target.value,
                     }),
@@ -525,6 +529,7 @@ export function TriggerFormModal({
                 </p>
               </div>
 
+
               <input
                 type="checkbox"
                 checked={
@@ -538,6 +543,7 @@ export function TriggerFormModal({
                       current,
                     ) => ({
                       ...current,
+
                       enabled:
                         event.target.checked,
                     }),
@@ -557,6 +563,7 @@ export function TriggerFormModal({
                 />
               </div>
 
+
               <div>
                 <p className="text-xs font-black text-violet-500">
                   イベント種別
@@ -567,45 +574,6 @@ export function TriggerFormModal({
                 </p>
               </div>
             </div>
-          </section>
-
-
-          <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <div>
-              <p className="text-sm font-black text-slate-800">
-                TikFinity ギフト一覧
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                TikFinityのRoom IDを入力すると、現在利用できるギフト一覧を更新できます。
-              </p>
-            </div>
-
-            <label className="mt-4 grid gap-2">
-              <span className="text-xs font-black text-slate-600">
-                Room ID
-              </span>
-
-              <input
-                type="text"
-                inputMode="numeric"
-                value={
-                  giftCatalogRoomId
-                }
-                onChange={(
-                  event,
-                ) =>
-                  setGiftCatalogRoomId(
-                    event.target.value,
-                  )
-                }
-                placeholder="例：7680129533424503553"
-                disabled={
-                  isGiftCatalogSyncing
-                }
-                className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 outline-none transition focus:border-violet-300 focus:ring-4 focus:ring-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
-              />
-            </label>
           </section>
 
 
@@ -650,6 +618,7 @@ export function TriggerFormModal({
                   current,
                 ) => ({
                   ...current,
+
                   selectedGiftId,
                 }),
               )
@@ -663,6 +632,7 @@ export function TriggerFormModal({
                   current,
                 ) => ({
                   ...current,
+
                   minimumCount,
                 }),
               )
@@ -688,6 +658,7 @@ export function TriggerFormModal({
                       current,
                     ) => ({
                       ...current,
+
                       gachaPoolId:
                         event.target.value,
                     }),
@@ -747,6 +718,7 @@ export function TriggerFormModal({
           >
             キャンセル
           </button>
+
 
           <button
             type="button"
