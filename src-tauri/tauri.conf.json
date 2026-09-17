@@ -45,7 +45,14 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$HOME/**",
+          "D:/kamura_v/BGM/non cle/SE/**"
+        ]
+      }
     }
   },
   "bundle": {

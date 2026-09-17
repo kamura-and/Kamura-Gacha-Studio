@@ -144,6 +144,7 @@ async fn send_minecraft_command(
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -169,9 +170,7 @@ pub fn run() {
             } = event
             {
                 if label == "main" {
-                    log::info!(
-                        "メインウィンドウが閉じられたため、アプリケーションを終了します。"
-                    );
+                    log::info!("メインウィンドウが閉じられたため、アプリケーションを終了します。");
 
                     app_handle.exit(0);
                 }

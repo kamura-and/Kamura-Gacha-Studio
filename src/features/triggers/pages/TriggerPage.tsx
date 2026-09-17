@@ -3,6 +3,7 @@ import {
   useMemo,
   useState,
 } from "react";
+
 import {
   Pencil,
   Plus,
@@ -11,59 +12,110 @@ import {
   Zap,
 } from "lucide-react";
 
-import { usePoolStore } from "@/features/pools/store/poolStore";
-import { TriggerFormModal } from "@/features/triggers/components/TriggerFormModal";
-import { useGiftCatalogStore } from "@/features/triggers/gifts/giftCatalogStore";
-import { useTriggerStore } from "@/features/triggers/store/triggerStore";
-import type { Trigger } from "@/features/triggers/types/Trigger";
-import type { TriggerCondition } from "@/features/triggers/types/TriggerCondition";
+import {
+  usePoolStore,
+} from "@/features/pools/store/poolStore";
+
+import {
+  TriggerFormModal,
+} from "@/features/triggers/components/TriggerFormModal";
+
+import {
+  useGiftCatalogStore,
+} from "@/features/triggers/gifts/giftCatalogStore";
+
+import {
+  useTriggerStore,
+} from "@/features/triggers/store/triggerStore";
+
+import type {
+  Trigger,
+  TriggerActivationPolicy,
+  TriggerAggregationScope,
+} from "@/features/triggers/types/Trigger";
+
+import type {
+  TriggerCondition,
+} from "@/features/triggers/types/TriggerCondition";
 
 
 export function TriggerPage() {
-  const triggers = useTriggerStore(
-    (state) => state.triggers,
-  );
+  const triggers =
+    useTriggerStore(
+      (state) =>
+        state.triggers,
+    );
 
-  const loadTriggers = useTriggerStore(
-    (state) => state.loadTriggers,
-  );
+  const loadTriggers =
+    useTriggerStore(
+      (state) =>
+        state.loadTriggers,
+    );
 
-  const deleteTrigger = useTriggerStore(
-    (state) => state.deleteTrigger,
-  );
+  const deleteTrigger =
+    useTriggerStore(
+      (state) =>
+        state.deleteTrigger,
+    );
 
-  const setTriggerEnabled = useTriggerStore(
-    (state) => state.setTriggerEnabled,
-  );
+  const setTriggerEnabled =
+    useTriggerStore(
+      (state) =>
+        state.setTriggerEnabled,
+    );
 
-  const addTrigger = useTriggerStore(
-    (state) => state.addTrigger,
-  );
+  const addTrigger =
+    useTriggerStore(
+      (state) =>
+        state.addTrigger,
+    );
 
-  const updateTrigger = useTriggerStore(
-    (state) => state.updateTrigger,
-  );
+  const updateTrigger =
+    useTriggerStore(
+      (state) =>
+        state.updateTrigger,
+    );
 
-  const pools = usePoolStore(
-    (state) => state.pools,
-  );
+  const pools =
+    usePoolStore(
+      (state) =>
+        state.pools,
+    );
 
-  const gifts = useGiftCatalogStore(
-    (state) => state.gifts,
-  );
+  const gifts =
+    useGiftCatalogStore(
+      (state) =>
+        state.gifts,
+    );
 
-  const loadPools = usePoolStore(
-    (state) => state.loadPools,
-  );
+  const loadPools =
+    usePoolStore(
+      (state) =>
+        state.loadPools,
+    );
 
-  const [searchQuery, setSearchQuery] =
+
+  const [
+    searchQuery,
+    setSearchQuery,
+  ] =
     useState("");
 
-  const [isFormOpen, setIsFormOpen] =
+
+  const [
+    isFormOpen,
+    setIsFormOpen,
+  ] =
     useState(false);
 
-  const [editingTrigger, setEditingTrigger] =
-    useState<Trigger | null>(null);
+
+  const [
+    editingTrigger,
+    setEditingTrigger,
+  ] =
+    useState<Trigger | null>(
+      null,
+    );
 
 
   useEffect(() => {
@@ -75,81 +127,127 @@ export function TriggerPage() {
   ]);
 
 
-  const filteredTriggers = useMemo(() => {
-    const normalizedQuery = searchQuery
-      .trim()
-      .toLowerCase();
+  const filteredTriggers =
+    useMemo(() => {
+      const normalizedQuery =
+        searchQuery
+          .trim()
+          .toLowerCase();
 
-    if (!normalizedQuery) {
-      return triggers;
-    }
 
-    return triggers.filter((trigger) => {
-      const poolName =
-        pools.find(
-          (pool) =>
-            pool.id ===
-            trigger.gachaPoolId,
-        )?.name ?? "";
+      if (!normalizedQuery) {
+        return triggers;
+      }
 
-      const searchableText = [
-        trigger.name,
-        trigger.description ?? "",
-        trigger.pluginId ?? "",
-        trigger.eventCategory ?? "",
-        trigger.eventType ?? "",
-        poolName,
-        ...trigger.conditions.flatMap(
-          (condition) => [
-            condition.field,
-            condition.operator,
-            formatConditionValue(
-              condition.value,
+
+      return triggers.filter(
+        (
+          trigger,
+        ) => {
+          const poolName =
+            pools.find(
+              (
+                pool,
+              ) =>
+                pool.id ===
+                trigger.gachaPoolId,
+            )?.name ??
+            "";
+
+
+          const activationLabel =
+            formatActivationLabel(
+              trigger,
+            );
+
+
+          const aggregationLabel =
+            formatAggregationLabel(
+              trigger,
+            );
+
+
+          const searchableText = [
+            trigger.name,
+            trigger.description ??
+              "",
+            trigger.pluginId ??
+              "",
+            trigger.eventCategory ??
+              "",
+            trigger.eventType ??
+              "",
+            poolName,
+            activationLabel,
+            aggregationLabel,
+
+            ...trigger.conditions.flatMap(
+              (
+                condition,
+              ) => [
+                condition.field,
+                condition.operator,
+
+                formatConditionValue(
+                  condition.value,
+                ),
+
+                formatConditionLabel(
+                  condition,
+                  gifts,
+                ),
+              ],
             ),
-            formatConditionLabel(
-              condition,
-              gifts,
-            ),
-          ],
-        ),
-      ]
-        .join(" ")
-        .toLowerCase();
+          ]
+            .join(" ")
+            .toLowerCase();
 
-      return searchableText.includes(
-        normalizedQuery,
+
+          return searchableText.includes(
+            normalizedQuery,
+          );
+        },
       );
-    });
-  }, [
-    gifts,
-    pools,
-    searchQuery,
-    triggers,
-  ]);
+    }, [
+      gifts,
+      pools,
+      searchQuery,
+      triggers,
+    ]);
 
 
-  const enabledCount = useMemo(
-    () =>
-      triggers.filter(
-        (trigger) =>
-          trigger.enabled,
-      ).length,
-    [triggers],
-  );
+  const enabledCount =
+    useMemo(
+      () =>
+        triggers.filter(
+          (
+            trigger,
+          ) =>
+            trigger.enabled,
+        ).length,
+      [
+        triggers,
+      ],
+    );
 
 
   const handleDelete = (
     trigger: Trigger,
   ) => {
-    const shouldDelete = window.confirm(
-      `「${trigger.name}」を削除しますか？`,
-    );
+    const shouldDelete =
+      window.confirm(
+        `「${trigger.name}」を削除しますか？`,
+      );
+
 
     if (!shouldDelete) {
       return;
     }
 
-    deleteTrigger(trigger.id);
+
+    deleteTrigger(
+      trigger.id,
+    );
   };
 
 
@@ -163,24 +261,41 @@ export function TriggerPage() {
   };
 
 
-  const handleOpenCreate = () => {
-    setEditingTrigger(null);
-    setIsFormOpen(true);
-  };
+  const handleOpenCreate =
+    () => {
+      setEditingTrigger(
+        null,
+      );
+
+      setIsFormOpen(
+        true,
+      );
+    };
 
 
   const handleOpenEdit = (
     trigger: Trigger,
   ) => {
-    setEditingTrigger(trigger);
-    setIsFormOpen(true);
+    setEditingTrigger(
+      trigger,
+    );
+
+    setIsFormOpen(
+      true,
+    );
   };
 
 
-  const handleCloseForm = () => {
-    setIsFormOpen(false);
-    setEditingTrigger(null);
-  };
+  const handleCloseForm =
+    () => {
+      setIsFormOpen(
+        false,
+      );
+
+      setEditingTrigger(
+        null,
+      );
+    };
 
 
   return (
@@ -189,29 +304,41 @@ export function TriggerPage() {
         <div className="flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between lg:p-8">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 px-3 py-1.5 text-xs font-black text-violet-700">
-              <Zap size={14} />
+              <Zap
+                size={14}
+              />
+
               Triggers
             </div>
+
 
             <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
               発動条件
             </h1>
 
+
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
               受信したイベントとガチャ箱を結び付けます。
             </p>
+
 
             <p className="mt-2 text-xs font-semibold text-emerald-600">
               変更内容はこの端末へ自動保存されます。
             </p>
           </div>
 
+
           <button
             type="button"
-            onClick={handleOpenCreate}
+            onClick={
+              handleOpenCreate
+            }
             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 py-3.5 text-sm font-black text-white transition hover:bg-violet-700"
           >
-            <Plus size={18} />
+            <Plus
+              size={18}
+            />
+
             新しい発動条件
           </button>
         </div>
@@ -221,13 +348,17 @@ export function TriggerPage() {
       <section className="grid gap-4 sm:grid-cols-3">
         <SummaryCard
           label="登録条件"
-          value={triggers.length}
+          value={
+            triggers.length
+          }
           valueClassName="text-slate-950"
         />
 
         <SummaryCard
           label="有効な条件"
-          value={enabledCount}
+          value={
+            enabledCount
+          }
           valueClassName="text-emerald-700"
         />
 
@@ -236,7 +367,9 @@ export function TriggerPage() {
           value={
             new Set(
               triggers.map(
-                (trigger) =>
+                (
+                  trigger,
+                ) =>
                   trigger.gachaPoolId,
               ),
             ).size
@@ -255,13 +388,17 @@ export function TriggerPage() {
 
           <input
             type="search"
-            value={searchQuery}
-            onChange={(event) =>
+            value={
+              searchQuery
+            }
+            onChange={(
+              event,
+            ) =>
               setSearchQuery(
                 event.target.value,
               )
             }
-            placeholder="条件名・イベント・ガチャ箱・ギフトを検索"
+            placeholder="条件名・イベント・ガチャ箱・ギフト・発動方法を検索"
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-100"
           />
         </div>
@@ -269,20 +406,28 @@ export function TriggerPage() {
 
 
       <section>
-        {filteredTriggers.length > 0 ? (
+        {filteredTriggers.length >
+        0 ? (
           <div className="grid gap-5 xl:grid-cols-2">
             {filteredTriggers.map(
-              (trigger) => {
+              (
+                trigger,
+              ) => {
                 const pool =
                   pools.find(
-                    (candidate) =>
+                    (
+                      candidate,
+                    ) =>
                       candidate.id ===
                       trigger.gachaPoolId,
                   );
 
+
                 return (
                   <article
-                    key={trigger.id}
+                    key={
+                      trigger.id
+                    }
                     className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
                   >
                     <header className="flex items-start justify-between gap-4 border-b border-slate-100 p-5">
@@ -311,31 +456,38 @@ export function TriggerPage() {
                         </p>
                       </div>
 
+
                       <div className="flex shrink-0 items-center gap-1">
                         <button
                           type="button"
-                          onClick={() =>
-                            handleOpenEdit(
-                              trigger,
-                            )
+                          onClick={
+                            () =>
+                              handleOpenEdit(
+                                trigger,
+                              )
                           }
                           aria-label={`${trigger.name}を編集`}
                           className="flex size-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-violet-600"
                         >
-                          <Pencil size={16} />
+                          <Pencil
+                            size={16}
+                          />
                         </button>
 
                         <button
                           type="button"
-                          onClick={() =>
-                            handleDelete(
-                              trigger,
-                            )
+                          onClick={
+                            () =>
+                              handleDelete(
+                                trigger,
+                              )
                           }
                           aria-label={`${trigger.name}を削除`}
                           className="flex size-10 items-center justify-center rounded-xl text-slate-400 transition hover:bg-rose-100 hover:text-rose-600"
                         >
-                          <Trash2 size={16} />
+                          <Trash2
+                            size={16}
+                          />
                         </button>
                       </div>
                     </header>
@@ -345,9 +497,11 @@ export function TriggerPage() {
                       <div className="grid gap-3 sm:grid-cols-2">
                         <InfoBlock
                           label="イベント"
-                          value={formatEventLabel(
-                            trigger,
-                          )}
+                          value={
+                            formatEventLabel(
+                              trigger,
+                            )
+                          }
                         />
 
                         <InfoBlock
@@ -401,6 +555,31 @@ export function TriggerPage() {
                       </div>
 
 
+                      <div>
+                        <p className="mb-2 text-xs font-black text-slate-400">
+                          発動方法
+                        </p>
+
+                        <div className="rounded-2xl border border-violet-100 bg-violet-50/60 px-4 py-3">
+                          <p className="text-sm font-black text-violet-800">
+                            {formatActivationLabel(
+                              trigger,
+                            )}
+                          </p>
+
+                          {usesAggregation(
+                            trigger,
+                          ) ? (
+                            <p className="mt-1 text-xs font-bold text-violet-500">
+                              {formatAggregationLabel(
+                                trigger,
+                              )}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+
+
                       <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-4">
                         <div>
                           <p className="text-sm font-black text-slate-700">
@@ -418,10 +597,11 @@ export function TriggerPage() {
                           aria-checked={
                             trigger.enabled
                           }
-                          onClick={() =>
-                            handleToggleEnabled(
-                              trigger,
-                            )
+                          onClick={
+                            () =>
+                              handleToggleEnabled(
+                                trigger,
+                              )
                           }
                           className={`relative h-7 w-12 shrink-0 rounded-full transition ${
                             trigger.enabled
@@ -447,18 +627,22 @@ export function TriggerPage() {
         ) : (
           <div className="flex min-h-80 flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white px-6 text-center">
             <div className="flex size-16 items-center justify-center rounded-3xl bg-violet-100 text-violet-600">
-              <Zap size={28} />
+              <Zap
+                size={28}
+              />
             </div>
 
             <h2 className="mt-5 text-lg font-black text-slate-900">
-              {triggers.length === 0
+              {triggers.length ===
+              0
                 ? "発動条件がありません"
                 : "該当する発動条件がありません"}
             </h2>
 
             <p className="mt-2 text-sm text-slate-500">
-              {triggers.length === 0
-                ? "次の工程で新しい発動条件を作成できるようにします。"
+              {triggers.length ===
+              0
+                ? "新しい発動条件を作成してください。"
                 : "検索条件を変更してください。"}
             </p>
           </div>
@@ -467,16 +651,36 @@ export function TriggerPage() {
 
 
       <TriggerFormModal
-        isOpen={isFormOpen}
-        trigger={editingTrigger}
-        pools={pools}
-        onClose={handleCloseForm}
-        onCreate={(input) => {
-          addTrigger(input);
+        isOpen={
+          isFormOpen
+        }
+        trigger={
+          editingTrigger
+        }
+        pools={
+          pools
+        }
+        onClose={
+          handleCloseForm
+        }
+        onCreate={(
+          input,
+        ) => {
+          addTrigger(
+            input,
+          );
+
           handleCloseForm();
         }}
-        onUpdate={(id, input) => {
-          updateTrigger(id, input);
+        onUpdate={(
+          id,
+          input,
+        ) => {
+          updateTrigger(
+            id,
+            input,
+          );
+
           handleCloseForm();
         }}
       />
@@ -516,6 +720,7 @@ function SummaryCard({
 type InfoBlockProps = {
   label: string;
   value: string;
+
   tone?:
     | "default"
     | "violet"
@@ -535,6 +740,7 @@ function InfoBlock({
         ? "text-amber-700"
         : "text-slate-800";
 
+
   return (
     <div className="rounded-2xl bg-slate-50 p-4">
       <p className="text-xs font-black text-slate-400">
@@ -551,9 +757,10 @@ function InfoBlock({
 }
 
 
-type GiftCatalogGifts = ReturnType<
-  typeof useGiftCatalogStore.getState
->["gifts"];
+type GiftCatalogGifts =
+  ReturnType<
+    typeof useGiftCatalogStore.getState
+  >["gifts"];
 
 
 function formatEventLabel(
@@ -562,10 +769,12 @@ function formatEventLabel(
   if (
     trigger.pluginId ===
       "tiktok-live" &&
-    trigger.eventCategory === "gift"
+    trigger.eventCategory ===
+      "gift"
   ) {
     return "TikTok LIVE・ギフト";
   }
+
 
   const pluginLabel =
     formatPluginLabel(
@@ -577,11 +786,14 @@ function formatEventLabel(
       trigger.eventCategory,
     );
 
+
   return [
     pluginLabel,
     eventLabel,
   ]
-    .filter(Boolean)
+    .filter(
+      Boolean,
+    )
     .join("・") ||
     "すべてのイベント";
 }
@@ -592,14 +804,17 @@ function formatConditionLabel(
   gifts: GiftCatalogGifts,
 ): string {
   if (
-    condition.field === "giftId" &&
-    condition.operator === "equals"
+    condition.field ===
+      "giftId" &&
+    condition.operator ===
+      "equals"
   ) {
     return `ギフト：${formatGiftLabel(
       condition.value,
       gifts,
     )}`;
   }
+
 
   if (
     condition.field ===
@@ -609,8 +824,9 @@ function formatConditionLabel(
   ) {
     return `個数：${formatConditionValue(
       condition.value,
-    )}個以上`;
+    )}個以上（旧方式）`;
   }
+
 
   const fieldLabel =
     formatConditionFieldLabel(
@@ -627,12 +843,15 @@ function formatConditionLabel(
       condition.value,
     );
 
+
   return [
     fieldLabel,
     operatorLabel,
     valueLabel,
   ]
-    .filter(Boolean)
+    .filter(
+      Boolean,
+    )
     .join(" ");
 }
 
@@ -646,23 +865,148 @@ function formatGiftLabel(
       value,
     );
 
+
   const gift =
     gifts.find(
-      (candidate) =>
+      (
+        candidate,
+      ) =>
         candidate.id ===
         giftId,
     );
+
 
   if (!gift) {
     return `不明なギフト（ID: ${giftId}）`;
   }
 
+
   const coinLabel =
-    gift.coinValue !== undefined
+    gift.coinValue !==
+    undefined
       ? `${gift.coinValue}コイン`
       : "コイン数未取得";
 
+
   return `${gift.name}（${coinLabel} / ID: ${gift.id}）`;
+}
+
+
+function usesAggregation(
+  trigger: Trigger,
+): boolean {
+  return (
+    normalizeActivationPolicy(
+      trigger.activationPolicy,
+    ) !==
+    "every-event"
+  );
+}
+
+
+function formatActivationLabel(
+  trigger: Trigger,
+): string {
+  const policy =
+    normalizeActivationPolicy(
+      trigger.activationPolicy,
+    );
+
+
+  if (
+    policy ===
+    "every-event"
+  ) {
+    return "1個ごとに発動";
+  }
+
+
+  const threshold =
+    normalizeThreshold(
+      trigger.threshold,
+    );
+
+
+  if (
+    policy ===
+    "once-threshold"
+  ) {
+    return `${threshold}個に到達したら1回`;
+  }
+
+
+  return `${threshold}個ごとに発動`;
+}
+
+
+function formatAggregationLabel(
+  trigger: Trigger,
+): string {
+  const scope =
+    normalizeAggregationScope(
+      trigger.aggregationScope,
+    );
+
+
+  if (
+    scope ===
+    "per-user"
+  ) {
+    return "リスナーごとに集計";
+  }
+
+
+  return "配信全体で合計";
+}
+
+
+function normalizeActivationPolicy(
+  value:
+    | TriggerActivationPolicy
+    | undefined,
+): TriggerActivationPolicy {
+  return (
+    value ??
+    "every-event"
+  );
+}
+
+
+function normalizeAggregationScope(
+  value:
+    | TriggerAggregationScope
+    | undefined,
+): TriggerAggregationScope {
+  return (
+    value ??
+    "global"
+  );
+}
+
+
+function normalizeThreshold(
+  value:
+    | number
+    | undefined,
+): number {
+  if (
+    typeof value !==
+      "number" ||
+    !Number.isFinite(
+      value,
+    ) ||
+    value <= 0
+  ) {
+    return 1;
+  }
+
+
+  return Math.max(
+    1,
+    Math.floor(
+      value,
+    ),
+  );
 }
 
 
@@ -671,7 +1015,9 @@ function formatPluginLabel(
     | Trigger["pluginId"]
     | undefined,
 ): string {
-  switch (pluginId) {
+  switch (
+    pluginId
+  ) {
     case "tiktok-live":
       return "TikTok LIVE";
 
@@ -682,7 +1028,10 @@ function formatPluginLabel(
       return "オーバーレイ";
 
     default:
-      return pluginId ?? "";
+      return (
+        pluginId ??
+        ""
+      );
   }
 }
 
@@ -692,7 +1041,9 @@ function formatEventCategoryLabel(
     | Trigger["eventCategory"]
     | undefined,
 ): string {
-  switch (category) {
+  switch (
+    category
+  ) {
     case "gift":
       return "ギフト";
 
@@ -712,7 +1063,10 @@ function formatEventCategoryLabel(
       return "入室";
 
     default:
-      return category ?? "";
+      return (
+        category ??
+        ""
+      );
   }
 }
 
@@ -720,7 +1074,9 @@ function formatEventCategoryLabel(
 function formatConditionFieldLabel(
   field: string,
 ): string {
-  switch (field) {
+  switch (
+    field
+  ) {
     case "giftId":
       return "ギフト";
 
@@ -743,7 +1099,9 @@ function formatConditionOperatorLabel(
   operator:
     TriggerCondition["operator"],
 ): string {
-  switch (operator) {
+  switch (
+    operator
+  ) {
     case "equals":
       return "が一致";
 
@@ -795,24 +1153,43 @@ function formatConditionOperatorLabel(
 function formatConditionValue(
   value: unknown,
 ): string {
-  if (value === undefined) {
+  if (
+    value ===
+    undefined
+  ) {
     return "";
   }
 
-  if (Array.isArray(value)) {
-    return value.join(", ");
-  }
 
   if (
-    typeof value === "object" &&
+    Array.isArray(
+      value,
+    )
+  ) {
+    return value.join(
+      ", ",
+    );
+  }
+
+
+  if (
+    typeof value ===
+      "object" &&
     value !== null
   ) {
     try {
-      return JSON.stringify(value);
+      return JSON.stringify(
+        value,
+      );
     } catch {
-      return String(value);
+      return String(
+        value,
+      );
     }
   }
 
-  return String(value);
+
+  return String(
+    value,
+  );
 }

@@ -6,11 +6,22 @@ import {
 
 import {
   Check,
+  FileAudio,
+  Play,
   Plus,
   Search,
   Trash2,
+  Volume2,
   X,
 } from "lucide-react";
+
+import {
+  open,
+} from "@tauri-apps/plugin-dialog";
+
+import {
+  soundRuntime,
+} from "@/features/presentation/sound/SoundRuntime";
 
 import type {
   EffectDefinition,
@@ -43,6 +54,10 @@ type PoolFormState = {
   enabled: boolean;
 
   entries: PoolEntry[];
+
+  soundSource: string;
+
+  soundVolume: number;
 };
 
 const createInitialState = (
@@ -60,6 +75,14 @@ const createInitialState = (
 
       entries:
         pool.entries,
+
+      soundSource:
+        pool.sound?.source ??
+        "",
+
+      soundVolume:
+        pool.sound?.volume ??
+        0.8,
     };
   }
 
@@ -71,6 +94,10 @@ const createInitialState = (
     enabled: true,
 
     entries: [],
+
+    soundSource: "",
+
+    soundVolume: 0.8,
   };
 };
 
@@ -428,6 +455,162 @@ export function PoolFormModal({
     );
   };
 
+  const handleSelectSound =
+    async () => {
+      try {
+        const selected =
+          await open({
+            multiple: false,
+
+            directory: false,
+
+            filters: [
+              {
+                name: "音声ファイル",
+
+                extensions: [
+                  "mp3",
+                  "wav",
+                  "ogg",
+                  "m4a",
+                ],
+              },
+            ],
+          });
+
+
+        if (
+          typeof selected !==
+          "string"
+        ) {
+          return;
+        }
+
+
+        const normalizedSource =
+          selected.trim();
+
+
+        if (!normalizedSource) {
+          return;
+        }
+
+
+        setForm(
+          (current) => ({
+            ...current,
+
+            soundSource:
+              normalizedSource,
+          }),
+        );
+      } catch (error) {
+        console.error(
+          "[PoolFormModal]",
+          "SEファイルの選択に失敗しました。",
+          error,
+        );
+
+
+        window.alert(
+          "SEファイルを選択できませんでした。",
+        );
+      }
+    };
+
+  function getFileName(
+    source: string,
+  ): string {
+    const normalizedSource =
+      source.replace(
+        /\\/g,
+        "/",
+      );
+
+    const segments =
+      normalizedSource.split(
+        "/",
+      );
+
+    return (
+      segments.at(-1) ||
+      source
+    );
+  }
+
+  const handlePreviewSound =
+    async () => {
+      if (
+        !form.soundSource.trim()
+      ) {
+        return;
+      }
+
+
+      try {
+        await soundRuntime.play(
+          form.soundSource,
+          {
+            volume:
+              form.soundVolume,
+          },
+        );
+      } catch {
+        window.alert(
+          "SEを再生できませんでした。",
+        );
+      }
+    };
+
+
+  const handleRemoveSound =
+    () => {
+      soundRuntime.stopAll();
+
+
+      setForm(
+        (current) => ({
+          ...current,
+
+          soundSource: "",
+        }),
+      );
+    };
+
+
+  const handleSoundVolumeChange =
+    (
+      value: string,
+    ) => {
+      const parsedValue =
+        Number(value);
+
+
+      if (
+        !Number.isFinite(
+          parsedValue,
+        )
+      ) {
+        return;
+      }
+
+
+      setForm(
+        (current) => ({
+          ...current,
+
+          soundVolume:
+            Math.min(
+              1,
+              Math.max(
+                0,
+                parsedValue,
+              ),
+            ),
+        }),
+      );
+    };
+
   const handleSubmit =
     () => {
       const trimmedName =
@@ -482,6 +665,17 @@ export function PoolFormModal({
 
         entries:
           form.entries,
+
+        sound:
+          form.soundSource.trim()
+            ? {
+              source:
+                form.soundSource.trim(),
+
+              volume:
+                form.soundVolume,
+            }
+            : undefined,
 
         createdAt:
           pool?.createdAt ??
@@ -632,7 +826,144 @@ export function PoolFormModal({
               />
             </label>
           </section>
+          <section className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
+                <Volume2
+                  size={20}
+                />
+              </div>
 
+              <div>
+                <h3 className="text-base font-black text-slate-900">
+                  ガチャSE
+                </h3>
+
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  このガチャ箱が発動したときに再生する効果音を設定します。
+                </p>
+              </div>
+            </div>
+
+
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button
+                  type="button"
+                  onClick={
+                    handleSelectSound
+                  }
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-black text-violet-700 transition hover:bg-violet-100"
+                >
+                  <FileAudio
+                    size={17}
+                  />
+
+                  音声ファイルを選択
+                </button>
+
+
+                <div className="min-w-0 flex-1">
+                  {form.soundSource ? (
+                    <>
+                      <p className="text-xs font-bold text-slate-400">
+                        選択中
+                      </p>
+
+                      <p
+                        className="mt-1 truncate text-sm font-black text-slate-700"
+                        title={
+                          form.soundSource
+                        }
+                      >
+                        {getFileName(
+                          form.soundSource,
+                        )}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm font-bold text-slate-400">
+                      SEは設定されていません
+                    </p>
+                  )}
+                </div>
+              </div>
+
+
+              {form.soundSource ? (
+                <div className="mt-5 border-t border-slate-100 pt-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <label
+                      htmlFor="pool-sound-volume"
+                      className="text-sm font-black text-slate-700"
+                    >
+                      音量
+                    </label>
+
+                    <span className="text-sm font-black text-violet-700">
+                      {Math.round(
+                        form.soundVolume *
+                        100,
+                      )}
+                      %
+                    </span>
+                  </div>
+
+
+                  <input
+                    id="pool-sound-volume"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={
+                      form.soundVolume
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      handleSoundVolumeChange(
+                        event.target.value,
+                      )
+                    }
+                    className="mt-3 w-full accent-violet-600"
+                  />
+
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={
+                        handlePreviewSound
+                      }
+                      className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-violet-500"
+                    >
+                      <Play
+                        size={16}
+                      />
+
+                      試聴
+                    </button>
+
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleRemoveSound
+                      }
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                    >
+                      <Trash2
+                        size={16}
+                      />
+
+                      SEを解除
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </section>
           <section>
             <div className="flex items-end justify-between gap-4">
               <div>

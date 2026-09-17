@@ -29,6 +29,8 @@ import type {
 import type {
   CreateTriggerInput,
   Trigger,
+  TriggerActivationPolicy,
+  TriggerAggregationScope,
   UpdateTriggerInput,
 } from "@/features/triggers/types/Trigger";
 
@@ -37,10 +39,13 @@ type TriggerFormModalProps = {
   isOpen: boolean;
   trigger: Trigger | null;
   pools: GachaPool[];
+
   onClose: () => void;
+
   onCreate: (
     input: CreateTriggerInput,
   ) => void;
+
   onUpdate: (
     id: string,
     input: UpdateTriggerInput,
@@ -52,8 +57,17 @@ type TriggerFormState = {
   name: string;
   description: string;
   enabled: boolean;
+
   selectedGiftId: string;
-  minimumCount: number;
+
+  activationPolicy:
+    TriggerActivationPolicy;
+
+  threshold: number;
+
+  aggregationScope:
+    TriggerAggregationScope;
+
   gachaPoolId: string;
 };
 
@@ -67,8 +81,17 @@ function createInitialState(
       name: "",
       description: "",
       enabled: true,
+
       selectedGiftId: "",
-      minimumCount: 1,
+
+      activationPolicy:
+        "every-event",
+
+      threshold: 1,
+
+      aggregationScope:
+        "global",
+
       gachaPoolId:
         pools.find(
           (pool) =>
@@ -90,14 +113,51 @@ function createInitialState(
     );
 
 
-  const countCondition =
+  const legacyCountCondition =
     trigger.conditions.find(
       (condition) =>
         condition.field ===
-          "repeatCount" &&
-        condition.operator ===
-          "greaterThanOrEqual",
+        "repeatCount",
     );
+
+
+  const hasExplicitActivationPolicy =
+    trigger.activationPolicy !==
+    undefined;
+
+
+  const activationPolicy:
+    TriggerActivationPolicy =
+      hasExplicitActivationPolicy
+        ? trigger.activationPolicy ??
+          "every-event"
+        : legacyCountCondition
+          ? "every-event"
+          : "every-event";
+
+
+  const threshold =
+    typeof trigger.threshold ===
+      "number" &&
+    Number.isFinite(
+      trigger.threshold,
+    ) &&
+    trigger.threshold > 0
+      ? Math.max(
+          1,
+          Math.floor(
+            trigger.threshold,
+          ),
+        )
+      : typeof legacyCountCondition?.value ===
+          "number"
+        ? Math.max(
+            1,
+            Math.floor(
+              legacyCountCondition.value,
+            ),
+          )
+        : 1;
 
 
   return {
@@ -117,16 +177,13 @@ function createInitialState(
         ? giftIdCondition.value
         : "",
 
-    minimumCount:
-      typeof countCondition?.value ===
-        "number"
-        ? Math.max(
-            1,
-            Math.floor(
-              countCondition.value,
-            ),
-          )
-        : 1,
+    activationPolicy,
+
+    threshold,
+
+    aggregationScope:
+      trigger.aggregationScope ??
+      "global",
 
     gachaPoolId:
       trigger.gachaPoolId,
@@ -356,16 +413,6 @@ export function TriggerFormModal({
           value:
             form.selectedGiftId,
         },
-        {
-          field:
-            "repeatCount",
-
-          operator:
-            "greaterThanOrEqual" as const,
-
-          value:
-            form.minimumCount,
-        },
       ];
 
 
@@ -393,6 +440,24 @@ export function TriggerFormModal({
 
         matchMode:
           "all",
+
+        activationPolicy:
+          form.activationPolicy,
+
+        aggregationScope:
+          form.aggregationScope,
+
+        threshold:
+          form.activationPolicy ===
+          "every-event"
+            ? 1
+            : form.threshold,
+
+        countField:
+          "repeatCount",
+
+        userIdField:
+          "userId",
 
         gachaPoolId:
           form.gachaPoolId,
@@ -482,7 +547,7 @@ export function TriggerFormModal({
                     }),
                   )
                 }
-                placeholder="例：バラ5個で妨害"
+                placeholder="例：ドーナッツ3個ごとに妨害"
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-100"
               />
             </label>
@@ -586,8 +651,16 @@ export function TriggerFormModal({
               form.selectedGiftId
             }
 
-            minimumCount={
-              form.minimumCount
+            activationPolicy={
+              form.activationPolicy
+            }
+
+            threshold={
+              form.threshold
+            }
+
+            aggregationScope={
+              form.aggregationScope
             }
 
             searchQuery={
@@ -624,8 +697,8 @@ export function TriggerFormModal({
               )
             }
 
-            onMinimumCountChange={(
-              minimumCount,
+            onActivationPolicyChange={(
+              activationPolicy,
             ) =>
               setForm(
                 (
@@ -633,7 +706,35 @@ export function TriggerFormModal({
                 ) => ({
                   ...current,
 
-                  minimumCount,
+                  activationPolicy,
+                }),
+              )
+            }
+
+            onThresholdChange={(
+              threshold,
+            ) =>
+              setForm(
+                (
+                  current,
+                ) => ({
+                  ...current,
+
+                  threshold,
+                }),
+              )
+            }
+
+            onAggregationScopeChange={(
+              aggregationScope,
+            ) =>
+              setForm(
+                (
+                  current,
+                ) => ({
+                  ...current,
+
+                  aggregationScope,
                 }),
               )
             }
@@ -694,14 +795,16 @@ export function TriggerFormModal({
 
 
             {selectedGift ? (
-              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
                 <span className="font-black text-slate-800">
                   保存内容：
                 </span>{" "}
-                {selectedGift.name}
-                を
-                {form.minimumCount}
-                個以上受信したら、選択したガチャ箱を実行します。
+                {formatTriggerSummary(
+                  selectedGift.name,
+                  form.activationPolicy,
+                  form.threshold,
+                  form.aggregationScope,
+                )}
               </div>
             ) : null}
           </section>
@@ -739,4 +842,39 @@ export function TriggerFormModal({
       </div>
     </div>
   );
+}
+
+
+function formatTriggerSummary(
+  giftName: string,
+  activationPolicy:
+    TriggerActivationPolicy,
+  threshold: number,
+  aggregationScope:
+    TriggerAggregationScope,
+): string {
+  if (
+    activationPolicy ===
+    "every-event"
+  ) {
+    return `${giftName}を1個受信するごとに、ガチャ箱を1回実行します。`;
+  }
+
+
+  const scopeLabel =
+    aggregationScope ===
+    "per-user"
+      ? "リスナーごとに"
+      : "配信全体で";
+
+
+  if (
+    activationPolicy ===
+    "once-threshold"
+  ) {
+    return `${giftName}を${scopeLabel}${threshold}個まで集計し、到達したとき1回だけガチャ箱を実行します。`;
+  }
+
+
+  return `${giftName}を${scopeLabel}${threshold}個集計するごとに、ガチャ箱を1回実行します。`;
 }

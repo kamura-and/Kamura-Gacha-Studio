@@ -1,12 +1,19 @@
+import {
+  convertFileSrc,
+} from "@tauri-apps/api/core";
+
+
 export type PlaySoundOptions = {
   volume?: number;
 
   loop?: boolean;
 };
 
+
 export class SoundRuntime {
   private readonly activeSounds =
     new Set<HTMLAudioElement>();
+
 
   public async play(
     source: string,
@@ -16,36 +23,50 @@ export class SoundRuntime {
     const normalizedSource =
       source.trim();
 
+
     if (!normalizedSource) {
       return;
     }
 
-    const audio =
-      new Audio(
+
+    const playableSource =
+      this.resolvePlayableSource(
         normalizedSource,
       );
+
+
+    const audio =
+      new Audio(
+        playableSource,
+      );
+
 
     audio.volume =
       this.normalizeVolume(
         options.volume,
       );
 
+
     audio.loop =
       options.loop ?? false;
+
 
     this.activeSounds.add(
       audio,
     );
+
 
     const cleanup = (): void => {
       this.activeSounds.delete(
         audio,
       );
 
+
       audio.removeEventListener(
         "ended",
         cleanup,
       );
+
 
       audio.removeEventListener(
         "error",
@@ -53,20 +74,24 @@ export class SoundRuntime {
       );
     };
 
+
     audio.addEventListener(
       "ended",
       cleanup,
     );
+
 
     audio.addEventListener(
       "error",
       cleanup,
     );
 
+
     try {
       await audio.play();
     } catch (error) {
       cleanup();
+
 
       console.error(
         "[SoundRuntime]",
@@ -75,13 +100,17 @@ export class SoundRuntime {
           source:
             normalizedSource,
 
+          playableSource,
+
           error,
         },
       );
 
+
       throw error;
     }
   }
+
 
   public stopAll(): void {
     for (
@@ -94,8 +123,42 @@ export class SoundRuntime {
         0;
     }
 
+
     this.activeSounds.clear();
   }
+
+
+  private resolvePlayableSource(
+    source: string,
+  ): string {
+    if (
+      this.isWindowsFilePath(
+        source,
+      )
+    ) {
+      return convertFileSrc(
+        source,
+      );
+    }
+
+
+    return source;
+  }
+
+
+  private isWindowsFilePath(
+    source: string,
+  ): boolean {
+    return (
+      /^[a-zA-Z]:[\\/]/.test(
+        source,
+      ) ||
+      source.startsWith(
+        "\\\\",
+      )
+    );
+  }
+
 
   private normalizeVolume(
     volume:
@@ -103,10 +166,13 @@ export class SoundRuntime {
   ): number {
     if (
       volume === undefined ||
-      !Number.isFinite(volume)
+      !Number.isFinite(
+        volume,
+      )
     ) {
       return 1;
     }
+
 
     return Math.min(
       1,
@@ -117,6 +183,7 @@ export class SoundRuntime {
     );
   }
 }
+
 
 export const soundRuntime =
   new SoundRuntime();

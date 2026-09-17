@@ -7,11 +7,24 @@ import type {
   GiftDefinition,
 } from "@/features/triggers/gifts/giftDefinitions";
 
+import type {
+  TriggerActivationPolicy,
+  TriggerAggregationScope,
+} from "@/features/triggers/types/Trigger";
+
 
 type GiftTriggerEditorProps = {
   gifts: GiftDefinition[];
   selectedGiftId: string;
-  minimumCount: number;
+
+  activationPolicy:
+    TriggerActivationPolicy;
+
+  threshold: number;
+
+  aggregationScope:
+    TriggerAggregationScope;
+
   searchQuery: string;
 
   isGiftCatalogSyncing?: boolean;
@@ -25,8 +38,16 @@ type GiftTriggerEditorProps = {
     giftId: string,
   ) => void;
 
-  onMinimumCountChange: (
+  onActivationPolicyChange: (
+    policy: TriggerActivationPolicy,
+  ) => void;
+
+  onThresholdChange: (
     value: number,
+  ) => void;
+
+  onAggregationScopeChange: (
+    scope: TriggerAggregationScope,
   ) => void;
 
   onGiftCatalogSync?: () => void;
@@ -36,24 +57,32 @@ type GiftTriggerEditorProps = {
 export function GiftTriggerEditor({
   gifts,
   selectedGiftId,
-  minimumCount,
+  activationPolicy,
+  threshold,
+  aggregationScope,
   searchQuery,
   isGiftCatalogSyncing = false,
   giftCatalogSyncMessage,
   onSearchQueryChange,
   onGiftChange,
-  onMinimumCountChange,
+  onActivationPolicyChange,
+  onThresholdChange,
+  onAggregationScopeChange,
   onGiftCatalogSync,
 }: GiftTriggerEditorProps) {
+  const usesThreshold =
+    activationPolicy !==
+    "every-event";
+
   return (
-    <section className="space-y-5">
+    <section className="space-y-6">
       <div>
         <h3 className="text-base font-black text-slate-900">
           ギフト条件
         </h3>
 
         <p className="mt-1 text-sm leading-6 text-slate-500">
-          画像・名前・コイン数・IDを確認して、発動対象のギフトを選択します。
+          発動対象のギフトと、何個受信したときにガチャを実行するかを設定します。
         </p>
       </div>
 
@@ -117,7 +146,7 @@ export function GiftTriggerEditor({
                 event.target.value,
               )
             }
-            placeholder="ギフト名を検索"
+            placeholder="ギフト名・IDを検索"
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-100"
           />
         </div>
@@ -211,49 +240,238 @@ export function GiftTriggerEditor({
       </div>
 
 
-      <label className="grid gap-2">
+      <div className="grid gap-3">
         <span className="text-sm font-black text-slate-700">
-          個数
+          発動方法
         </span>
 
-        <div className="flex items-center gap-3">
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={
-              minimumCount
-            }
-            onChange={(
-              event,
-            ) => {
-              const parsedValue =
-                Number(
-                  event.target.value,
+        <ActivationPolicyOption
+          checked={
+            activationPolicy ===
+            "every-event"
+          }
+          title="1個ごとに発動"
+          description="ギフト1個につき1回、ガチャを実行します。"
+          onChange={
+            () =>
+              onActivationPolicyChange(
+                "every-event",
+              )
+          }
+        />
+
+        <ActivationPolicyOption
+          checked={
+            activationPolicy ===
+            "once-threshold"
+          }
+          title="指定個数に到達したら1回"
+          description="集計した個数が指定数に到達したとき、その範囲では1回だけ発動します。"
+          onChange={
+            () =>
+              onActivationPolicyChange(
+                "once-threshold",
+              )
+          }
+        />
+
+        <ActivationPolicyOption
+          checked={
+            activationPolicy ===
+            "every-threshold"
+          }
+          title="指定個数ごとに発動"
+          description="指定個数に到達するたび、繰り返し発動します。"
+          onChange={
+            () =>
+              onActivationPolicyChange(
+                "every-threshold",
+              )
+          }
+        />
+      </div>
+
+
+      {usesThreshold ? (
+        <div className="grid gap-2">
+          <label className="text-sm font-black text-slate-700">
+            指定個数
+          </label>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={
+                threshold
+              }
+              onChange={(
+                event,
+              ) => {
+                const parsedValue =
+                  Number(
+                    event.target.value,
+                  );
+
+                onThresholdChange(
+                  Number.isFinite(
+                    parsedValue,
+                  )
+                    ? Math.max(
+                        1,
+                        Math.floor(
+                          parsedValue,
+                        ),
+                      )
+                    : 1,
                 );
+              }}
+              className="w-32 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-black text-slate-900 outline-none transition focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-100"
+            />
 
-              onMinimumCountChange(
-                Number.isFinite(
-                  parsedValue,
-                )
-                  ? Math.max(
-                      1,
-                      Math.floor(
-                        parsedValue,
-                      ),
-                    )
-                  : 1,
-              );
-            }}
-            className="w-32 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-black text-slate-900 outline-none transition focus:border-violet-300 focus:bg-white focus:ring-4 focus:ring-violet-100"
-          />
+            <span className="text-sm font-bold text-slate-500">
+              個
+            </span>
+          </div>
 
-          <span className="text-sm font-bold text-slate-500">
-            個以上で発動
-          </span>
+          <p className="text-xs leading-5 text-slate-500">
+            {activationPolicy ===
+            "once-threshold"
+              ? `${threshold}個に到達したとき1回だけ発動します。`
+              : `${threshold}個、${threshold * 2}個、${threshold * 3}個…と到達するたびに発動します。`}
+          </p>
         </div>
-      </label>
+      ) : null}
+
+
+      {usesThreshold ? (
+        <div className="grid gap-3">
+          <span className="text-sm font-black text-slate-700">
+            集計方法
+          </span>
+
+          <label
+            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition ${
+              aggregationScope ===
+              "global"
+                ? "border-violet-300 bg-violet-50 ring-4 ring-violet-100"
+                : "border-slate-200 bg-white hover:border-violet-200"
+            }`}
+          >
+            <input
+              type="radio"
+              name="gift-aggregation-scope"
+              checked={
+                aggregationScope ===
+                "global"
+              }
+              onChange={
+                () =>
+                  onAggregationScopeChange(
+                    "global",
+                  )
+              }
+              className="mt-1 size-4 accent-violet-600"
+            />
+
+            <div>
+              <p className="text-sm font-black text-slate-800">
+                配信全体で合計
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                すべてのリスナーから受信した対象ギフトを合算します。
+              </p>
+            </div>
+          </label>
+
+
+          <label
+            className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition ${
+              aggregationScope ===
+              "per-user"
+                ? "border-violet-300 bg-violet-50 ring-4 ring-violet-100"
+                : "border-slate-200 bg-white hover:border-violet-200"
+            }`}
+          >
+            <input
+              type="radio"
+              name="gift-aggregation-scope"
+              checked={
+                aggregationScope ===
+                "per-user"
+              }
+              onChange={
+                () =>
+                  onAggregationScopeChange(
+                    "per-user",
+                  )
+              }
+              className="mt-1 size-4 accent-violet-600"
+            />
+
+            <div>
+              <p className="text-sm font-black text-slate-800">
+                リスナーごとに集計
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                リスナーごとに対象ギフトの個数を別々に数えます。
+              </p>
+            </div>
+          </label>
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+
+type ActivationPolicyOptionProps = {
+  checked: boolean;
+  title: string;
+  description: string;
+  onChange: () => void;
+};
+
+
+function ActivationPolicyOption({
+  checked,
+  title,
+  description,
+  onChange,
+}: ActivationPolicyOptionProps) {
+  return (
+    <label
+      className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition ${
+        checked
+          ? "border-violet-300 bg-violet-50 ring-4 ring-violet-100"
+          : "border-slate-200 bg-white hover:border-violet-200"
+      }`}
+    >
+      <input
+        type="radio"
+        name="gift-activation-policy"
+        checked={
+          checked
+        }
+        onChange={
+          onChange
+        }
+        className="mt-1 size-4 accent-violet-600"
+      />
+
+      <div>
+        <p className="text-sm font-black text-slate-800">
+          {title}
+        </p>
+
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          {description}
+        </p>
+      </div>
+    </label>
   );
 }
 

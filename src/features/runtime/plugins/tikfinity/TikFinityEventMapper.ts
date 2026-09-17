@@ -3,6 +3,10 @@ import type {
 } from "../../types/RuntimeEvent";
 
 import {
+    learnUnknownGift,
+} from "@/features/triggers/gifts/UnknownGiftLearningService";
+
+import {
     tikFinityGiftComboTracker,
 } from "./TikFinityGiftComboTracker";
 
@@ -136,6 +140,34 @@ function mapGiftEvent(
             data.giftName,
             giftId,
         );
+
+
+    /**
+     * Gift Catalog学習はRuntime処理とは独立した補助処理。
+     *
+     * Catalog側で想定外の問題が起きても、
+     * Gift → Trigger → Pool → Effect の本線は止めない。
+     *
+     * また、コンボ終了通知でRuntimeEventを発行しない場合でも
+     * 実際に観測したGiftとしてlastSeenAtを更新できるよう、
+     * combo判定より前に実行する。
+     */
+    try {
+        learnUnknownGift({
+            giftId,
+            giftName,
+        });
+    } catch (error) {
+        console.warn(
+            "[GIFT CATALOG]",
+            "gift learning failed",
+            {
+                giftId,
+                giftName,
+                error,
+            },
+        );
+    }
 
 
     const repeatCount =

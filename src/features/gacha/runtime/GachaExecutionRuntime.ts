@@ -7,6 +7,14 @@ import type {
 } from "@/features/effects/runtime/EffectRuntime";
 
 import {
+  poolRepository,
+} from "@/features/pools/repositories/poolRepository";
+
+import {
+  soundRuntime,
+} from "@/features/presentation/sound/SoundRuntime";
+
+import {
   gachaRuntime,
 } from "./GachaRuntime";
 
@@ -48,8 +56,23 @@ export class GachaExecutionRuntime {
         input.options,
       );
 
+
+    /*
+     * ガチャ箱にSEが設定されている場合、
+     * Effect実行と並行して再生を開始します。
+     *
+     * SEは演出用の補助機能なので、
+     * 再生失敗によってEffectや
+     * Minecraft処理を停止させません。
+     */
+    this.playPoolSound(
+      spinResult.gachaPoolId,
+    );
+
+
     const effect =
       spinResult.effect;
+
 
     const effectResult =
       effectRuntime.execute({
@@ -79,6 +102,7 @@ export class GachaExecutionRuntime {
           effect.imageDataUrl,
       });
 
+
     console.info(
       "[GachaExecutionRuntime]",
       "Effect Prize Executed",
@@ -100,6 +124,7 @@ export class GachaExecutionRuntime {
       },
     );
 
+
     return {
       spin:
         spinResult,
@@ -113,6 +138,69 @@ export class GachaExecutionRuntime {
       legacyCommandCount:
         0,
     };
+  }
+
+
+  private playPoolSound(
+    gachaPoolId: string,
+  ): void {
+    const pool =
+      poolRepository.findById(
+        gachaPoolId,
+      );
+
+
+    const sound =
+      pool?.sound;
+
+
+    if (
+      !sound?.source.trim()
+    ) {
+      return;
+    }
+
+
+    void soundRuntime
+      .play(
+        sound.source,
+        {
+          volume:
+            sound.volume,
+        },
+      )
+      .then(() => {
+        console.info(
+          "[POOL SOUND]",
+          "played",
+          {
+            gachaPoolId,
+
+            source:
+              sound.source,
+
+            volume:
+              sound.volume,
+          },
+        );
+      })
+      .catch((error) => {
+        console.warn(
+          "[POOL SOUND]",
+          "playback failed",
+          {
+            gachaPoolId,
+
+            source:
+              sound.source,
+
+            volume:
+              sound.volume,
+
+            error,
+          },
+        );
+      });
   }
 }
 
